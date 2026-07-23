@@ -17,6 +17,31 @@ export default function AppShell({ sidebar, rightPanel, children, fullWidth }: A
 
       {fullWidth ? (
         <main style={{ flex: 1, overflow: 'auto' }}>{children}</main>
+      ) : rightPanel && !sidebar ? (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '9fr 3fr',
+            gap: 1,
+            flex: 1,
+            overflow: 'hidden',
+            background: 'var(--border-subtle)',
+          }}
+        >
+          <section style={{ overflow: 'auto', background: 'var(--bg-canvas)', padding: 20 }}>
+            {children}
+          </section>
+          <aside
+            style={{
+              overflow: 'auto',
+              background: 'var(--bg-surface)',
+              borderLeft: '1px solid var(--border-subtle)',
+              padding: 16,
+            }}
+          >
+            {rightPanel}
+          </aside>
+        </div>
       ) : (
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {sidebar && (

@@ -1,5 +1,5 @@
 import { Contribution } from './types';
-import { card, sectionTitle, mono, ACCENT_ROTATION } from './styles';
+import { narrativeSection, sectionTitle, mono, ACCENT_ROTATION } from './styles';
 
 interface HotTopicsProps {
   contributions: Contribution[];
@@ -34,8 +34,11 @@ export default function HotTopics({ contributions }: HotTopicsProps) {
   const topics = topTopics(contributions);
 
   return (
-    <div style={card}>
-      <div style={sectionTitle}>Hot Topics This Week</div>
+    <div style={narrativeSection}>
+      <div style={{ ...sectionTitle, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        HOT TOPICS THIS WEEK
+      </div>
       {topics.length === 0 ? (
         <span style={{ ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>No ministries recorded.</span>
       ) : (
@@ -52,10 +55,25 @@ export default function HotTopics({ contributions }: HotTopicsProps) {
                   padding: '8px 10px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: accent }}>{topic.ministry}</span>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: accent,
+                    }}
+                  >
+                    {topic.ministry}
+                  </span>
                   <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
-                    {topic.count} contribution{topic.count === 1 ? '' : 's'}
+                    {topic.count} question{topic.count === 1 ? '' : 's'}
                   </span>
                 </div>
                 {topic.mpNames.length > 0 && (
@@ -64,11 +82,13 @@ export default function HotTopics({ contributions }: HotTopicsProps) {
                       <span
                         key={name}
                         style={{
-                          ...mono,
+                          fontFamily: 'var(--font-mono)',
                           fontSize: 9,
                           color: 'var(--text-secondary)',
                           border: '1px solid var(--border-default)',
                           padding: '1px 6px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
                         }}
                       >
                         {name}

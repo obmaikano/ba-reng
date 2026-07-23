@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { MpSummary } from './types';
-import { sectionTitle, mono } from './styles';
+import { sectionTitle, mono, barThin } from './styles';
 
 interface ParticipationIndexPreviewProps {
   mps: MpSummary[];
@@ -25,19 +25,27 @@ export default function ParticipationIndexPreview({ mps }: ParticipationIndexPre
               onClick={() => navigate(`/mp/${mp.id}`)}
               style={{ cursor: 'pointer' }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>
-                  <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)', marginRight: 6 }}>
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  {mp.name}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)', width: 16, textAlign: 'right' }}>
+                  {String(index + 1).padStart(2, '0')}
                 </span>
-                <span style={{ ...mono, fontSize: 12, color: 'var(--accent-blue)' }}>{score}</span>
-              </div>
-              <div style={{ height: 2, background: 'var(--bg-elevated)' }}>
-                <div
-                  style={{ height: 2, width: `${(score / maxScore) * 100}%`, background: 'var(--accent-blue)' }}
-                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {mp.name}
+                    </span>
+                    <span style={{ ...mono, fontSize: 12, color: 'var(--accent-blue)', fontWeight: 600 }}>{score}</span>
+                  </div>
+                  <div style={barThin}>
+                    <div
+                      style={{
+                        height: 2,
+                        background: 'var(--accent-blue)',
+                        width: `${(score / maxScore) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           );
@@ -45,7 +53,14 @@ export default function ParticipationIndexPreview({ mps }: ParticipationIndexPre
       </div>
       <span
         onClick={() => navigate('/rankings')}
-        style={{ ...mono, fontSize: 11, color: 'var(--accent-blue)', cursor: 'pointer', display: 'inline-block', marginTop: 10 }}
+        style={{
+          ...mono,
+          fontSize: 10,
+          color: 'var(--accent-blue)',
+          cursor: 'pointer',
+          display: 'inline-block',
+          marginTop: 12,
+        }}
       >
         View full leaderboard →
       </span>

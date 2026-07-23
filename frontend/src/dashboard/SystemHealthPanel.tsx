@@ -1,13 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { StatusData } from './useDashboardData';
-import { sectionTitle, mono } from './styles';
+import { sectionTitle, mono, statusDot } from './styles';
 
 interface SystemHealthPanelProps {
   status: StatusData;
 }
-
-const rowStyle = { display: 'flex', justifyContent: 'space-between', fontSize: 11 } as const;
-const labelStyle = { color: 'var(--text-secondary)' } as const;
 
 export default function SystemHealthPanel({ status }: SystemHealthPanelProps) {
   const navigate = useNavigate();
@@ -18,25 +15,40 @@ export default function SystemHealthPanel({ status }: SystemHealthPanelProps) {
     <div style={{ marginBottom: 20 }}>
       <div style={sectionTitle}>System Health</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={rowStyle}>
-          <span style={labelStyle}>Crawl status</span>
-          <span style={{ ...mono, color: crawlHealthy ? 'var(--accent-green)' : 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ color: crawlHealthy ? 'var(--accent-green)' : 'var(--accent-amber)' }}>●</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Crawl status</span>
+          <span
+            style={{
+              ...mono,
+              color: crawlHealthy ? 'var(--accent-green)' : 'var(--accent-amber)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            <span
+              style={{
+                ...statusDot,
+                background: crawlHealthy ? 'var(--accent-green)' : 'var(--accent-amber)',
+              }}
+            />
             {crawlHealthy ? 'Healthy' : status.last_crawl?.status ?? 'Unknown'}
           </span>
         </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>Last crawl</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Last crawl</span>
           <span style={{ ...mono, color: 'var(--text-tertiary)' }}>
-            {status.last_crawl?.started_at.slice(0, 16) ?? '—'}
+            {status.last_crawl
+              ? status.last_crawl.started_at.slice(5, 10).replace('-', ' ') + ' ' + status.last_crawl.started_at.slice(11, 16)
+              : '—'}
           </span>
         </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>Documents parsed</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Documents parsed</span>
           <span style={{ ...mono, color: 'var(--accent-blue)' }}>{status.document_count}</span>
         </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>Unresolved entities</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Unresolved entities</span>
           <span style={{ ...mono, color: hasUnresolved ? 'var(--accent-amber)' : 'var(--accent-green)' }}>
             {status.unresolved_entity_count}
             {hasUnresolved && (
@@ -52,9 +64,9 @@ export default function SystemHealthPanel({ status }: SystemHealthPanelProps) {
             )}
           </span>
         </div>
-        <div style={rowStyle}>
-          <span style={labelStyle}>Session</span>
-          <span style={{ ...mono, color: 'var(--text-tertiary)' }}>13th Parliament</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Session</span>
+          <span style={{ ...mono, color: 'var(--text-tertiary)' }}>13th, 5th</span>
         </div>
       </div>
     </div>

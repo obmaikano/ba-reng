@@ -10,7 +10,7 @@ interface DashboardSidebarProps {
 
 export default function DashboardSidebar({ data }: DashboardSidebarProps) {
   return (
-    <div style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       <QuickActions />
       <ParticipationIndexPreview mps={data.mps} />
       <SystemHealthPanel status={data.status} />

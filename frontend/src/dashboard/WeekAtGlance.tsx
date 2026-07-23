@@ -1,6 +1,5 @@
-import { CSSProperties } from 'react';
 import { Contribution } from './types';
-import { statCard, grid, statLabel, statValue, mono } from './styles';
+import { narrativeSection, statCard, grid4, statLabel, statValue, mono } from './styles';
 
 interface WeekAtGlanceProps {
   contributions: Contribution[];
@@ -60,7 +59,7 @@ export default function WeekAtGlance({
   const ministry = topMinistry(contributions);
 
   const stats: Stat[] = [
-    { label: 'Sitting days', value: String(sittingDays), detail: sittingDayNames(contributions) },
+    { label: 'Sitting Days', value: String(sittingDays), detail: sittingDayNames(contributions) },
     {
       label: 'Contributions',
       value: String(contributions.length),
@@ -74,31 +73,34 @@ export default function WeekAtGlance({
       detail: `of ${totalMpCount} total`,
     },
     {
-      label: 'Most addressed',
+      label: 'Most Addressed',
       value: ministry.name,
       valueColor: 'var(--accent-amber)',
-      detail: ministry.count > 0 ? `${ministry.count} this week` : 'No ministry recorded',
+      detail: ministry.count > 0 ? `${ministry.count} question${ministry.count === 1 ? '' : 's'} this week` : 'No ministry recorded',
     },
   ];
 
-  const detailStyle: CSSProperties = {
-    ...mono,
-    fontSize: 10,
-    color: 'var(--text-tertiary)',
-    marginTop: 4,
-  };
-
   return (
-    <div style={grid}>
-      {stats.map((stat) => (
-        <div key={stat.label} style={statCard}>
-          <div style={statLabel}>{stat.label}</div>
-          <div style={{ ...statValue, ...(stat.valueColor ? { color: stat.valueColor } : {}), fontSize: stat.value.length > 6 ? 16 : 20 }}>
-            {stat.value}
+    <div style={narrativeSection}>
+      <div style={grid4}>
+        {stats.map((stat) => (
+          <div key={stat.label} style={statCard}>
+            <div style={statLabel}>{stat.label}</div>
+            <div
+              style={{
+                ...statValue,
+                ...(stat.valueColor ? { color: stat.valueColor } : {}),
+                fontSize: stat.value.length > 6 ? 16 : 20,
+              }}
+            >
+              {stat.value}
+            </div>
+            <div style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4 }}>
+              {stat.detail}
+            </div>
           </div>
-          <div style={detailStyle}>{stat.detail}</div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

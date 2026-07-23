@@ -1,5 +1,5 @@
 import { Contribution } from './types';
-import { card, sectionTitle, mono, surfaceElevated, typeTag } from './styles';
+import { narrativeSection, sectionTitle, mono, surfaceElevated, typeTag } from './styles';
 
 interface WeeklyTimelineProps {
   contributions: Contribution[];
@@ -41,30 +41,45 @@ function summarizeDays(contributions: Contribution[]): DaySummary[] {
     .slice(-7);
 }
 
+function describeDay(day: DaySummary): string {
+  if (day.ministries.length === 0) return 'No ministry recorded for these contributions.';
+  return `${day.ministries.join(' and ')} addressed via ${day.types.map((t) => t.toUpperCase()).join(', ')}.`;
+}
+
 export default function WeeklyTimeline({ contributions }: WeeklyTimelineProps) {
   const days = summarizeDays(contributions);
+  const sitting = days.filter((d) => d.count > 0);
 
   return (
-    <div style={card}>
-      <div style={sectionTitle}>This Week's Timeline</div>
-      {days.length === 0 ? (
+    <div style={narrativeSection}>
+      <div style={{ ...sectionTitle, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        THIS WEEK'S TIMELINE
+      </div>
+      {sitting.length === 0 ? (
         <span style={{ ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>No activity recorded.</span>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {days.map((day) => (
-            <div key={day.date} style={{ ...surfaceElevated, padding: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+          {sitting.map((day) => (
+            <div key={day.date} style={{ ...surfaceElevated, padding: 12 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginBottom: 4,
+                  flexWrap: 'wrap',
+                }}
+              >
                 <span style={{ ...mono, fontSize: 10, color: 'var(--accent-blue)', fontWeight: 600 }}>
                   {formatDay(day.date)}
                 </span>
                 {day.types.map((type) => (
-                  <span key={type} style={typeTag(type)}>{type}</span>
+                  <span key={type} style={typeTag(type)}>{type.toUpperCase()}</span>
                 ))}
               </div>
-              <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: 0 }}>
-                {day.ministries.length > 0
-                  ? `Ministries addressed: ${day.ministries.join(', ')}`
-                  : 'No ministry recorded for these contributions.'}
+              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                {describeDay(day)}
               </p>
               <div style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)', marginTop: 4 }}>
                 {day.count} contribution{day.count === 1 ? '' : 's'}

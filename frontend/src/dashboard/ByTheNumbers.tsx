@@ -1,5 +1,5 @@
 import { Contribution } from './types';
-import { card, sectionTitle, mono } from './styles';
+import { narrativeSection, sectionTitle, mono, surface, statRow, statRowLast } from './styles';
 
 interface ByTheNumbersProps {
   contributions: Contribution[];
@@ -9,48 +9,50 @@ const TYPE_LABELS: Record<string, string> = {
   question: 'Questions asked',
   oral_question: 'Questions asked',
   motion: 'Motions moved',
-  bill_presentation: 'Bills presented',
-  tabling: 'Papers tabled',
-  amendment: 'Amendments',
+  bill_presentation: 'Bill readings',
+  bill_1st: 'Bill readings',
+  bill_2nd: 'Bill readings',
+  bill_3rd: 'Bill readings',
+  minist_question: "Minister's Question Time",
 };
 
-function friendlyLabel(type: string): string {
-  return TYPE_LABELS[type] ?? type.replace(/_/g, ' ').replace(/^\w/, (ch) => ch.toUpperCase());
-}
-
 export default function ByTheNumbers({ contributions }: ByTheNumbersProps) {
-  const counts = new Map<string, number>();
+  const counts = new Map<string, string>();
   for (const c of contributions) {
-    counts.set(c.contribution_type, (counts.get(c.contribution_type) ?? 0) + 1);
+    const key = TYPE_LABELS[c.contribution_type] ?? c.contribution_type;
+    counts.set(key, String((Number(counts.get(key)) || 0) + 1));
   }
-  const rows = Array.from(counts.entries())
-    .map(([type, count]) => ({ label: friendlyLabel(type), count }))
-    .sort((a, b) => b.count - a.count);
 
   const ministriesAddressed = new Set(
     contributions.map((c) => c.ministry_addressed).filter((m): m is string => Boolean(m)),
   ).size;
-  rows.push({ label: 'Ministries addressed', count: ministriesAddressed });
+
+  const rows: { label: string; count: string; color?: string }[] = [
+    { label: 'Questions asked', count: counts.get('Questions asked') ?? '0' },
+    { label: 'Motions moved', count: counts.get('Motions moved') ?? '0' },
+    { label: 'Bill readings', count: counts.get('Bill readings') ?? '0' },
+    { label: "Minister's Question Time", count: counts.get("Minister's Question Time") ?? '0' },
+    { label: 'Ministries addressed', count: String(ministriesAddressed) },
+  ];
 
   return (
-    <div style={card}>
-      <div style={sectionTitle}>By The Numbers</div>
-      <div>
-        {rows.map((row, index) => (
-          <div
-            key={row.label}
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              justifyContent: 'space-between',
-              padding: '6px 0',
-              borderBottom: index === rows.length - 1 ? 'none' : '1px solid var(--border-subtle)',
-            }}
-          >
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{row.label}</span>
-            <span style={{ ...mono, fontSize: 12, color: 'var(--accent-blue)' }}>{row.count}</span>
-          </div>
-        ))}
+    <div style={narrativeSection}>
+      <div style={{ ...sectionTitle, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        BY THE NUMBERS
+      </div>
+      <div style={{ ...surface, padding: 16 }}>
+        {rows.map((row, index) => {
+          const style = index === rows.length - 1 ? statRowLast : statRow;
+          return (
+            <div key={row.label} style={style}>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{row.label}</span>
+              <span style={{ ...mono, fontSize: 12, color: row.color ?? 'var(--accent-blue)' }}>
+                {row.count}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

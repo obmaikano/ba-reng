@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Contribution, MpSummary } from './types';
-import { card, sectionTitle, mono, surfaceElevated, avatarMono, initials } from './styles';
+import { narrativeSection, sectionTitle, mono, surfaceElevated, avatarMono, initials } from './styles';
 
 interface WhoWasActiveProps {
   contributions: Contribution[];
@@ -35,8 +35,11 @@ export default function WhoWasActive({ contributions, mps }: WhoWasActiveProps) 
   const top5 = rankByWeeklyActivity(contributions, mps);
 
   return (
-    <div style={card}>
-      <div style={sectionTitle}>Who Was Active This Week</div>
+    <div style={narrativeSection}>
+      <div style={{ ...sectionTitle, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        WHO WAS ACTIVE THIS WEEK
+      </div>
       {top5.length === 0 ? (
         <span style={{ ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>No activity recorded this week.</span>
       ) : (
@@ -59,7 +62,16 @@ export default function WhoWasActive({ contributions, mps }: WhoWasActiveProps) 
               </span>
               <div style={avatarMono(28)}>{initials(mp.name)}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: 'var(--text-primary)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {mp.name}
                 </div>
                 <div style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)' }}>
@@ -74,7 +86,7 @@ export default function WhoWasActive({ contributions, mps }: WhoWasActiveProps) 
           ))}
         </div>
       )}
-      <div style={{ marginTop: 10, textAlign: 'center' }}>
+      <div style={{ marginTop: 8, textAlign: 'center' }}>
         <span
           onClick={() => navigate('/rankings')}
           style={{ ...mono, fontSize: 10, color: 'var(--accent-blue)', cursor: 'pointer' }}
