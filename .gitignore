@@ -1,3 +1,11 @@
+# Agent/execution contract — project-local workflow, never public
+AGENTS.md
+VIBE.md
+PLAN.md
+
+# Skills and agent tooling
+.codex/
+
 # Python
 __pycache__/
 *.py[cod]
