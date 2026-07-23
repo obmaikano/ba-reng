@@ -1,19 +1,40 @@
 import { Contribution } from './types';
-import { card, sectionTitle, mono } from './styles';
+import { card, sectionTitle, mono, surfaceElevated, typeTag } from './styles';
 
 interface WeeklyTimelineProps {
   contributions: Contribution[];
 }
 
-export default function WeeklyTimeline({ contributions }: WeeklyTimelineProps) {
-  const counts = new Map<string, number>();
+interface DaySummary {
+  date: string;
+  count: number;
+  types: string[];
+  ministries: string[];
+}
+
+function summarizeDays(contributions: Contribution[]): DaySummary[] {
+  const byDate = new Map<string, Contribution[]>();
   for (const c of contributions) {
-    counts.set(c.date, (counts.get(c.date) ?? 0) + 1);
+    const bucket = byDate.get(c.date) ?? [];
+    bucket.push(c);
+    byDate.set(c.date, bucket);
   }
-  const days = Array.from(counts.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-7);
-  const maxCount = Math.max(1, ...days.map(([, count]) => count));
+
+  return Array.from(byDate.entries())
+    .map(([date, items]) => ({
+      date,
+      count: items.length,
+      types: Array.from(new Set(items.map((c) => c.contribution_type))),
+      ministries: Array.from(
+        new Set(items.map((c) => c.ministry_addressed).filter((m): m is string => Boolean(m))),
+      ).slice(0, 3),
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 5);
+}
+
+export default function WeeklyTimeline({ contributions }: WeeklyTimelineProps) {
+  const days = summarizeDays(contributions);
 
   return (
     <div style={card}>
@@ -21,22 +42,25 @@ export default function WeeklyTimeline({ contributions }: WeeklyTimelineProps) {
       {days.length === 0 ? (
         <span style={{ ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>No activity recorded.</span>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {days.map(([date, count]) => (
-            <div key={date} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ ...mono, fontSize: 11, color: 'var(--text-tertiary)', width: 80 }}>{date}</span>
-              <div style={{ flex: 1, background: 'var(--bg-elevated)', height: 8 }}>
-                <div
-                  style={{
-                    height: 8,
-                    width: `${(count / maxCount) * 100}%`,
-                    background: 'var(--accent-blue)',
-                  }}
-                />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {days.map((day) => (
+            <div key={day.date} style={{ ...surfaceElevated, padding: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                <span style={{ ...mono, fontSize: 11, color: 'var(--accent-blue)', fontWeight: 600 }}>
+                  {day.date}
+                </span>
+                {day.types.map((type) => (
+                  <span key={type} style={typeTag(type)}>{type}</span>
+                ))}
               </div>
-              <span style={{ ...mono, fontSize: 11, color: 'var(--text-secondary)', width: 24, textAlign: 'right' }}>
-                {count}
-              </span>
+              <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: 0 }}>
+                {day.ministries.length > 0
+                  ? `Ministries addressed: ${day.ministries.join(', ')}`
+                  : 'No ministry recorded for these contributions.'}
+              </p>
+              <div style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)', marginTop: 4 }}>
+                {day.count} contribution{day.count === 1 ? '' : 's'}
+              </div>
             </div>
           ))}
         </div>

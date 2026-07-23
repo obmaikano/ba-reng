@@ -6,14 +6,20 @@ interface SystemHealthPanelProps {
 }
 
 export default function SystemHealthPanel({ status }: SystemHealthPanelProps) {
+  const crawlHealthy = status.last_crawl?.status === 'SUCCESS';
   const rows: [string, string, string][] = [
+    [
+      'Crawl status',
+      crawlHealthy ? 'Healthy' : status.last_crawl?.status ?? 'Unknown',
+      crawlHealthy ? 'var(--accent-green)' : 'var(--accent-amber)',
+    ],
+    ['Last crawl', status.last_crawl?.started_at.slice(0, 10) ?? '—', 'var(--text-tertiary)'],
     ['Documents parsed', String(status.document_count), 'var(--accent-blue)'],
     [
       'Unresolved entities',
       String(status.unresolved_entity_count),
       status.unresolved_entity_count > 0 ? 'var(--accent-amber)' : 'var(--accent-green)',
     ],
-    ['Last crawl status', status.last_crawl?.status ?? 'UNKNOWN', 'var(--accent-green)'],
   ];
 
   return (

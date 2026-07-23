@@ -11,6 +11,9 @@ export default function ByTheNumbers({ contributions }: ByTheNumbersProps) {
     counts.set(c.contribution_type, (counts.get(c.contribution_type) ?? 0) + 1);
   }
   const rows = Array.from(counts.entries()).sort(([, a], [, b]) => b - a);
+  const ministriesAddressed = new Set(
+    contributions.map((c) => c.ministry_addressed).filter((m): m is string => Boolean(m)),
+  ).size;
 
   return (
     <div style={card}>
@@ -27,6 +30,14 @@ export default function ByTheNumbers({ contributions }: ByTheNumbersProps) {
               </td>
             </tr>
           ))}
+          <tr>
+            <td style={{ padding: '6px 0', fontSize: 13, color: 'var(--text-secondary)' }}>
+              Ministries addressed
+            </td>
+            <td style={{ ...mono, padding: '6px 0', fontSize: 13, color: 'var(--text-primary)', textAlign: 'right' }}>
+              {ministriesAddressed}
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>

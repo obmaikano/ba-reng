@@ -110,6 +110,7 @@ export default function App() {
         <Route path="/mp/:mpId" element={<MpProfileStub />} />
         <Route path="/compare" element={<ComingSoon title="Compare MPs" />} />
         <Route path="/bills" element={<ComingSoon title="Bill Tracker" />} />
+        <Route path="/search" element={<ComingSoon title="Search" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/admin/*"

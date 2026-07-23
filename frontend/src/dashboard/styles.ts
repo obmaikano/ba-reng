@@ -62,3 +62,33 @@ export function typeTag(contributionType: string): CSSProperties {
     display: 'inline-block',
   };
 }
+
+export const surfaceElevated: CSSProperties = {
+  background: 'var(--bg-elevated)',
+  border: '1px solid var(--border-default)',
+};
+
+export function avatarMono(size = 28): CSSProperties {
+  return {
+    ...surfaceElevated,
+    width: size,
+    height: size,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'var(--font-mono)',
+    fontSize: size <= 28 ? 10 : 12,
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+    flexShrink: 0,
+  };
+}
+
+export function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const first = parts[0]?.[0] ?? '';
+  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
+  return (first + last).toUpperCase();
+}
+
+export const ACCENT_ROTATION = ['var(--accent-amber)', 'var(--accent-blue)', 'var(--accent-green)'];

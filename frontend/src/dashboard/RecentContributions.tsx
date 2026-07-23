@@ -14,7 +14,15 @@ export default function RecentContributions({ contributions }: RecentContributio
 
   return (
     <div style={{ ...card, maxHeight: 340, overflow: 'auto' }}>
-      <div style={sectionTitle}>Recent Contributions</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <div style={sectionTitle}>Recent Contributions</div>
+        <span
+          onClick={() => navigate('/feed')}
+          style={{ ...mono, fontSize: 10, color: 'var(--accent-blue)', cursor: 'pointer' }}
+        >
+          View full feed →
+        </span>
+      </div>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
