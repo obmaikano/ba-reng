@@ -1,6 +1,7 @@
 """MP endpoints."""
 from fastapi import APIRouter, HTTPException, Query
 
+from backend.api.metrics.participation_index import compute as compute_index
 from backend.db.connection import get_connection
 
 router = APIRouter(prefix='/api/v1/mps', tags=['mps'])
@@ -20,7 +21,21 @@ def list_mps() -> list[dict]:
             ORDER BY m.name
             ''',
         ).fetchall()
-        return [dict(r) for r in rows]
+        breakdowns: dict[int, list[dict]] = {}
+        for r in conn.execute(
+            'SELECT mp_id, contribution_type, COUNT(*) AS cnt '
+            'FROM contributions WHERE mp_id IS NOT NULL '
+            'GROUP BY mp_id, contribution_type',
+        ).fetchall():
+            breakdowns.setdefault(r['mp_id'], []).append(
+                {'contribution_type': r['contribution_type'], 'cnt': r['cnt']},
+            )
+        result = []
+        for row in rows:
+            mp = dict(row)
+            mp['participation_index'] = compute_index(breakdowns.get(mp['id'], []))
+            result.append(mp)
+        return result
     finally:
         conn.close()
 
@@ -49,6 +64,7 @@ def get_mp(mp_id: int) -> dict:
             (mp_id,),
         ).fetchall()
         result['breakdown_by_type'] = [dict(r) for r in type_rows]
+        result['participation_index'] = compute_index([dict(r) for r in type_rows])
         return result
     finally:
         conn.close()
