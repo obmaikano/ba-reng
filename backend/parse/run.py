@@ -38,15 +38,17 @@ def _insert_unresolved(
     raw_name: str,
     doc_id: int,
     contribution_id: int,
-) -> None:
-    if not raw_name:
-        return
+) -> bool:
     cursor.execute(
         """INSERT INTO entity_review_queue
            (raw_match_name, document_id, contribution_id, status)
-           VALUES (?, ?, ?, 'UNRESOLVED')""",
-        (raw_name, doc_id, contribution_id),
+           SELECT ?, ?, ?, 'UNRESOLVED'
+           WHERE NOT EXISTS (
+               SELECT 1 FROM entity_review_queue WHERE raw_match_name = ?
+           )""",
+        (raw_name, doc_id, contribution_id, raw_name),
     )
+    return cursor.rowcount > 0
 
 
 def parse_and_store(
@@ -72,10 +74,11 @@ def parse_and_store(
         cid = _insert_contribution(cursor, doc_id, contrib)
         if cid is not None:
             stored += 1
-            if not contrib['raw_match_name']:
+            raw_name = contrib['raw_match_name']
+            if not raw_name:
                 continue
-            _insert_unresolved(cursor, contrib['raw_match_name'], doc_id, cid)
-            unresolved += 1
+            if _insert_unresolved(cursor, raw_name, doc_id, cid):
+                unresolved += 1
 
     conn.commit()
 
