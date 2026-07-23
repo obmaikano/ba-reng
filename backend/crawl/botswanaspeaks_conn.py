@@ -15,6 +15,7 @@ from backend.db.connection import get_connection
 BASE_URL = 'https://botswanaspeaks.gov.bw'
 LISTING_URL = f'{BASE_URL}/category/4/parliament'
 PDF_DIR = Path(__file__).resolve().parent.parent.parent / 'data' / 'pdfs'
+MAX_PAGES = 10
 
 HEADERS = {
     'User-Agent': 'BaReng/0.1 (Botswana Parliament MP Monitor; research)',
@@ -68,18 +69,19 @@ def get_pdf_links(soup: BeautifulSoup) -> list[str]:
     return links
 
 
-def fetch_article_links(
-    listing_soup: BeautifulSoup,
-) -> list[tuple[str, str]]:
-    """Extract article URLs and titles from the category listing page."""
-    articles: list[tuple[str, str]] = []
+def fetch_article_links(listing_soup: BeautifulSoup) -> list[str]:
+    """Extract article URLs from the category listing page."""
+    articles: list[str] = []
     seen = set()
     for a in listing_soup.select('article a[href]'):
         href = a['href']
         if href.startswith('/article/') and href not in seen:
             seen.add(href)
-            articles.append((href, a.get_text(strip=True)))
+            articles.append(href)
     return articles
+
+
+MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
 
 
 def download_pdf(pdf_url: str) -> bytes | None:
@@ -87,6 +89,11 @@ def download_pdf(pdf_url: str) -> bytes | None:
     try:
         resp = requests.get(pdf_url, headers=HEADERS, timeout=60)
         resp.raise_for_status()
+        content_type = resp.headers.get('Content-Type', '')
+        if 'application/pdf' not in content_type:
+            return None
+        if len(resp.content) > MAX_DOWNLOAD_BYTES:
+            return None
         return resp.content
     except requests.RequestException:
         return None
@@ -95,6 +102,41 @@ def download_pdf(pdf_url: str) -> bytes | None:
 def compute_hash(content: bytes) -> str:
     """Compute SHA-256 hex digest of byte content."""
     return hashlib.sha256(content).hexdigest()
+
+
+def _next_page_url(soup: BeautifulSoup) -> str | None:
+    """Return the next listing page URL or None if on the last page."""
+    next_el = (
+        soup.select_one('a[rel=next]')
+        or soup.select_one('.pagination a.page-link:not([disabled])')
+    )
+    if next_el and next_el.get('href'):
+        href = next_el['href']
+        if href.startswith('/'):
+            return BASE_URL + href
+        return href
+    return None
+
+
+def _fetch_all_article_links() -> list[str]:
+    """Fetch article links across all listing pages."""
+    all_links: list[str] = []
+    seen = set()
+    url: str | None = LISTING_URL
+    page_num = 0
+
+    while url and page_num < MAX_PAGES:
+        resp = requests.get(url, headers=HEADERS, timeout=60)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        for href in fetch_article_links(soup):
+            if href not in seen:
+                seen.add(href)
+                all_links.append(href)
+        url = _next_page_url(soup) if page_num < MAX_PAGES - 1 else None
+        page_num += 1
+
+    return all_links
 
 
 def crawl(conn: sqlite3.Connection | None = None) -> dict:
@@ -107,23 +149,19 @@ def crawl(conn: sqlite3.Connection | None = None) -> dict:
     crawl_id = _start_run(cursor, 'botswanaspeaks.gov.bw')
 
     try:
-        listing_resp = requests.get(LISTING_URL, headers=HEADERS, timeout=60)
-        listing_resp.raise_for_status()
+        article_links = _fetch_all_article_links()
     except requests.RequestException as exc:
         _finish_run(cursor, crawl_id, 'ERROR', errors=1)
         if close_conn:
             conn.close()
         return {'status': 'ERROR', 'error': str(exc), 'new_documents': 0}
 
-    listing_soup = BeautifulSoup(listing_resp.text, 'html.parser')
-    article_links = fetch_article_links(listing_soup)
-
     new_count = 0
     error_count = 0
     skip_count = 0
     PDF_DIR.mkdir(parents=True, exist_ok=True)
 
-    for rel_path, _ in article_links:
+    for rel_path in article_links:
         try:
             article_url = BASE_URL + rel_path
 

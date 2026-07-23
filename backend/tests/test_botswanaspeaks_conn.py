@@ -84,8 +84,7 @@ class TestFetchArticleLinks:
         soup = BeautifulSoup(SAMPLE_LISTING_HTML, 'html.parser')
         links = fetch_article_links(soup)
         assert len(links) == 2
-        expected = ('/article/396/notice-paper', 'NOTICE PAPER (FOR FRIDAY 24 JULY, 2026)')
-        assert links[0] == expected
+        assert links[0] == '/article/396/notice-paper'
 
     def test_deduplicates(self) -> None:
         html = SAMPLE_LISTING_HTML + (
@@ -152,6 +151,7 @@ class TestDownloadPdf:
     def test_download_success(self, mock_get: MagicMock) -> None:
         mock_resp = MagicMock()
         mock_resp.content = b'pdf data'
+        mock_resp.headers = {'Content-Type': 'application/pdf'}
         mock_get.return_value = mock_resp
 
         result = download_pdf('https://example.com/test.pdf')
@@ -161,4 +161,24 @@ class TestDownloadPdf:
     def test_download_failure(self, mock_get: MagicMock) -> None:
         mock_get.side_effect = requests.RequestException('Connection error')
         result = download_pdf('https://example.com/test.pdf')
+        assert result is None
+
+    @patch('backend.crawl.botswanaspeaks_conn.requests.get')
+    def test_rejects_wrong_content_type(self, mock_get: MagicMock) -> None:
+        mock_resp = MagicMock()
+        mock_resp.content = b'<html>fake</html>'
+        mock_resp.headers = {'Content-Type': 'text/html'}
+        mock_get.return_value = mock_resp
+
+        result = download_pdf('https://example.com/not-a-pdf')
+        assert result is None
+
+    @patch('backend.crawl.botswanaspeaks_conn.requests.get')
+    def test_rejects_oversized(self, mock_get: MagicMock) -> None:
+        mock_resp = MagicMock()
+        mock_resp.content = b'x' * (50 * 1024 * 1024 + 1)
+        mock_resp.headers = {'Content-Type': 'application/pdf'}
+        mock_get.return_value = mock_resp
+
+        result = download_pdf('https://example.com/huge.pdf')
         assert result is None
