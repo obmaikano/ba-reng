@@ -17,7 +17,7 @@ export default function TopStory({ contribution }: TopStoryProps) {
 
   return (
     <div style={{ ...card, cursor: 'pointer' }} onClick={() => setExpanded((prev) => !prev)}>
-      <div style={sectionTitle}>Top Story</div>
+      <div style={sectionTitle}>Top Story This Week</div>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={avatarMono(36)}>{initials(mpLabel)}</div>
         <div style={{ flex: 1 }}>

@@ -29,8 +29,8 @@ function summarizeDays(contributions: Contribution[]): DaySummary[] {
         new Set(items.map((c) => c.ministry_addressed).filter((m): m is string => Boolean(m))),
       ).slice(0, 3),
     }))
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 5);
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-7);
 }
 
 export default function WeeklyTimeline({ contributions }: WeeklyTimelineProps) {
@@ -38,7 +38,7 @@ export default function WeeklyTimeline({ contributions }: WeeklyTimelineProps) {
 
   return (
     <div style={card}>
-      <div style={sectionTitle}>Weekly Timeline</div>
+      <div style={sectionTitle}>This Week's Timeline</div>
       {days.length === 0 ? (
         <span style={{ ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>No activity recorded.</span>
       ) : (

@@ -35,7 +35,7 @@ export default function HotTopics({ contributions }: HotTopicsProps) {
 
   return (
     <div style={card}>
-      <div style={sectionTitle}>Hot Topics</div>
+      <div style={sectionTitle}>Hot Topics This Week</div>
       {topics.length === 0 ? (
         <span style={{ ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>No ministries recorded.</span>
       ) : (

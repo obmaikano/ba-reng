@@ -15,11 +15,16 @@ interface DashboardMainProps {
 const DEFAULT_CAVEAT = 'Based on recorded contributions only. Not attendance data.';
 
 export default function DashboardMain({ data }: DashboardMainProps) {
-  const { contributions, mps } = data;
+  const { weekContributions, weekStart, weekEnd, sittingDays, mps } = data;
   const activeMpCount = new Set(
-    contributions.filter((c) => c.mp_id !== null).map((c) => c.mp_id),
+    weekContributions.filter((c) => c.mp_id !== null).map((c) => c.mp_id),
   ).size;
   const caveat = mps[0]?.participation_index.caveat ?? DEFAULT_CAVEAT;
+  const weekLabel = weekStart && weekEnd
+    ? weekStart === weekEnd
+      ? `Week of ${weekEnd}`
+      : `Week of ${weekStart} – ${weekEnd}`
+    : 'No sitting days recorded';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -39,25 +44,25 @@ export default function DashboardMain({ data }: DashboardMainProps) {
         <h1 style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontSize: 22, margin: 0 }}>
           This Week in Parliament
         </h1>
-        <p style={{ color: 'var(--text-tertiary)', marginTop: 4, fontSize: 13 }}>
-          Ba Reng? — Botswana Parliament MP Monitor
+        <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 4, fontSize: 11 }}>
+          {weekLabel} · {sittingDays} sitting day{sittingDays === 1 ? '' : 's'} · {weekContributions.length} contributions · {activeMpCount} MPs active
         </p>
       </div>
 
-      <WeekAtGlance contributions={contributions} activeMpCount={activeMpCount} />
-      <TopStory contribution={contributions[0] ?? null} />
+      <WeekAtGlance contributions={weekContributions} activeMpCount={activeMpCount} />
+      <TopStory contribution={weekContributions[0] ?? null} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <WeeklyTimeline contributions={contributions} />
-        <WhoWasActive mps={mps} />
+        <WeeklyTimeline contributions={weekContributions} />
+        <WhoWasActive contributions={weekContributions} mps={mps} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        <ByTheNumbers contributions={contributions} />
-        <HotTopics contributions={contributions} />
+        <ByTheNumbers contributions={weekContributions} />
+        <HotTopics contributions={weekContributions} />
       </div>
 
-      <RecentContributions contributions={contributions} />
+      <RecentContributions contributions={weekContributions} />
       <CaveatBanner caveat={caveat} />
     </div>
   );
