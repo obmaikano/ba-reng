@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { StatusData } from './useDashboardData';
 import { sectionTitle, mono } from './styles';
 
@@ -5,33 +6,56 @@ interface SystemHealthPanelProps {
   status: StatusData;
 }
 
+const rowStyle = { display: 'flex', justifyContent: 'space-between', fontSize: 11 } as const;
+const labelStyle = { color: 'var(--text-secondary)' } as const;
+
 export default function SystemHealthPanel({ status }: SystemHealthPanelProps) {
+  const navigate = useNavigate();
   const crawlHealthy = status.last_crawl?.status === 'SUCCESS';
-  const rows: [string, string, string][] = [
-    [
-      'Crawl status',
-      crawlHealthy ? 'Healthy' : status.last_crawl?.status ?? 'Unknown',
-      crawlHealthy ? 'var(--accent-green)' : 'var(--accent-amber)',
-    ],
-    ['Last crawl', status.last_crawl?.started_at.slice(0, 10) ?? '—', 'var(--text-tertiary)'],
-    ['Documents parsed', String(status.document_count), 'var(--accent-blue)'],
-    [
-      'Unresolved entities',
-      String(status.unresolved_entity_count),
-      status.unresolved_entity_count > 0 ? 'var(--accent-amber)' : 'var(--accent-green)',
-    ],
-  ];
+  const hasUnresolved = status.unresolved_entity_count > 0;
 
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={sectionTitle}>System Health</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {rows.map(([label, value, color]) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-            <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
-            <span style={{ ...mono, color }}>{value}</span>
-          </div>
-        ))}
+        <div style={rowStyle}>
+          <span style={labelStyle}>Crawl status</span>
+          <span style={{ ...mono, color: crawlHealthy ? 'var(--accent-green)' : 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ color: crawlHealthy ? 'var(--accent-green)' : 'var(--accent-amber)' }}>●</span>
+            {crawlHealthy ? 'Healthy' : status.last_crawl?.status ?? 'Unknown'}
+          </span>
+        </div>
+        <div style={rowStyle}>
+          <span style={labelStyle}>Last crawl</span>
+          <span style={{ ...mono, color: 'var(--text-tertiary)' }}>
+            {status.last_crawl?.started_at.slice(0, 16) ?? '—'}
+          </span>
+        </div>
+        <div style={rowStyle}>
+          <span style={labelStyle}>Documents parsed</span>
+          <span style={{ ...mono, color: 'var(--accent-blue)' }}>{status.document_count}</span>
+        </div>
+        <div style={rowStyle}>
+          <span style={labelStyle}>Unresolved entities</span>
+          <span style={{ ...mono, color: hasUnresolved ? 'var(--accent-amber)' : 'var(--accent-green)' }}>
+            {status.unresolved_entity_count}
+            {hasUnresolved && (
+              <>
+                {' · '}
+                <span
+                  onClick={() => navigate('/admin/entities')}
+                  style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}
+                >
+                  Review
+                </span>
+              </>
+            )}
+          </span>
+        </div>
+        <div style={rowStyle}>
+          <span style={labelStyle}>Session</span>
+          <span style={{ ...mono, color: 'var(--text-tertiary)' }}>13th Parliament</span>
+        </div>
       </div>
     </div>
   );

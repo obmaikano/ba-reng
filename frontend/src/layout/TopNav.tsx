@@ -18,7 +18,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: '08 Search', path: '/search' },
 ];
 
-const ADMIN_ITEM: NavItem = { label: '09 Admin', path: '/admin', admin: true };
+const ADMIN_ITEMS: NavItem[] = [
+  { label: '09 Admin', path: '/admin', admin: true },
+  { label: '10 Entities', path: '/admin/entities', admin: true },
+  { label: '11 Users', path: '/admin/users', admin: true },
+];
 
 function navBtnStyle(active: boolean, admin: boolean) {
   if (active) {
@@ -99,7 +103,7 @@ export default function TopNav() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
         {NAV_ITEMS.map(renderButton)}
         <span style={{ color: 'var(--text-tertiary)', margin: '0 4px' }}>|</span>
-        {renderButton(ADMIN_ITEM)}
+        {ADMIN_ITEMS.map(renderButton)}
         <span style={{ margin: '0 4px' }} />
         {user ? (
           <>

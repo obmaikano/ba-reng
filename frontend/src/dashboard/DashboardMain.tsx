@@ -15,7 +15,7 @@ interface DashboardMainProps {
 const DEFAULT_CAVEAT = 'Based on recorded contributions only. Not attendance data.';
 
 export default function DashboardMain({ data }: DashboardMainProps) {
-  const { weekContributions, weekStart, weekEnd, sittingDays, mps } = data;
+  const { weekContributions, weekStart, weekEnd, sittingDays, prevWeekCount, mps, status } = data;
   const activeMpCount = new Set(
     weekContributions.filter((c) => c.mp_id !== null).map((c) => c.mp_id),
   ).size;
@@ -31,15 +31,19 @@ export default function DashboardMain({ data }: DashboardMainProps) {
       <div>
         <div
           style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
             fontFamily: 'var(--font-mono)',
             fontSize: 10,
             letterSpacing: '0.05em',
             textTransform: 'uppercase',
-            color: 'var(--text-tertiary)',
             marginBottom: 4,
           }}
         >
-          13th Parliament
+          <span style={{ color: 'var(--text-tertiary)' }}>13th Parliament</span>
+          <span style={{ color: 'var(--text-tertiary)' }}>·</span>
+          <span style={{ color: 'var(--accent-amber)' }}>⚠ Proxy</span>
         </div>
         <h1 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 600, margin: 0 }}>
           This Week in Parliament
@@ -49,7 +53,12 @@ export default function DashboardMain({ data }: DashboardMainProps) {
         </p>
       </div>
 
-      <WeekAtGlance contributions={weekContributions} activeMpCount={activeMpCount} />
+      <WeekAtGlance
+        contributions={weekContributions}
+        activeMpCount={activeMpCount}
+        totalMpCount={status.mp_count}
+        prevWeekCount={prevWeekCount}
+      />
       <TopStory contribution={weekContributions[0] ?? null} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>

@@ -16,6 +16,7 @@ export interface DashboardData {
   weekStart: string | null;
   weekEnd: string | null;
   sittingDays: number;
+  prevWeekCount: number;
   mps: MpSummary[];
   status: StatusData;
 }
@@ -27,25 +28,34 @@ interface DashboardDataState {
 
 const WEEK_WINDOW_DAYS = 7;
 
+function shiftDate(date: string, days: number): string {
+  const shifted = new Date(date);
+  shifted.setDate(shifted.getDate() + days);
+  return shifted.toISOString().slice(0, 10);
+}
+
 function scopeToLatestWeek(contributions: Contribution[]): {
   weekContributions: Contribution[];
   weekStart: string | null;
   weekEnd: string | null;
   sittingDays: number;
+  prevWeekCount: number;
 } {
   if (contributions.length === 0) {
-    return { weekContributions: [], weekStart: null, weekEnd: null, sittingDays: 0 };
+    return { weekContributions: [], weekStart: null, weekEnd: null, sittingDays: 0, prevWeekCount: 0 };
   }
 
   const latestDate = contributions.reduce((max, c) => (c.date > max ? c.date : max), contributions[0].date);
-  const windowStart = new Date(latestDate);
-  windowStart.setDate(windowStart.getDate() - (WEEK_WINDOW_DAYS - 1));
-  const weekStart = windowStart.toISOString().slice(0, 10);
+  const weekStart = shiftDate(latestDate, -(WEEK_WINDOW_DAYS - 1));
 
   const weekContributions = contributions.filter((c) => c.date >= weekStart && c.date <= latestDate);
   const sittingDays = new Set(weekContributions.map((c) => c.date)).size;
 
-  return { weekContributions, weekStart, weekEnd: latestDate, sittingDays };
+  const prevWeekStart = shiftDate(weekStart, -WEEK_WINDOW_DAYS);
+  const prevWeekEnd = shiftDate(weekStart, -1);
+  const prevWeekCount = contributions.filter((c) => c.date >= prevWeekStart && c.date <= prevWeekEnd).length;
+
+  return { weekContributions, weekStart, weekEnd: latestDate, sittingDays, prevWeekCount };
 }
 
 export function useDashboardData(): DashboardDataState {
@@ -59,8 +69,8 @@ export function useDashboardData(): DashboardDataState {
       get<StatusData>('/api/v1/status'),
     ])
       .then(([contributions, mps, status]) => {
-        const { weekContributions, weekStart, weekEnd, sittingDays } = scopeToLatestWeek(contributions);
-        setData({ contributions, weekContributions, weekStart, weekEnd, sittingDays, mps, status });
+        const scoped = scopeToLatestWeek(contributions);
+        setData({ contributions, ...scoped, mps, status });
       })
       .catch(() => setError(true));
   }, []);

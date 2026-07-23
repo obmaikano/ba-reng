@@ -12,6 +12,14 @@ interface DaySummary {
   ministries: string[];
 }
 
+const DAY_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+function formatDay(date: string): string {
+  const d = new Date(date);
+  return `${DAY_NAMES[d.getUTCDay()]} ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]}`;
+}
+
 function summarizeDays(contributions: Contribution[]): DaySummary[] {
   const byDate = new Map<string, Contribution[]>();
   for (const c of contributions) {
@@ -46,8 +54,8 @@ export default function WeeklyTimeline({ contributions }: WeeklyTimelineProps) {
           {days.map((day) => (
             <div key={day.date} style={{ ...surfaceElevated, padding: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
-                <span style={{ ...mono, fontSize: 11, color: 'var(--accent-blue)', fontWeight: 600 }}>
-                  {day.date}
+                <span style={{ ...mono, fontSize: 10, color: 'var(--accent-blue)', fontWeight: 600 }}>
+                  {formatDay(day.date)}
                 </span>
                 {day.types.map((type) => (
                   <span key={type} style={typeTag(type)}>{type}</span>
