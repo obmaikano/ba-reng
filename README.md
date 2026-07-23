@@ -2,7 +2,7 @@
 
 **Botswana Parliament MP Monitor**
 
-Ba Reng? (Setswana: "What did they say?") tracks MP contributions, voting records, and parliamentary activity from public sources. It gives citizens a clear view of who speaks, what they say, and how they vote.
+Ba Reng? (Setswana: "What did they say?") tracks MP contributions, and parliamentary activity from public sources. It gives citizens a clear view of who speaks, what they say, and how they vote.
 
 An open government weekend project.
 
@@ -28,7 +28,7 @@ make dev-frontend # vite on :5173
 |--------|------|-----------|
 | botswanaspeaks.gov.bw | MP contributions, order papers | Daily |
 | Wikipedia (13th Parliament) | MP roster, constituencies | Static |
-| Parliament votes | Voting records | Per session |
+| Parliament website | Hansard | Per session |
 
 ## Visual Direction
 
