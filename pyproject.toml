@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ba-reng"
+version = "0.1.0"
+description = "Botswana Parliament MP Monitor"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "requests>=2.32",
+    "beautifulsoup4>=4.12",
+    "pdfplumber>=0.11",
+    "PyMuPDF>=1.25",
+    "python-jose[cryptography]>=3.3",
+    "passlib[bcrypt]>=1.7",
+    "bcrypt>=4.0",
+    "python-multipart>=0.0.12",
+]
+
+[tool.setuptools.packages.find]
+include = ["backend*"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90", "N", "I", "D", "UP", "ANN", "ARG", "BLE", "PL", "RUF"]
+ignore = ["COM812"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"backend/db/migrations/*" = ["D", "ANN"]
+"tests/*" = ["D", "ANN", "ARG"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.ruff.lint.pylint]
+max-args = 7
+max-returns = 6
+max-branches = 20
+max-statements = 100
+max-nested-blocks = 4
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 100
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["backend/tests"]
+python_files = ["test_*.py"]

@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ba Reng? — Combined Design Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --bg-canvas: #0B0E14;    --bg-surface: #11151C;    --bg-elevated: #161B24;
+            --bg-hover: #1A202C;      --bg-active: #1F2937;
+            --border-subtle: #1F242E; --border-default: #2A313D;
+            --text-primary: #E4E8EE;  --text-secondary: #8B95A4; --text-tertiary: #5A6473;
+            --accent-blue: #2D7FF9;   --accent-amber: #F5A623;
+            --accent-green: #16A34A;  --accent-red: #EF4444;
+            --shadow-elevation-low: 0 1px 3px rgba(0,0,0,0.4);
+            --shadow-elevation-medium: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        * { border-radius: 0 !important; box-sizing: border-box; }
+        body { background: var(--bg-canvas); color: var(--text-primary); font-family: 'Inter', sans-serif; font-feature-settings: "ss01", "cv01", "cv05"; -webkit-font-smoothing: antialiased; margin: 0; font-size: 14px; }
+        .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: "tnum" 1; }
+        .surface { background: var(--bg-surface); border: 1px solid var(--border-subtle); }
+        .surface-elevated { background: var(--bg-elevated); border: 1px solid var(--border-default); }
+        .border-subtle { border-color: var(--border-subtle) !important; }
+        .border-default { border-color: var(--border-default) !important; }
+        .text-sec { color: var(--text-secondary); }
+        .text-tert { color: var(--text-tertiary); }
+        .text-blue { color: var(--accent-blue); }
+        .text-amber { color: var(--accent-amber); }
+        .text-green { color: var(--accent-green); }
+        .text-red { color: var(--accent-red); }
+        .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 6px; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--border-default); color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px; line-height: 1.4; }
+        .tag-blue { color: var(--accent-blue); border-color: rgba(45,127,249,0.3); background: rgba(45,127,249,0.1); }
+        .tag-amber { color: var(--accent-amber); border-color: rgba(245,166,35,0.3); background: rgba(245,166,35,0.1); }
+        .tag-green { color: var(--accent-green); border-color: rgba(22,163,74,0.3); background: rgba(22,163,74,0.1); }
+        .tag-red { color: var(--accent-red); border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.1); }
+        .feed-row { border-bottom: 1px solid var(--border-subtle); transition: background 0.1s; cursor: pointer; }
+        .feed-row:hover { background: var(--bg-hover); }
+        .status-dot { width: 6px; height: 6px; display: inline-block; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-canvas); }
+        ::-webkit-scrollbar-thumb { background: var(--border-default); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+        .btn-primary { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; background: var(--accent-blue); color: white; padding: 5px 14px; border: none; cursor: pointer; transition: opacity 0.1s; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-primary:hover { opacity: 0.85; }
+        .btn-ghost { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-secondary); padding: 4px 10px; border: 1px solid var(--border-subtle); background: transparent; cursor: pointer; transition: all 0.1s; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-ghost:hover { color: var(--text-primary); border-color: var(--border-default); background: var(--bg-elevated); }
+        .btn-danger { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; background: var(--accent-red); color: white; padding: 5px 14px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-danger:hover { opacity: 0.85; }
+        .bp-input { background: var(--bg-elevated); border: 1px solid var(--border-default); color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 5px 8px; width: 100%; outline: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3); }
+        .bp-input:focus { border-color: var(--accent-blue); box-shadow: inset 0 1px 2px rgba(0,0,0,0.3), 0 0 0 1px rgba(45,127,249,0.2); }
+        .bp-select { background: var(--bg-elevated); border: 1px solid var(--border-default); color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 5px 8px; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238B95A4' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 24px; }
+        .bar-thin { height: 2px; background: var(--bg-elevated); } .bar-thin > div { height: 100%; background: var(--accent-blue); }
+        .tab { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 6px 14px; color: var(--text-secondary); border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.1s; }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .avatar-mono { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; border: 1px solid var(--border-default); background: var(--bg-elevated); flex-shrink: 0; }
+        .stat-card { padding: 12px; border: 1px solid var(--border-subtle); background: var(--bg-elevated); }
+        .stat-card .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-card .value { font-size: 20px; font-weight: 600; font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+        .pill-link { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent-blue); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+        .pill-link:hover { text-decoration: underline; }
+        .step-indicator { display: flex; align-items: center; gap: 8px; }
+        .step-dot { width: 8px; height: 8px; border: 1px solid var(--border-default); background: transparent; flex-shrink: 0; }
+        .step-dot.active { background: var(--accent-blue); border-color: var(--accent-blue); }
+        .step-dot.complete { background: var(--accent-green); border-color: var(--accent-green); }
+        .step-line { flex: 1; height: 1px; background: var(--border-subtle); }
+        .step-line.complete { background: var(--accent-green); }
+        .story-card { border-left: 3px solid var(--accent-blue); padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-left-width: 3px; margin-bottom: 8px; cursor: pointer; transition: background 0.1s; }
+        .story-card:hover { background: var(--bg-hover); }
+        .story-card.amber { border-left-color: var(--accent-amber); }
+        .story-card.green { border-left-color: var(--accent-green); }
+        .stat-row { display: flex; align-items: baseline; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-subtle); }
+        .stat-row:last-child { border-bottom: none; }
+        .admin-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 1px 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .admin-badge.admin { background: rgba(239,68,68,0.15); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.3); }
+        .admin-badge.editor { background: rgba(245,166,35,0.15); color: var(--accent-amber); border: 1px solid rgba(245,166,35,0.3); }
+        .admin-badge.viewer { background: rgba(45,127,249,0.15); color: var(--accent-blue); border: 1px solid rgba(45,127,249,0.3); }
+        .narrative-section { margin-bottom: 20px; }
+        .narrative-section h3 { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+        /* SPA transitions */
+        .feed-view { display: none; }
+        .feed-view.active { display: block; }
+        .feed-view.anim-in { animation: feedIn 0.25s ease forwards; }
+        .feed-view.anim-out { animation: feedOut 0.15s ease forwards; }
+        @keyframes feedIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes feedOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-4px); } }
+
+        .sidebar-content { display: none; }
+        .sidebar-content.active { display: block; }
+        .rightpanel-content { display: none; }
+        .rightpanel-content.active { display: block; }
+
+        .nav-btn { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 4px 10px; border: 1px solid var(--border-subtle); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+        .nav-btn:hover { color: var(--text-primary); border-color: var(--border-default); }
+        .nav-btn.active { background: var(--bg-elevated); color: var(--accent-blue); border-color: var(--accent-blue); }
+        .nav-btn.admin-btn { color: var(--accent-amber); }
+        .nav-btn.admin-btn.active { background: rgba(245,166,35,0.1); color: var(--accent-amber); border-color: rgba(245,166,35,0.3); }
+    </style>
+</head>
+<body>
+
+<!-- ===== PERSISTENT HEADER ===== -->
+<div class="sticky top-0 z-50 bg-[var(--bg-canvas)] border-b border-default">
+    <div class="flex items-center justify-between h-11 px-5">
+        <div class="flex items-center gap-2.5">
+            <div class="w-[18px] h-[18px] bg-[var(--text-primary)] flex items-center justify-center flex-shrink-0">
+                <span class="mono text-[9px] font-bold text-[var(--bg-canvas)]">BR</span>
+            </div>
+            <span class="font-semibold text-sm tracking-tight">Ba Reng?</span>
+            <span class="mono text-tert text-[10px]">v1.0.0</span>
+            <span class="text-tert text-[10px] ml-1">·</span>
+            <span class="mono text-[10px] text-amber ml-1">NARRATIVE_DASHBOARD</span>
+        </div>
+        <div class="flex items-center gap-1 flex-wrap">
+            <button class="nav-btn active" data-target="screen-home">01 Week</button>
+            <span class="text-tert mx-0.5">|</span>
+            <button class="nav-btn" data-target="screen-feed">02 Feed</button>
+            <button class="nav-btn" data-target="screen-findmp">03 Find MP</button>
+            <button class="nav-btn" data-target="screen-profile">04 Profile</button>
+            <button class="nav-btn" data-target="screen-compare">05 Compare</button>
+            <button class="nav-btn" data-target="screen-leaderboard">06 Rank</button>
+            <button class="nav-btn" data-target="screen-bills">07 Bills</button>
+            <button class="nav-btn" data-target="screen-search">08 Search</button>
+            <span class="text-tert mx-0.5">|</span>
+            <button class="nav-btn admin-btn" data-target="screen-admin">09 Admin</button>
+            <button class="nav-btn admin-btn" data-target="screen-entities">10 Entities</button>
+            <button class="nav-btn admin-btn" data-target="screen-users">11 Users</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- SCREEN 1: THIS WEEK IN PARLIAMENT (FULL WIDTH)                   -->
+<!-- ================================================================ -->
+<div id="screen-home" class="screen active">
+    <div class="border-b border-subtle surface">
+        <div class="flex items-center justify-between px-5 py-1 mono text-[11px] text-tert">
+            <div class="flex items-center gap-5">
+                <span class="flex items-center gap-1.5"><span class="status-dot bg-green"></span> CRAWLER_ACTIVE</span>
+                <span>SOURCE: botswanaspeaks.gov.bw</span>
+                <span>LAST_RUN: 2026-07-22T06:00:02Z</span>
+                <span>DOCS_PARSED: 142</span>
+                <span class="text-amber">ENTITIES_UNRESOLVED: 2</span>
+            </div>
+            <span class="text-amber flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i> PROXY_METRIC</span>
+        </div>
+    </div>
+
+    <main class="grid grid-cols-12 gap-px bg-[var(--border-subtle)]" style="min-height: calc(100vh - 95px);">
+        <section class="col-span-9 bg-[var(--bg-canvas)] overflow-y-auto p-5">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="mono text-[10px] text-tert uppercase tracking-wider">13TH PARLIAMENT · 5TH SESSION</span>
+                        <span class="text-tert">·</span>
+                        <span class="mono text-[10px] text-amber flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> PROXY</span>
+                    </div>
+                    <h1 class="text-lg font-semibold">This Week in Parliament</h1>
+                    <p class="mono text-[11px] text-tert mt-1">Week of 20–22 Jul 2026 · 3 sitting days · 14 contributions · 8 MPs active</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="btn-ghost text-[10px]"><i data-lucide="calendar" class="w-3 h-3"></i> Change week</button>
+                    <button class="btn-ghost text-[10px]"><i data-lucide="download" class="w-3 h-3"></i> PDF</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-3 mb-5">
+                <div class="stat-card"><div class="label">Sitting Days</div><div class="value" style="color:var(--text-primary)">3</div><div class="mono text-[10px] text-tert mt-1">Mon, Tue, Wed</div></div>
+                <div class="stat-card"><div class="label">Contributions</div><div class="value text-blue">14</div><div class="mono text-[10px] text-tert mt-1">+8 vs prev week</div></div>
+                <div class="stat-card"><div class="label">Active MPs</div><div class="value text-blue">8</div><div class="mono text-[10px] text-tert mt-1">of 65 total</div></div>
+                <div class="stat-card"><div class="label">Most Addressed</div><div class="value text-amber" style="font-size:16px">Finance</div><div class="mono text-[10px] text-tert mt-1">6 questions this week</div></div>
+            </div>
+
+            <div class="narrative-section">
+                <h3><i data-lucide="sparkles" class="w-3 h-3 inline mr-1"></i> TOP STORY THIS WEEK</h3>
+                <div class="story-card">
+                    <div class="flex items-start gap-3">
+                        <div class="avatar-mono w-9 h-9 text-xs mt-0.5" style="border-color:var(--accent-amber)">TF</div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="tag tag-blue text-[9px]">ORAL_QUESTION</span>
+                                <span class="mono text-[10px] text-tert">22 Jul 2026</span>
+                            </div>
+                            <h2 class="text-sm font-semibold mb-1">Furniture Grills Minister on Mohembo Bridge Delay</h2>
+                            <p class="text-xs text-sec leading-relaxed">Thabologo Furniture (BCP, Tati East) asked the Minister of Environment & Tourism for the completion timeline, budget allocation, and community impact mitigation for the Mohembo Bridge — a critical transport link in the Okavango Delta that has seen repeated delays.</p>
+                            <div class="flex items-center gap-3 mt-2 mono text-[10px]">
+                                <span class="text-blue cursor-pointer hover:underline">Read full Q&A →</span>
+                                <span class="text-tert">·</span>
+                                <span class="text-tert">Source: Notice Paper #14</span>
+                                <span class="text-tert">·</span>
+                                <span class="text-tert">Ministry: Environment & Tourism</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-5">
+                <div class="narrative-section">
+                    <h3><i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i> THIS WEEK'S TIMELINE</h3>
+                    <div class="surface-elevated p-3 mb-2">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="mono text-[10px] text-blue font-semibold">MON 20 JUL</span>
+                            <span class="tag tag-amber text-[9px]">MOTION</span>
+                        </div>
+                        <p class="text-xs text-sec">Kablay moved motion on youth unemployment in peri-urban settlements. Debate centered on skills gap and informal economy integration.</p>
+                        <div class="mono text-[9px] text-tert mt-1">1 contribution</div>
+                    </div>
+                    <div class="surface-elevated p-3 mb-2">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="mono text-[10px] text-blue font-semibold">TUE 21 JUL</span>
+                            <span class="tag tag-blue text-[9px]">ORAL_Q</span>
+                            <span class="tag tag-green text-[9px]">BILL</span>
+                        </div>
+                        <p class="text-xs text-sec">Mmolotsi questioned Finance Minister on flood relief contingency fund drawdown. Boko contributed to Penal Code Amendment Bill 2nd reading.</p>
+                        <div class="mono text-[9px] text-tert mt-1">4 contributions</div>
+                    </div>
+                    <div class="surface-elevated p-3">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="mono text-[10px] text-blue font-semibold">WED 22 JUL</span>
+                            <span class="tag tag-blue text-[9px]">ORAL_Q</span>
+                            <span class="tag tag-red text-[9px]">MINIST_Q</span>
+                        </div>
+                        <p class="text-xs text-sec">Furniture's Mohembo Bridge question dominated. Boko continued bill contributions. Reatile questioned Transport Minister on rural road maintenance.</p>
+                        <div class="mono text-[9px] text-tert mt-1">9 contributions</div>
+                    </div>
+                </div>
+
+                <div class="narrative-section">
+                    <h3><i data-lucide="users" class="w-3 h-3 inline mr-1"></i> WHO WAS ACTIVE THIS WEEK</h3>
+                    <div class="space-y-1.5">
+                        <div class="surface-elevated p-2.5 flex items-center gap-2.5 cursor-pointer hover:bg-[var(--bg-hover)]">
+                            <span class="mono text-[10px] text-tert w-4 text-right">1</span>
+                            <div class="avatar-mono w-7 h-7 text-[10px]">DB</div>
+                            <div class="flex-1 min-w-0"><div class="text-xs font-medium truncate">Duma Boko</div><div class="mono text-[9px] text-tert">UDC · Gaborone Bon Nth</div></div>
+                            <span class="mono text-xs text-blue font-semibold">4</span>
+                            <span class="mono text-[9px] text-tert">contrib</span>
+                        </div>
+                        <div class="surface-elevated p-2.5 flex items-center gap-2.5 cursor-pointer hover:bg-[var(--bg-hover)]">
+                            <span class="mono text-[10px] text-tert w-4 text-right">2</span>
+                            <div class="avatar-mono w-7 h-7 text-[10px]">TF</div>
+                            <div class="flex-1 min-w-0"><div class="text-xs font-medium truncate">Thabologo Furniture</div><div class="mono text-[9px] text-tert">BCP · Tati East</div></div>
+                            <span class="mono text-xs text-blue font-semibold">3</span>
+                            <span class="mono text-[9px] text-tert">contrib</span>
+                        </div>
+                        <div class="surface-elevated p-2.5 flex items-center gap-2.5 cursor-pointer hover:bg-[var(--bg-hover)]">
+                            <span class="mono text-[10px] text-tert w-4 text-right">3</span>
+                            <div class="avatar-mono w-7 h-7 text-[10px]">WM</div>
+                            <div class="flex-1 min-w-0"><div class="text-xs font-medium truncate">Wynter Mmolotsi</div><div class="mono text-[9px] text-tert">UDC · Francistown S</div></div>
+                            <span class="mono text-xs text-blue font-semibold">3</span>
+                            <span class="mono text-[9px] text-tert">contrib</span>
+                        </div>
+                        <div class="surface-elevated p-2.5 flex items-center gap-2.5 cursor-pointer hover:bg-[var(--bg-hover)]">
+                            <span class="mono text-[10px] text-tert w-4 text-right">4</span>
+                            <div class="avatar-mono w-7 h-7 text-[10px]">KK</div>
+                            <div class="flex-1 min-w-0"><div class="text-xs font-medium truncate">Kapinga Kapinga</div><div class="mono text-[9px] text-tert">BDP · Okavango W</div></div>
+                            <span class="mono text-xs text-blue font-semibold">2</span>
+                            <span class="mono text-[9px] text-tert">contrib</span>
+                        </div>
+                        <div class="surface-elevated p-2.5 flex items-center gap-2.5 cursor-pointer hover:bg-[var(--bg-hover)]">
+                            <span class="mono text-[10px] text-tert w-4 text-right">5</span>
+                            <div class="avatar-mono w-7 h-7 text-[10px]">LK</div>
+                            <div class="flex-1 min-w-0"><div class="text-xs font-medium truncate">Liakat Kablay</div><div class="mono text-[9px] text-tert">BCP · Tswapong N</div></div>
+                            <span class="mono text-xs text-blue font-semibold">1</span>
+                            <span class="mono text-[9px] text-tert">contrib</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-center mono text-[10px] text-tert">
+                        <span class="text-blue cursor-pointer hover:underline">View full leaderboard →</span>
+                        <span class="mx-2">·</span>
+                        <span class="text-blue cursor-pointer hover:underline">Compare MPs →</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-5">
+                <div class="narrative-section">
+                    <h3><i data-lucide="bar-chart-3" class="w-3 h-3 inline mr-1"></i> BY THE NUMBERS</h3>
+                    <div class="surface p-4">
+                        <div class="stat-row"><span class="text-xs text-sec">Questions asked</span><span class="mono text-xs text-blue">8</span></div>
+                        <div class="stat-row"><span class="text-xs text-sec">Motions moved</span><span class="mono text-xs text-blue">3</span></div>
+                        <div class="stat-row"><span class="text-xs text-sec">Bill readings</span><span class="mono text-xs text-blue">2</span></div>
+                        <div class="stat-row"><span class="text-xs text-sec">Minister's Question Time</span><span class="mono text-xs text-blue">1</span></div>
+                        <div class="stat-row"><span class="text-xs text-sec">Ministries addressed</span><span class="mono text-xs text-blue">5</span></div>
+                        <div class="stat-row" style="border-bottom:none"><span class="text-xs text-sec">Bills in progress</span><span class="mono text-xs text-amber">14</span></div>
+                    </div>
+                </div>
+
+                <div class="narrative-section">
+                    <h3><i data-lucide="flame" class="w-3 h-3 inline mr-1"></i> HOT TOPICS THIS WEEK</h3>
+                    <div class="space-y-2">
+                        <div class="story-card amber" style="margin-bottom:0">
+                            <div class="flex items-center justify-between mb-1"><span class="text-xs font-semibold text-amber">Finance & Budget</span><span class="mono text-[10px] text-tert">6 questions</span></div>
+                            <p class="text-[11px] text-sec">Contingency fund drawdown, VAT regime timeline, drought relief allocation — cross-party interest.</p>
+                            <div class="flex gap-2 mt-1.5"><span class="tag tag-blue text-[9px]">Mmolotsi</span><span class="tag tag-amber text-[9px]">Boko</span></div>
+                        </div>
+                        <div class="story-card" style="margin-bottom:0;border-left-color:var(--accent-blue)">
+                            <div class="flex items-center justify-between mb-1"><span class="text-xs font-semibold text-blue">Infrastructure</span><span class="mono text-[10px] text-tert">3 questions</span></div>
+                            <p class="text-[11px] text-sec">Mohembo Bridge delay, rural road maintenance backlog, Okavango transport.</p>
+                            <div class="flex gap-2 mt-1.5"><span class="tag tag-blue text-[9px]">Furniture</span><span class="tag tag-amber text-[9px]">Kapinga</span><span class="tag tag-red text-[9px]">Reatile</span></div>
+                        </div>
+                        <div class="story-card green" style="margin-bottom:0;border-left-color:var(--accent-green)">
+                            <div class="flex items-center justify-between mb-1"><span class="text-xs font-semibold text-green">Land & Agriculture</span><span class="mono text-[10px] text-tert">2 questions</span></div>
+                            <p class="text-[11px] text-sec">Customary land rights in Penal Code amendment, drought relief for small-scale farmers.</p>
+                            <div class="flex gap-2 mt-1.5"><span class="tag tag-blue text-[9px]">Boko</span><span class="tag tag-amber text-[9px]">Phoi</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="narrative-section">
+                <div class="flex items-center justify-between mb-2">
+                    <h3><i data-lucide="radio" class="w-3 h-3 inline mr-1"></i> RECENT CONTRIBUTIONS</h3>
+                    <span class="mono text-[10px] text-blue cursor-pointer hover:underline">View full feed →</span>
+                </div>
+                <div class="grid grid-cols-12 gap-3 px-4 py-1.5 border-b border-subtle mono text-[10px] text-tert uppercase tracking-widest surface">
+                    <div class="col-span-2">Date</div><div class="col-span-2.5">MP</div><div class="col-span-1.5">Type</div><div class="col-span-5">Subject</div><div class="col-span-1 text-right">Source</div>
+                </div>
+                <div class="feed-row grid grid-cols-12 gap-3 px-4 py-2 items-center">
+                    <div class="col-span-2 mono text-[11px] text-sec">22 Jul</div>
+                    <div class="col-span-2.5 text-xs font-medium">T. Furniture</div>
+                    <div class="col-span-1.5"><span class="tag tag-blue text-[9px]">ORAL_Q</span></div>
+                    <div class="col-span-5 text-xs text-sec truncate">Mohembo Bridge development impact on community livelihoods</div>
+                    <div class="col-span-1 text-right mono text-[10px] text-tert hover:text-blue"><i data-lucide="file-text" class="w-3 h-3 inline"></i></div>
+                </div>
+                <div class="feed-row grid grid-cols-12 gap-3 px-4 py-2 items-center">
+                    <div class="col-span-2 mono text-[11px] text-sec">22 Jul</div>
+                    <div class="col-span-2.5 text-xs font-medium">K. Kapinga</div>
+                    <div class="col-span-1.5"><span class="tag tag-amber text-[9px]">MOTION</span></div>
+                    <div class="col-span-5 text-xs text-sec truncate">Wildlife Conservation Act review committee</div>
+                    <div class="col-span-1 text-right mono text-[10px] text-tert hover:text-blue"><i data-lucide="file-text" class="w-3 h-3 inline"></i></div>
+                </div>
+                <div class="feed-row grid grid-cols-12 gap-3 px-4 py-2 items-center">
+                    <div class="col-span-2 mono text-[11px] text-sec">22 Jul</div>
+                    <div class="col-span-2.5 text-xs font-medium">D. Boko</div>
+                    <div class="col-span-1.5"><span class="tag tag-green text-[9px]">BILL_2ND</span></div>
+                    <div class="col-span-5 text-xs text-sec truncate">Penal Code Amendment — Section 142, customary land rights</div>
+                    <div class="col-span-1 text-right mono text-[10px] text-tert hover:text-blue"><i data-lucide="file-text" class="w-3 h-3 inline"></i></div>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-2.5 p-3 surface" style="border-left:3px solid var(--accent-amber)">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-amber mt-0.5 flex-shrink-0"></i>
+                <div>
+                    <h4 class="text-xs font-semibold text-amber mb-1">Constraint: No Attendance Data</h4>
+                    <p class="text-[11px] text-sec leading-relaxed">This narrative reflects <span class="mono text-[var(--text-primary)]">RECORDED_CONTRIBUTIONS</span> only. Botswana Parliament does not publish attendance records. A low count does not mean absence — MPs engage in committee work, constituency duties, and silent voting.</p>
+                    <a href="#" class="pill-link mt-1">VIEW_METHODOLOGY →</a>
+                </div>
+            </div>
+        </section>
+
+        <aside class="col-span-3 bg-[var(--bg-surface)] overflow-y-auto border-l border-subtle p-4">
+            <div class="mb-5">
+                <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3">Quick Actions</h3>
+                <div class="space-y-2">
+                    <button class="btn-primary w-full justify-center text-xs"><i data-lucide="search" class="w-3 h-3"></i> Find Your MP</button>
+                    <button class="btn-ghost w-full justify-center text-xs"><i data-lucide="git-compare" class="w-3 h-3"></i> Compare MPs</button>
+                    <button class="btn-ghost w-full justify-center text-xs"><i data-lucide="file-text" class="w-3 h-3"></i> Browse Bills</button>
+                </div>
+            </div>
+            <div class="mb-5">
+                <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3">Participation Index</h3>
+                <div class="space-y-2.5">
+                    <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">01</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Duma Boko</span><span class="mono text-xs text-blue">142</span></div><div class="bar-thin"><div style="width:100%"></div></div></div></div>
+                    <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">02</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Wynter Mmolotsi</span><span class="mono text-xs text-blue">118</span></div><div class="bar-thin"><div style="width:83%"></div></div></div></div>
+                    <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">03</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Liakat Kablay</span><span class="mono text-xs text-blue">95</span></div><div class="bar-thin"><div style="width:67%"></div></div></div></div>
+                    <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">04</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Kapinga Kapinga</span><span class="mono text-xs text-blue">87</span></div><div class="bar-thin"><div style="width:61%"></div></div></div></div>
+                    <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">05</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Thabologo Furniture</span><span class="mono text-xs text-blue">73</span></div><div class="bar-thin"><div style="width:51%"></div></div></div></div>
+                </div>
+                <a href="#" class="pill-link mt-3 inline-block">View full leaderboard →</a>
+            </div>
+            <div class="mb-5">
+                <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3">System Health</h3>
+                <div class="space-y-2 text-[11px]">
+                    <div class="flex items-center justify-between"><span class="text-sec">Crawl status</span><span class="mono text-green flex items-center gap-1"><span class="status-dot bg-green"></span> Healthy</span></div>
+                    <div class="flex items-center justify-between"><span class="text-sec">Last crawl</span><span class="mono text-tert">22 Jul 06:00</span></div>
+                    <div class="flex items-center justify-between"><span class="text-sec">Documents parsed</span><span class="mono text-blue">142</span></div>
+                    <div class="flex items-center justify-between"><span class="text-sec">Unresolved entities</span><span class="mono text-amber">2 <span class="text-tert">· <a href="#" class="text-blue hover:underline">Review</a></span></span></div>
+                    <div class="flex items-center justify-between"><span class="text-sec">Session</span><span class="mono text-tert">13th, 5th</span></div>
+                </div>
+            </div>
+            <div class="p-3 surface" style="border-left:3px solid var(--accent-amber)">
+                <span class="mono text-[9px] text-amber uppercase tracking-wider">Data Integrity</span>
+                <p class="text-[10px] text-tert mt-1 leading-relaxed">98.6% of contributions auto-resolved to correct MPs. Unresolved names are surfaced transparently — never silently guessed.</p>
+            </div>
+        </aside>
+    </main>
+</div>
+
+<!-- ================================================================ -->
+<!-- FEED MODE: PERSISTENT 3-COLUMN LAYOUT (Screens 02-11)           -->
+<!-- ================================================================ -->
+<div id="feed-mode" class="screen">
+    <!-- Status bar -->
+    <div class="border-b border-subtle surface">
+        <div class="flex items-center justify-between px-5 py-1 mono text-[11px] text-tert">
+            <div class="flex items-center gap-5" id="feed-status-left">
+                <span class="flex items-center gap-1.5"><span class="status-dot bg-green"></span> CRAWLER_ACTIVE</span>
+                <span>LAST_RUN: 2026-07-22T06:00:02Z</span>
+                <span>DOCS_PARSED: 142</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-amber flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3 h-3"></i> PROXY_METRIC</span>
+                <span id="feed-screen-label" class="mono text-[10px] text-blue flex items-center gap-1"><i data-lucide="radio" class="w-3 h-3"></i> LIVE_RECORD_STREAM</span>
+            </div>
+        </div>
+    </div>
+
+    <main class="grid grid-cols-12 gap-px bg-[var(--border-subtle)]" style="height: calc(100vh - 95px);">
+        <!-- LEFT SIDEBAR (col-2) — context-aware -->
+        <aside class="col-span-2 bg-[var(--bg-surface)] overflow-y-auto p-4 border-r border-subtle hidden md:block">
+            <!-- Data screens sidebar (default) -->
+            <div id="sidebar-data" class="sidebar-content active">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="mono text-[10px] text-tert uppercase tracking-widest">Filters</span>
+                    <span class="mono text-[10px] text-blue cursor-pointer">Reset</span>
+                </div>
+                <div class="space-y-3.5">
+                    <div><label class="mono text-[10px] text-tert uppercase tracking-wider block mb-1">Type</label><select class="bp-select"><option>All Types</option><option>Oral Question</option><option>Motion</option><option>Bill Reading</option><option>Committee of Supply</option></select></div>
+                    <div><label class="mono text-[10px] text-tert uppercase tracking-wider block mb-1">Party</label><select class="bp-select"><option>All Parties</option><option>BDP</option><option>UDC</option><option>BCP</option><option>AP</option></select></div>
+                    <div><label class="mono text-[10px] text-tert uppercase tracking-wider block mb-1">Ministry</label><select class="bp-select"><option>All Ministries</option><option>Finance</option><option>Lands & Agriculture</option><option>Health</option><option>Environment</option></select></div>
+                    <div><label class="mono text-[10px] text-tert uppercase tracking-wider block mb-1">Date Range</label><div class="flex gap-1.5"><input type="text" placeholder="2026-01-01" class="bp-input text-[10px]"><input type="text" placeholder="2026-07-22" class="bp-input text-[10px]"></div></div>
+                    <div><label class="mono text-[10px] text-tert uppercase tracking-wider block mb-1">Constituency</label><input type="text" placeholder="Search..." class="bp-input text-[10px]"></div>
+                </div>
+                <div class="border-t border-subtle mt-4 pt-4">
+                    <span class="mono text-[10px] text-tert uppercase tracking-widest">Top Ministries</span>
+                    <div class="mt-3 space-y-1.5">
+                        <div class="flex justify-between mono text-[11px]"><span class="text-sec">Finance</span><span class="text-blue">42</span></div>
+                        <div class="flex justify-between mono text-[11px]"><span class="text-sec">Lands & Agriculture</span><span class="text-blue">28</span></div>
+                        <div class="flex justify-between mono text-[11px]"><span class="text-sec">Health</span><span class="text-blue">19</span></div>
+                        <div class="flex justify-between mono text-[11px]"><span class="text-sec">Environment</span><span class="text-blue">14</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin sidebar -->
+            <div id="sidebar-admin" class="sidebar-content">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="mono text-[10px] text-tert uppercase tracking-widest">Admin</span>
+                    <span class="admin-badge admin">ADMIN</span>
+                </div>
+                <div class="space-y-1">
+                    <div class="p-2 hover:bg-[var(--bg-hover)] cursor-pointer flex items-center gap-2 text-xs text-sec">
+                        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 text-blue"></i> Dashboard
+                    </div>
+                    <div class="p-2 hover:bg-[var(--bg-hover)] cursor-pointer flex items-center gap-2 text-xs text-sec">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-amber"></i> Entity Review
+                        <span class="ml-auto tag tag-amber text-[9px]">2</span>
+                    </div>
+                    <div class="p-2 hover:bg-[var(--bg-hover)] cursor-pointer flex items-center gap-2 text-xs text-sec">
+                        <i data-lucide="users" class="w-3.5 h-3.5 text-blue"></i> User Management
+                    </div>
+                    <div class="p-2 hover:bg-[var(--bg-hover)] cursor-pointer flex items-center gap-2 text-xs text-sec">
+                        <i data-lucide="activity" class="w-3.5 h-3.5 text-green"></i> Crawl Log
+                    </div>
+                    <div class="p-2 hover:bg-[var(--bg-hover)] cursor-pointer flex items-center gap-2 text-xs text-sec">
+                        <i data-lucide="flag" class="w-3.5 h-3.5 text-amber"></i> Flagged Contributions
+                    </div>
+                </div>
+                <div class="border-t border-subtle mt-4 pt-4">
+                    <span class="mono text-[10px] text-tert uppercase tracking-widest">System</span>
+                    <div class="mt-3 space-y-1.5 text-[11px]">
+                        <div class="flex justify-between"><span class="text-sec">DB</span><span class="mono text-tert">SQLite 3.46</span></div>
+                        <div class="flex justify-between"><span class="text-sec">Users</span><span class="mono text-blue">4 active</span></div>
+                        <div class="flex justify-between"><span class="text-sec">Session</span><span class="mono text-tert">13th, 5th</span></div>
+                        <div class="flex justify-between"><span class="text-sec">Uptime</span><span class="mono text-green">99.8%</span></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- FEED COLUMN (col-7) — SPA views render here -->
+        <section class="col-span-12 md:col-span-7 bg-[var(--bg-canvas)] overflow-y-auto">
+            <!-- Screen 02: Live Record Stream -->
+            <div id="screen-feed" class="feed-view">
+                <div class="sticky top-0 bg-[var(--bg-canvas)] z-10 border-b border-default">
+                    <div class="flex items-center justify-between px-5 py-2.5">
+                        <div><h2 class="text-sm font-semibold">Live Record Stream</h2><p class="mono text-[11px] text-tert">Displaying 42 of 142 records — 13th Parliament, 5th Session</p></div>
+                        <div class="flex items-center gap-1.5"><button class="btn-ghost text-[10px]"><i data-lucide="filter" class="w-3 h-3"></i> Filter</button><button class="btn-ghost text-[10px]"><i data-lucide="download" class="w-3 h-3"></i> CSV</button></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-12 gap-3 px-5 py-1.5 border-b border-subtle mono text-[10px] text-tert uppercase tracking-widest surface">
+                    <div class="col-span-2">Timestamp</div><div class="col-span-3">Entity (MP)</div><div class="col-span-1.5">Type</div><div class="col-span-4.5">Subject / Excerpt</div><div class="col-span-1 text-right">Source</div>
+                </div>
+                <div class="feed-row grid grid-cols-12 gap-3 px-5 py-2.5 items-center">
+                    <div class="col-span-2"><div class="mono text-xs text-sec">14:02:05</div><div class="mono text-[10px] text-tert">2026-07-22</div></div>
+                    <div class="col-span-3"><div class="text-xs font-medium">Thabologo Furniture</div><div class="mono text-[10px] text-tert">TATI_EAST · BCP</div></div>
+                    <div class="col-span-1.5"><span class="tag tag-blue">ORAL_Q</span></div>
+                    <div class="col-span-4.5 text-xs text-sec truncate">Asked Minister of Environment & Tourism regarding Mohembo Bridge development impact on community livelihoods</div>
+                    <div class="col-span-1 text-right mono text-[10px] text-tert hover:text-blue"><i data-lucide="file-text" class="w-3 h-3 inline"></i></div>
+                </div>
+                <div class="feed-row grid grid-cols-12 gap-3 px-5 py-2.5 items-center">
+                    <div class="col-span-2"><div class="mono text-xs text-sec">11:45:12</div><div class="mono text-[10px] text-tert">2026-07-22</div></div>
+                    <div class="col-span-3"><div class="text-xs font-medium">Kapinga Kapinga</div><div class="mono text-[10px] text-tert">OKAVANGO_W · BDP</div></div>
+                    <div class="col-span-1.5"><span class="tag tag-amber">MOTION</span></div>
+                    <div class="col-span-4.5 text-xs text-sec truncate">Motion to establish special committee for Wildlife Conservation Act review</div>
+                    <div class="col-span-1 text-right mono text-[10px] text-tert hover:text-blue"><i data-lucide="file-text" class="w-3 h-3 inline"></i></div>
+                </div>
+                <div class="feed-row grid grid-cols-12 gap-3 px-5 py-2.5 items-center">
+                    <div class="col-span-2"><div class="mono text-xs text-sec">09:15:00</div><div class="mono text-[10px] text-tert">2026-07-22</div></div>
+                    <div class="col-span-3"><div class="text-xs font-medium">Duma Boko</div><div class="mono text-[10px] text-tert">GAB_BON_N · UDC</div></div>
+                    <div class="col-span-1.5"><span class="tag tag-green">BILL_2ND</span></div>
+                    <div class="col-span-4.5 text-xs text-sec truncate">Contribution to 2nd reading of Penal Code Amendment Bill, Section 142 on customary land rights</div>
+                    <div class="col-span-1 text-right mono text-[10px] text-tert hover:text-blue"><i data-lucide="file-text" class="w-3 h-3 inline"></i></div>
+                </div>
+                <div class="feed-row grid grid-cols-12 gap-3 px-5 py-2.5 items-center">
+                    <div class="col-span-2"><div class="mono text-xs text-sec">16:30:00</div><div class="mono text-[10px] text-tert">2026-07-21</div></div>
+                    <div class="col-span-3"><div class="text-xs font-medium">Wynter Mmolotsi</div><div class="mono text-[10px] text-tert">FRANCISTOWN_S · UDC</div></div>
+                    <div class="col-span-1.5"><span class="tag tag-blue">ORAL_Q</span></div>
+                    <div class="col-span-4.5 text-xs text-sec truncate">Asked Minister of Finance about contingency fund drawdown for Q3 flood relief</div>
+                    <div class="col-span-1 text-right mono text-[10px] text-tert hover:text-blue"><i data-lucide="file-text" class="w-3 h-3 inline"></i></div>
+                </div>
+                <div class="feed-row grid grid-cols-12 gap-3 px-5 py-2.5 items-center">
+                    <div class="col-span-2"><div class="mono text-xs text-sec">10:15:30</div><div class="mono text-[10px] text-tert">2026-07-21</div></div>
+                    <div class="col-span-3"><div class="text-xs font-medium">Liakat Kablay</div><div class="mono text-[10px] text-tert">TSWAPONG_N · BCP</div></div>
+                    <div class="col-span-1.5"><span class="tag tag-amber">MOTION</span></div>
+                    <div class="col-span-4.5 text-xs text-sec truncate">Moved motion on rising unemployment among youth in peri-urban settlements</div>
+                    <div class="col-span-1 text-right mono text-[10px] text-tert hover:text-blue"><i data-lucide="file-text" class="w-3 h-3 inline"></i></div>
+                </div>
+                <div class="p-4 text-center mono text-[11px] text-tert border-t border-subtle">42 of 142 records · <span class="text-blue cursor-pointer hover:underline">Load more →</span></div>
+            </div>
+
+            <!-- Screen 03: Find My MP -->
+            <div id="screen-findmp" class="feed-view">
+                <div class="p-6">
+                    <div class="mb-6">
+                        <span class="mono text-[10px] text-amber flex items-center gap-1 mb-2"><i data-lucide="search" class="w-3 h-3"></i> FIND_MY_MP</span>
+                        <h1 class="text-lg font-semibold">Find Your Representative</h1>
+                        <p class="mono text-[11px] text-tert mt-1">Enter a constituency name or search by MP name.</p>
+                    </div>
+                    <div class="surface p-4 mb-6">
+                        <div class="flex gap-2">
+                            <div class="flex-1 relative">
+                                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tert"></i>
+                                <input type="text" placeholder="Constituency name, MP name, or party..." class="bp-input text-xs pl-9" value="Tati">
+                            </div>
+                            <button class="btn-primary text-xs"><i data-lucide="arrow-right" class="w-3 h-3"></i> Search</button>
+                        </div>
+                        <div class="flex items-center gap-3 mt-3 mono text-[10px] text-tert">
+                            <span>Try: <span class="text-blue cursor-pointer hover:underline">Gaborone</span></span>
+                            <span>·</span>
+                            <span>Popular: <span class="text-blue cursor-pointer hover:underline">Francistown</span></span>
+                            <span>·</span>
+                            <span class="cursor-pointer hover:text-primary"><i data-lucide="map-pin" class="w-3 h-3 inline"></i> Browse all 57 constituencies</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <span class="mono text-[10px] text-tert uppercase tracking-widest">Results for "Tati"</span>
+                        <div class="surface-elevated p-3 flex items-center gap-3 cursor-pointer hover:bg-[var(--bg-hover)] transition">
+                            <div class="avatar-mono w-10 h-10 text-sm">TF</div>
+                            <div class="flex-1"><div class="text-sm font-medium">Thabologo Furniture</div><div class="mono text-[11px] text-tert">TATI_EAST · BCP · 73 contributions this session</div></div>
+                            <span class="tag tag-blue">ORAL_Q: 52</span>
+                            <span class="tag tag-amber">MOTION: 8</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-tert"></i>
+                        </div>
+                        <div class="surface-elevated p-3 flex items-center gap-3 cursor-pointer hover:bg-[var(--bg-hover)] transition">
+                            <div class="avatar-mono w-10 h-10 text-sm">ST</div>
+                            <div class="flex-1"><div class="text-sm font-medium">Shakkie Tlou</div><div class="mono text-[11px] text-tert">TATI_WEST · UDC · 5 contributions this session</div></div>
+                            <span class="tag tag-blue">ORAL_Q: 3</span>
+                            <span class="tag tag-green">BILL: 2</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-tert"></i>
+                        </div>
+                        <div class="mono text-[11px] text-tert p-4 text-center border border-subtle mt-4">
+                            <i data-lucide="search-x" class="w-4 h-4 inline mb-1"></i>
+                            <p>No results for "Tati_Central". Check spelling or <span class="text-blue cursor-pointer hover:underline">browse all constituencies</span>.</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 border-t border-subtle pt-4">
+                        <div class="flex items-center justify-between">
+                            <span class="mono text-[10px] text-tert uppercase tracking-widest">All 57 Constituencies</span>
+                            <a href="#" class="pill-link">View full directory →</a>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1 mt-2 mono text-[10px] text-sec">
+                            <span class="cursor-pointer hover:text-primary p-1">Gaborone Bon Nth</span>
+                            <span class="cursor-pointer hover:text-primary p-1">Gaborone Bon Sth</span>
+                            <span class="cursor-pointer hover:text-primary p-1">Francistown East</span>
+                            <span class="cursor-pointer hover:text-primary p-1">Francistown West</span>
+                            <span class="cursor-pointer hover:text-primary p-1">Tati East</span>
+                            <span class="cursor-pointer hover:text-primary p-1">Tati West</span>
+                            <span class="cursor-pointer hover:text-primary p-1">Okavango East</span>
+                            <span class="cursor-pointer hover:text-primary p-1">Okavango West</span>
+                            <span class="cursor-pointer hover:text-primary p-1">Serowe North</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 04: MP Profile -->
+            <div id="screen-profile" class="feed-view">
+                <div class="p-6">
+                    <div class="flex items-start gap-5 pb-6 border-b border-default">
+                        <div class="avatar-mono w-14 h-14 text-lg font-bold text-blue" style="border-color:var(--accent-blue)">DB</div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3">
+                                <h1 class="text-xl font-semibold">Duma Boko</h1>
+                                <span class="tag" style="background:rgba(22,163,74,0.1);border-color:rgba(22,163,74,0.3);color:var(--accent-green)">PRESIDENT</span>
+                                <span class="mono text-[10px] text-tert">MP ID: MP-013</span>
+                            </div>
+                            <div class="flex items-center gap-4 mt-1 mono text-[12px] text-sec">
+                                <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> Gaborone Bonnington North</span>
+                                <span class="flex items-center gap-1"><span class="status-dot bg-[var(--accent-blue)]"></span> UDC</span>
+                                <span>Elected: 2024</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn-primary text-xs"><i data-lucide="git-compare" class="w-3 h-3"></i> Compare</button>
+                            <button class="btn-ghost text-xs"><i data-lucide="share-2" class="w-3 h-3"></i> Share</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-2 p-3 mt-4 mb-4" style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-left:3px solid var(--accent-blue)">
+                        <i data-lucide="compass" class="w-4 h-4 text-blue mt-0.5 flex-shrink-0"></i>
+                        <div>
+                            <span class="text-xs font-semibold text-blue">Session Focus</span>
+                            <p class="text-[11px] text-sec mt-0.5">Boko has concentrated on <span class="text-primary font-medium">Finance (42 contributions)</span> and <span class="text-primary font-medium">Lands & Agriculture (28)</span>. Bills dominate his record — 19 bill readings (3rd highest in Parliament). He has addressed 8 ministries this session, indicating broad portfolio engagement.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-3 mb-6">
+                        <div class="stat-card"><div class="label">Total Contributions</div><div class="value text-blue">142</div></div>
+                        <div class="stat-card"><div class="label">Oral Questions</div><div class="value">84</div></div>
+                        <div class="stat-card"><div class="label">Motions</div><div class="value">31</div></div>
+                        <div class="stat-card"><div class="label">Bills</div><div class="value">19</div></div>
+                        <div class="stat-card" style="border-color:rgba(245,166,35,0.3)"><div class="label">Participation Rank</div><div class="value text-amber flex items-center gap-2">#1<span class="mono text-[10px] text-tert font-normal">of 65</span></div></div>
+                    </div>
+
+                    <div class="flex items-start gap-2 p-3 mb-4" style="background:var(--bg-elevated);border:1px solid rgba(245,166,35,0.2)">
+                        <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber mt-0.5 flex-shrink-0"></i>
+                        <p class="text-[11px] text-sec"><span class="text-amber font-semibold">Proxy Metric:</span> All counts from recorded contributions only. Botswana Parliament does not publish attendance data.</p>
+                    </div>
+
+                    <div class="flex border-b border-default mb-4">
+                        <span class="tab active">Timeline</span>
+                        <span class="tab">By Type</span>
+                        <span class="tab">Ministries</span>
+                        <span class="tab">Compare</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="surface-elevated p-3 flex items-center gap-3">
+                            <div class="w-16 flex-shrink-0 mono text-[10px] text-sec text-right">09:15<br><span class="text-tert">22 Jul</span></div>
+                            <div class="w-2 h-2 bg-green flex-shrink-0"></div>
+                            <span class="tag tag-green text-[10px]">BILL_2ND</span>
+                            <div class="flex-1 text-xs text-sec">Penal Code Amendment Bill — Section 142 on customary land rights. Argued for amendment to protect communal land tenure.</div>
+                            <i data-lucide="external-link" class="w-3 h-3 text-tert flex-shrink-0"></i>
+                        </div>
+                        <div class="surface-elevated p-3 flex items-center gap-3">
+                            <div class="w-16 flex-shrink-0 mono text-[10px] text-sec text-right">14:30<br><span class="text-tert">21 Jul</span></div>
+                            <div class="w-2 h-2 bg-blue flex-shrink-0"></div>
+                            <span class="tag tag-blue text-[10px]">ORAL_Q</span>
+                            <div class="flex-1 text-xs text-sec">Minister of Finance — Asked about implementation timeline for new VAT regime on essential goods.</div>
+                            <i data-lucide="external-link" class="w-3 h-3 text-tert flex-shrink-0"></i>
+                        </div>
+                        <div class="surface-elevated p-3 flex items-center gap-3">
+                            <div class="w-16 flex-shrink-0 mono text-[10px] text-sec text-right">10:00<br><span class="text-tert">20 Jul</span></div>
+                            <div class="w-2 h-2 bg-[var(--accent-amber)] flex-shrink-0"></div>
+                            <span class="tag tag-amber text-[10px]">MOTION</span>
+                            <div class="flex-1 text-xs text-sec">Moved motion on establishing parliamentary oversight committee for NDP 12 implementation.</div>
+                            <i data-lucide="external-link" class="w-3 h-3 text-tert flex-shrink-0"></i>
+                        </div>
+                        <div class="p-4 text-center mono text-[10px] text-tert border border-subtle">
+                            <i data-lucide="calendar" class="w-3 h-3 inline mr-1"></i> No recorded activity on 19 Jul 2026 (sitting day)
+                            <span class="text-amber cursor-pointer hover:underline ml-2">What does this mean?</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center mono text-[11px] text-tert">
+                        <span class="text-blue cursor-pointer hover:underline">Load more</span>
+                        <span class="mx-2">·</span>
+                        <span class="text-blue cursor-pointer hover:underline">Export CSV</span>
+                        <span class="mx-2">·</span>
+                        <span class="text-blue cursor-pointer hover:underline">View source docs</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 05: MP Compare -->
+            <div id="screen-compare" class="feed-view">
+                <div class="p-6">
+                    <div class="mb-6">
+                        <span class="mono text-[10px] text-amber flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> PROXY_METRIC</span>
+                        <h1 class="text-lg font-semibold mt-1">Compare MPs</h1>
+                        <p class="mono text-[11px] text-tert">Side-by-side view of participation metrics.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div><label class="mono text-[10px] text-tert uppercase tracking-wider block mb-1">MP A</label><select class="bp-select"><option>Duma Boko (UDC · Gaborone Bon Nth)</option><option>Thabologo Furniture (BCP · Tati East)</option><option>Wynter Mmolotsi (UDC · Francistown South)</option></select></div>
+                        <div><label class="mono text-[10px] text-tert uppercase tracking-wider block mb-1">MP B</label><select class="bp-select"><option>Thabologo Furniture (BCP · Tati East)</option><option>Duma Boko (UDC · Gaborone Bon Nth)</option><option>Wynter Mmolotsi (UDC · Francistown South)</option></select></div>
+                    </div>
+
+                    <div class="flex items-start gap-2 p-3 mb-4 surface-elevated" style="border-left:3px solid var(--accent-blue)">
+                        <i data-lucide="compass" class="w-4 h-4 text-blue mt-0.5 flex-shrink-0"></i>
+                        <div>
+                            <span class="text-xs font-semibold text-blue">Comparison Story</span>
+                            <p class="text-[11px] text-sec mt-0.5">Boko leads across all categories with 142 total contributions vs Furniture's 73. The gap is widest in motions (31 vs 8), suggesting Boko takes more legislative initiative. However, Furniture's oral questions (52 vs 84) are proportionally higher relative to total count — questioning is his primary tool.</p>
+                        </div>
+                    </div>
+
+                    <div class="surface">
+                        <div class="grid grid-cols-12 border-b border-subtle">
+                            <div class="col-span-4 p-3 border-r border-subtle mono text-[10px] text-tert uppercase">Metric</div>
+                            <div class="col-span-4 p-3 border-r border-subtle text-center mono text-[10px] text-tert uppercase">Duma Boko</div>
+                            <div class="col-span-4 p-3 text-center mono text-[10px] text-tert uppercase">Thabologo Furniture</div>
+                        </div>
+                        <div class="grid grid-cols-12 border-b border-subtle feed-row">
+                            <div class="col-span-4 p-3 border-r border-subtle text-xs text-sec">Total Contributions</div>
+                            <div class="col-span-4 p-3 border-r border-subtle text-center mono text-sm font-semibold text-blue">142</div>
+                            <div class="col-span-4 p-3 text-center mono text-sm font-semibold">73</div>
+                        </div>
+                        <div class="grid grid-cols-12 border-b border-subtle feed-row">
+                            <div class="col-span-4 p-3 border-r border-subtle text-xs text-sec">Oral Questions</div>
+                            <div class="col-span-4 p-3 border-r border-subtle text-center mono">84</div>
+                            <div class="col-span-4 p-3 text-center mono font-semibold text-blue">52</div>
+                        </div>
+                        <div class="grid grid-cols-12 border-b border-subtle feed-row">
+                            <div class="col-span-4 p-3 border-r border-subtle text-xs text-sec">Motions</div>
+                            <div class="col-span-4 p-3 border-r border-subtle text-center mono font-semibold text-blue">31</div>
+                            <div class="col-span-4 p-3 text-center mono">8</div>
+                        </div>
+                        <div class="grid grid-cols-12 border-b border-subtle feed-row">
+                            <div class="col-span-4 p-3 border-r border-subtle text-xs text-sec">Bill Readings</div>
+                            <div class="col-span-4 p-3 border-r border-subtle text-center mono font-semibold text-blue">19</div>
+                            <div class="col-span-4 p-3 text-center mono">7</div>
+                        </div>
+                        <div class="grid grid-cols-12 border-b border-subtle feed-row">
+                            <div class="col-span-4 p-3 border-r border-subtle text-xs text-sec">Ministries Addressed</div>
+                            <div class="col-span-4 p-3 border-r border-subtle text-center mono">8</div>
+                            <div class="col-span-4 p-3 text-center mono">5</div>
+                        </div>
+                        <div class="grid grid-cols-12 feed-row">
+                            <div class="col-span-4 p-3 border-r border-subtle text-xs text-sec">Top Ministry</div>
+                            <div class="col-span-4 p-3 border-r border-subtle text-center mono text-[11px]">Finance (42)</div>
+                            <div class="col-span-4 p-3 text-center mono text-[11px]">Lands & Agriculture (18)</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5 mt-4 p-3 surface">
+                        <i data-lucide="info" class="w-3.5 h-3.5 text-blue mt-0.5 flex-shrink-0"></i>
+                        <p class="text-[11px] text-tert">Comparison uses weighted Participation Index. <a href="#" class="text-blue hover:underline">Download as PDF</a>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 06: Participation Index / Leaderboard -->
+            <div id="screen-leaderboard" class="feed-view">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <span class="mono text-[10px] text-amber flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> PROXY_METRIC</span>
+                            <h1 class="text-lg font-semibold mt-1">Participation Index</h1>
+                            <p class="mono text-[11px] text-tert">Ranked by recorded contributions · 13th Parliament, 5th Session</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="btn-ghost text-xs"><i data-lucide="download" class="w-3 h-3"></i> CSV</button>
+                            <select class="bp-select w-32"><option>All Parties</option><option>BDP</option><option>UDC</option><option>BCP</option></select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-2.5 p-3 mb-6" style="background:var(--bg-elevated);border:1px solid rgba(245,166,35,0.2)">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber mt-0.5 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-xs font-semibold text-amber">Constraint: No Attendance Data</h4>
+                            <p class="text-[11px] text-sec leading-relaxed">This index reflects <span class="mono text-[var(--text-primary)]">RECORDED_CONTRIBUTIONS</span> only. Botswana Parliament does not publish attendance records.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-3 px-4 py-2 border-b border-default mono text-[10px] text-tert uppercase tracking-widest surface">
+                        <div class="col-span-1">#</div><div class="col-span-3">MP</div><div class="col-span-1.5">Party</div><div class="col-span-1 text-right">Total</div><div class="col-span-1 text-right">Oral Q</div><div class="col-span-1 text-right">Motion</div><div class="col-span-1 text-right">Bill</div><div class="col-span-2.5">Trend</div>
+                    </div>
+                    <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center">
+                        <div class="col-span-1 mono text-xs text-blue font-bold">1</div>
+                        <div class="col-span-3"><span class="text-xs font-medium">Duma Boko</span><div class="mono text-[10px] text-tert">Gaborone Bon Nth</div></div>
+                        <div class="col-span-1.5 mono text-[11px]"><span class="tag tag-blue text-[10px]">UDC</span></div>
+                        <div class="col-span-1 text-right mono text-sm font-semibold text-blue">142</div>
+                        <div class="col-span-1 text-right mono text-xs">84</div>
+                        <div class="col-span-1 text-right mono text-xs">31</div>
+                        <div class="col-span-1 text-right mono text-xs">19</div>
+                        <div class="col-span-2.5 mono text-[11px] text-green">+12 this session</div>
+                    </div>
+                    <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center">
+                        <div class="col-span-1 mono text-xs text-sec">2</div>
+                        <div class="col-span-3"><span class="text-xs font-medium">Wynter Mmolotsi</span><div class="mono text-[10px] text-tert">Francistown South</div></div>
+                        <div class="col-span-1.5 mono text-[11px]"><span class="tag tag-blue text-[10px]">UDC</span></div>
+                        <div class="col-span-1 text-right mono text-sm font-semibold">118</div>
+                        <div class="col-span-1 text-right mono text-xs">62</div>
+                        <div class="col-span-1 text-right mono text-xs">28</div>
+                        <div class="col-span-1 text-right mono text-xs">22</div>
+                        <div class="col-span-2.5 mono text-[11px] text-green">+8 this session</div>
+                    </div>
+                    <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center">
+                        <div class="col-span-1 mono text-xs text-sec">3</div>
+                        <div class="col-span-3"><span class="text-xs font-medium">Liakat Kablay</span><div class="mono text-[10px] text-tert">Tswapong North</div></div>
+                        <div class="col-span-1.5 mono text-[11px]"><span class="tag text-[10px]" style="border-color:rgba(245,166,35,0.3);color:var(--accent-amber);background:rgba(245,166,35,0.1)">BCP</span></div>
+                        <div class="col-span-1 text-right mono text-sm font-semibold">95</div>
+                        <div class="col-span-1 text-right mono text-xs">41</div>
+                        <div class="col-span-1 text-right mono text-xs">29</div>
+                        <div class="col-span-1 text-right mono text-xs">15</div>
+                        <div class="col-span-2.5 mono text-[11px] text-green">+5 this session</div>
+                    </div>
+                    <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center">
+                        <div class="col-span-1 mono text-xs text-sec">4</div>
+                        <div class="col-span-3"><span class="text-xs font-medium">Kapinga Kapinga</span><div class="mono text-[10px] text-tert">Okavango West</div></div>
+                        <div class="col-span-1.5 mono text-[11px]"><span class="tag tag-blue text-[10px]">BDP</span></div>
+                        <div class="col-span-1 text-right mono text-sm font-semibold">87</div>
+                        <div class="col-span-1 text-right mono text-xs">33</div>
+                        <div class="col-span-1 text-right mono text-xs">36</div>
+                        <div class="col-span-1 text-right mono text-xs">12</div>
+                        <div class="col-span-2.5 mono text-[11px] text-green">+3 this session</div>
+                    </div>
+                    <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center">
+                        <div class="col-span-1 mono text-xs text-sec">5</div>
+                        <div class="col-span-3"><span class="text-xs font-medium">Thabologo Furniture</span><div class="mono text-[10px] text-tert">Tati East</div></div>
+                        <div class="col-span-1.5 mono text-[11px]"><span class="tag text-[10px]" style="border-color:rgba(245,166,35,0.3);color:var(--accent-amber);background:rgba(245,166,35,0.1)">BCP</span></div>
+                        <div class="col-span-1 text-right mono text-sm font-semibold">73</div>
+                        <div class="col-span-1 text-right mono text-xs">52</div>
+                        <div class="col-span-1 text-right mono text-xs">8</div>
+                        <div class="col-span-1 text-right mono text-xs">7</div>
+                        <div class="col-span-2.5 mono text-[11px] text-green">+11 this session</div>
+                    </div>
+                    <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center" style="opacity:0.5">
+                        <div class="col-span-1 mono text-xs text-sec">62</div>
+                        <div class="col-span-3"><span class="text-xs font-medium">Moeti Mohwasa</span><div class="mono text-[10px] text-tert">Mmopane/Lentsweletau</div></div>
+                        <div class="col-span-1.5 mono text-[11px]"><span class="tag tag-blue text-[10px]">BDP</span></div>
+                        <div class="col-span-1 text-right mono text-sm font-semibold text-amber">0</div>
+                        <div class="col-span-1 text-right mono text-xs">0</div>
+                        <div class="col-span-1 text-right mono text-xs">0</div>
+                        <div class="col-span-1 text-right mono text-xs">0</div>
+                        <div class="col-span-2.5 mono text-[11px] text-amber">No recorded activity</div>
+                    </div>
+                    <div class="p-3 mt-2 surface flex items-start gap-2">
+                        <i data-lucide="info" class="w-3.5 h-3.5 text-amber mt-0.5 flex-shrink-0"></i>
+                        <p class="text-[11px] text-tert">6 of 65 MPs have zero recorded contributions. Zero recorded ≠ absent.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 07: Bill Tracker -->
+            <div id="screen-bills" class="feed-view">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <span class="mono text-[10px] text-tert">LEGISLATION</span>
+                            <h1 class="text-lg font-semibold mt-1">Bills & Legislation Tracker</h1>
+                            <p class="mono text-[11px] text-tert">Track bills through readings, committee stages, and assent</p>
+                        </div>
+                        <select class="bp-select w-36"><option>All Stages</option><option>1st Reading</option><option>2nd Reading</option><option>Committee</option><option>Report</option><option>3rd Reading</option><option>Assented</option></select>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="surface p-4 feed-row">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="tag tag-green">2ND READING</span>
+                                        <span class="mono text-[10px] text-tert">Bill #12 of 2026</span>
+                                    </div>
+                                    <h3 class="text-sm font-medium">Penal Code Amendment Bill</h3>
+                                    <p class="text-xs text-sec mt-1">Amendment to Section 142 on customary land rights, clarifying communal tenure registration processes.</p>
+                                </div>
+                                <span class="mono text-[10px] text-tert flex-shrink-0">Sponsor: Min. of Justice</span>
+                            </div>
+                            <div class="step-indicator">
+                                <span class="step-dot complete"></span> <span class="step-line complete"></span>
+                                <span class="step-dot active"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span>
+                            </div>
+                            <div class="flex justify-between mono text-[10px] text-tert mt-1">
+                                <span class="text-green">1st Reading ✓</span>
+                                <span class="text-blue">2nd Reading</span>
+                                <span>Committee</span> <span>Report</span> <span>3rd Reading</span>
+                            </div>
+                            <div class="flex items-center gap-3 mt-3 mono text-[10px] text-tert">
+                                <span>Introduced: 2026-07-01</span><span>·</span><span>Last action: 2026-07-22</span>
+                                <span>·</span><span class="text-blue cursor-pointer hover:underline">View debate →</span>
+                            </div>
+                        </div>
+                        <div class="surface p-4 feed-row">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="tag tag-amber">COMMITTEE</span>
+                                        <span class="mono text-[10px] text-tert">Bill #8 of 2026</span>
+                                    </div>
+                                    <h3 class="text-sm font-medium">Water Resources Management Bill</h3>
+                                    <p class="text-xs text-sec mt-1">Framework for integrated water resource management, catchment area protection, and water use licensing.</p>
+                                </div>
+                                <span class="mono text-[10px] text-tert flex-shrink-0">Sponsor: Min. of Lands</span>
+                            </div>
+                            <div class="step-indicator">
+                                <span class="step-dot complete"></span> <span class="step-line complete"></span>
+                                <span class="step-dot complete"></span> <span class="step-line complete"></span>
+                                <span class="step-dot active"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span>
+                            </div>
+                            <div class="flex justify-between mono text-[10px] text-tert mt-1">
+                                <span class="text-green">1st Reading ✓</span>
+                                <span class="text-green">2nd Reading ✓</span>
+                                <span class="text-blue">Committee</span> <span>Report</span> <span>3rd Reading</span>
+                            </div>
+                        </div>
+                        <div class="surface p-4 feed-row" style="opacity:0.7">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="tag">1ST READING</span>
+                                        <span class="mono text-[10px] text-tert">Bill #15 of 2026</span>
+                                    </div>
+                                    <h3 class="text-sm font-medium">Alternative Energy Promotion Bill</h3>
+                                    <p class="text-xs text-sec mt-1">Incentives and regulatory framework for solar, wind, and biomass energy development.</p>
+                                </div>
+                                <span class="mono text-[10px] text-tert flex-shrink-0">Sponsor: MP Kablay</span>
+                            </div>
+                            <div class="step-indicator">
+                                <span class="step-dot active"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span> <span class="step-line"></span>
+                                <span class="step-dot"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 08: Search -->
+            <div id="screen-search" class="feed-view">
+                <div class="p-6">
+                    <div class="mb-6">
+                        <h1 class="text-lg font-semibold">Search Parliamentary Record</h1>
+                        <p class="mono text-[11px] text-tert">Search across all contributions, MP names, subjects, and source documents.</p>
+                    </div>
+                    <div class="flex gap-2 mb-6">
+                        <div class="flex-1 relative">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tert"></i>
+                            <input type="text" class="bp-input text-xs pl-9" value="Mohembo Bridge" placeholder="Search contributions, MPs, ministries...">
+                        </div>
+                        <button class="btn-primary"><i data-lucide="arrow-right" class="w-3 h-3"></i></button>
+                    </div>
+                    <div class="flex items-center gap-3 mb-4 mono text-[10px] text-tert">
+                        <span>Filters:</span>
+                        <select class="bp-select w-28"><option>All Types</option></select>
+                        <select class="bp-select w-28"><option>All Parties</option></select>
+                        <select class="bp-select w-28"><option>All Ministries</option></select>
+                        <span class="text-blue cursor-pointer hover:underline ml-2">Clear</span>
+                    </div>
+                    <div class="mono text-[10px] text-tert mb-3">9 results for "Mohembo Bridge"</div>
+                    <div class="space-y-2">
+                        <div class="surface-elevated p-3 feed-row">
+                            <div class="flex items-start gap-3">
+                                <span class="tag tag-blue text-[10px] flex-shrink-0 mt-0.5">ORAL_Q</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs"><span class="font-medium">Thabologo Furniture</span> — Asked Minister about <mark style="background:rgba(45,127,249,0.15);color:var(--accent-blue);padding:0 2px">Mohembo Bridge</mark> development impact</div>
+                                    <div class="mono text-[10px] text-tert mt-1">TATI_EAST · BCP · 2026-07-22</div>
+                                </div>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-tert flex-shrink-0"></i>
+                            </div>
+                        </div>
+                        <div class="surface-elevated p-3 feed-row">
+                            <div class="flex items-start gap-3">
+                                <span class="tag tag-amber text-[10px] flex-shrink-0 mt-0.5">MOTION</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs"><span class="font-medium">Kapinga Kapinga</span> — Motion on infrastructure in Okavango Delta, citing <mark style="background:rgba(45,127,249,0.15);color:var(--accent-blue);padding:0 2px">Mohembo Bridge</mark> as case study</div>
+                                    <div class="mono text-[10px] text-tert mt-1">OKAVANGO_W · BDP · 2026-07-20</div>
+                                </div>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-tert flex-shrink-0"></i>
+                            </div>
+                        </div>
+                        <div class="surface-elevated p-3 feed-row">
+                            <div class="flex items-start gap-3">
+                                <span class="tag tag-green text-[10px] flex-shrink-0 mt-0.5">BILL</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs"><span class="font-medium">Duma Boko</span> — Citing <mark style="background:rgba(45,127,249,0.15);color:var(--accent-blue);padding:0 2px">Mohembo Bridge</mark> procurement in Public Procurement debate</div>
+                                    <div class="mono text-[10px] text-tert mt-1">GAB_BON_N · UDC · 2026-07-18</div>
+                                </div>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-tert flex-shrink-0"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 09: Admin Dashboard -->
+            <div id="screen-admin" class="feed-view">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="admin-badge admin">ADMIN</span>
+                                <span class="mono text-[10px] text-tert">DASHBOARD</span>
+                            </div>
+                            <h1 class="text-lg font-semibold mt-1">System Administration</h1>
+                            <p class="mono text-[11px] text-tert mt-1">Pipeline health, data quality, and system controls</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="btn-primary text-xs"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Trigger Crawl</button>
+                            <button class="btn-ghost text-xs"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-3 mb-6">
+                        <div class="stat-card" style="border-left:3px solid var(--accent-green)">
+                            <div class="label">Crawl Status</div>
+                            <div class="value text-green flex items-center gap-2" style="font-size:16px">HEALTHY<span class="status-dot bg-green"></span></div>
+                            <div class="mono text-[10px] text-tert mt-1">Last: 22 Jul 06:00 UTC</div>
+                        </div>
+                        <div class="stat-card"><div class="label">Documents</div><div class="value text-blue">142</div><div class="mono text-[10px] text-tert mt-1">+3 since yesterday</div></div>
+                        <div class="stat-card"><div class="label">Contributions</div><div class="value text-blue">378</div><div class="mono text-[10px] text-tert mt-1">Across 8 sources</div></div>
+                        <div class="stat-card" style="border-left:3px solid var(--accent-amber)"><div class="label">Unresolved Entities</div><div class="value text-amber">2</div><div class="mono text-[10px] text-tert mt-1">Resolved: 98.6%</div></div>
+                        <div class="stat-card"><div class="label">Active Users</div><div class="value">4</div><div class="mono text-[10px] text-tert mt-1">3 Admins · 1 Editor</div></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="surface p-4">
+                            <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3">Quick Actions</h3>
+                            <div class="space-y-2">
+                                <a href="#" class="flex items-center gap-2 p-2 hover:bg-[var(--bg-hover)] text-xs text-sec"><i data-lucide="users" class="w-3.5 h-3.5 text-blue"></i> Manage users<span class="ml-auto mono text-[10px] text-tert">→</span></a>
+                                <a href="#" class="flex items-center gap-2 p-2 hover:bg-[var(--bg-hover)] text-xs text-sec"><i data-lucide="search" class="w-3.5 h-3.5 text-amber"></i> Entity review queue<span class="ml-auto mono text-[10px] text-tert">2 pending →</span></a>
+                                <a href="#" class="flex items-center gap-2 p-2 hover:bg-[var(--bg-hover)] text-xs text-sec"><i data-lucide="activity" class="w-3.5 h-3.5 text-blue"></i> Crawl log<span class="ml-auto mono text-[10px] text-tert">→</span></a>
+                                <a href="#" class="flex items-center gap-2 p-2 hover:bg-[var(--bg-hover)] text-xs text-sec"><i data-lucide="flag" class="w-3.5 h-3.5 text-amber"></i> Flagged contributions<span class="ml-auto mono text-[10px] text-tert">0 →</span></a>
+                            </div>
+                        </div>
+                        <div class="surface p-4">
+                            <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3">Recent Crawl Runs</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between py-1.5 border-b border-subtle"><div class="flex items-center gap-2"><span class="status-dot bg-green"></span><span class="text-xs text-sec">botswanaspeaks</span></div><span class="mono text-[10px] text-tert">22 Jul 06:00</span><span class="mono text-[10px] text-green">+3 docs</span></div>
+                                <div class="flex items-center justify-between py-1.5 border-b border-subtle"><div class="flex items-center gap-2"><span class="status-dot bg-green"></span><span class="text-xs text-sec">botswanaspeaks</span></div><span class="mono text-[10px] text-tert">21 Jul 06:00</span><span class="mono text-[10px] text-green">+5 docs</span></div>
+                                <div class="flex items-center justify-between py-1.5 border-b border-subtle"><div class="flex items-center gap-2"><span class="status-dot bg-red"></span><span class="text-xs text-sec">parliament_docs</span></div><span class="mono text-[10px] text-tert">20 Jul 06:00</span><span class="mono text-[10px] text-red">FAILED</span></div>
+                                <div class="flex items-center justify-between py-1.5"><div class="flex items-center gap-2"><span class="status-dot bg-green"></span><span class="text-xs text-sec">roster</span></div><span class="mono text-[10px] text-tert">15 Jul 06:00</span><span class="mono text-[10px] text-green">No changes</span></div>
+                            </div>
+                            <div class="mt-2 text-center mono text-[10px] text-blue cursor-pointer hover:underline">View all runs →</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="surface p-4">
+                            <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3">Data Quality</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between"><span class="text-xs text-sec">Auto-resolved rate</span><span class="mono text-xs text-green">98.6%</span></div>
+                                <div class="flex items-center justify-between"><span class="text-xs text-sec">Contributions with source PDF</span><span class="mono text-xs text-green">100%</span></div>
+                                <div class="flex items-center justify-between"><span class="text-xs text-sec">MP roster coverage</span><span class="mono text-xs text-green">65/65</span></div>
+                                <div class="flex items-center justify-between"><span class="text-xs text-sec">Session coverage</span><span class="mono text-xs text-blue">47 sitting days</span></div>
+                                <div class="flex items-center justify-between"><span class="text-xs text-sec">Duplicate documents</span><span class="mono text-xs text-amber">2 flagged</span></div>
+                            </div>
+                        </div>
+                        <div class="surface p-4">
+                            <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3">Recent Admin Actions</h3>
+                            <div class="space-y-2 text-[11px]">
+                                <div class="flex items-center gap-2 py-1 border-b border-subtle"><span class="text-green"><i data-lucide="check" class="w-3 h-3"></i></span><span class="text-sec">admin@bareng.bw resolved "Ms. Tsheko" → Lydia Tsheko</span><span class="ml-auto mono text-[9px] text-tert">2h ago</span></div>
+                                <div class="flex items-center gap-2 py-1 border-b border-subtle"><span class="text-blue"><i data-lucide="log-in" class="w-3 h-3"></i></span><span class="text-sec">editor@bareng.bw logged in</span><span class="ml-auto mono text-[9px] text-tert">4h ago</span></div>
+                                <div class="flex items-center gap-2 py-1 border-b border-subtle"><span class="text-amber"><i data-lucide="refresh-cw" class="w-3 h-3"></i></span><span class="text-sec">Crawl triggered manually</span><span class="ml-auto mono text-[9px] text-tert">6h ago</span></div>
+                                <div class="flex items-center gap-2 py-1"><span class="text-green"><i data-lucide="user-plus" class="w-3 h-3"></i></span><span class="text-sec">New user editor@bareng.bw added</span><span class="ml-auto mono text-[9px] text-tert">1d ago</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 10: Entity Review Queue -->
+            <div id="screen-entities" class="feed-view">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <span class="mono text-[10px] text-amber flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3"></i> EDITOR_ACCESS</span>
+                            <h1 class="text-lg font-semibold mt-1">Entity Review Queue</h1>
+                            <p class="mono text-[11px] text-tert">Unmatched names from source documents</p>
+                        </div>
+                        <button class="btn-ghost text-xs"><i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh</button>
+                    </div>
+
+                    <div class="surface-elevated p-3 mb-4 flex items-center gap-3">
+                        <i data-lucide="info" class="w-4 h-4 text-amber flex-shrink-0"></i>
+                        <p class="text-[11px] text-sec">2 unresolved entities out of 142 contributions (98.6% auto-resolved). Each unmatched name blocks contributions from appearing on the correct MP profile.</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="surface p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <span class="tag tag-amber">UNRESOLVED</span>
+                                    <span class="mono text-xs font-semibold ml-2">"Mr. T. Furniture"</span>
+                                </div>
+                                <span class="mono text-[10px] text-tert">botswanaspeaks · 2026-07-22</span>
+                            </div>
+                            <div class="text-xs text-sec mb-3">Extracted from Notice Paper #14: <span class="mono text-[11px] text-tert">"Mr. T. Furniture (Tati East) to ask the Minister..."</span></div>
+                            <div class="flex items-center gap-3">
+                                <select class="bp-select flex-1">
+                                    <option value="">Select matching MP...</option>
+                                    <option>Thabologo Furniture — TATI_EAST — BCP</option>
+                                    <option>Shakkie Tlou — TATI_WEST — UDC</option>
+                                    <option>Unmatched — leave as unresolved</option>
+                                </select>
+                                <button class="btn-primary text-xs">Resolve</button>
+                                <button class="btn-ghost text-xs">Skip</button>
+                            </div>
+                            <div class="mono text-[10px] text-tert mt-2">Suggestion: <span class="text-blue">Thabologo Furniture (96% confidence — constituency match)</span></div>
+                        </div>
+
+                        <div class="surface p-4">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <span class="tag tag-amber">UNRESOLVED</span>
+                                    <span class="mono text-xs font-semibold ml-2">"Member for South"</span>
+                                </div>
+                                <span class="mono text-[10px] text-tert">botswanaspeaks · 2026-07-18</span>
+                            </div>
+                            <div class="text-xs text-sec mb-3">Extracted from Motion listing — constituency not specified.</div>
+                            <div class="flex items-center gap-3">
+                                <select class="bp-select flex-1">
+                                    <option value="">Select matching MP...</option>
+                                    <option>Wynter Mmolotsi — FRANCISTOWN_S — UDC</option>
+                                    <option>Moeti Mohwasa — MMOPANE/LENTSWELETAU — BDP</option>
+                                    <option>Unmatched — leave as unresolved</option>
+                                </select>
+                                <button class="btn-primary text-xs">Resolve</button>
+                                <button class="btn-ghost text-xs">Skip</button>
+                            </div>
+                            <div class="mono text-[10px] text-tert mt-2">Suggestion: <span class="text-amber">Low confidence — "South" ambiguous</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 border-t border-subtle pt-4">
+                        <span class="mono text-[10px] text-tert uppercase tracking-widest">Recently Resolved</span>
+                        <div class="mt-2 space-y-1 text-[11px]">
+                            <div class="flex items-center gap-2 py-1"><span class="text-green"><i data-lucide="check" class="w-3 h-3"></i></span> <span class="mono text-sec">"Hon. Minister of Finance"</span> → System match</div>
+                            <div class="flex items-center gap-2 py-1"><span class="text-green"><i data-lucide="check" class="w-3 h-3"></i></span> <span class="mono text-sec">"Ms. Tsheko"</span> → Lydia Tsheko <span class="mono text-[10px] text-tert">by admin 2026-07-20</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 11: User Management -->
+            <div id="screen-users" class="feed-view">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <span class="admin-badge admin">ADMIN_ONLY</span>
+                            <h1 class="text-lg font-semibold mt-1">User Management</h1>
+                            <p class="mono text-[11px] text-tert">Invite, manage, and deactivate platform users</p>
+                        </div>
+                        <button class="btn-primary text-xs"><i data-lucide="user-plus" class="w-3 h-3"></i> Add User</button>
+                    </div>
+
+                    <div class="surface">
+                        <div class="grid grid-cols-12 gap-3 px-4 py-2 border-b border-subtle mono text-[10px] text-tert uppercase tracking-widest surface">
+                            <div class="col-span-3">User</div><div class="col-span-2">Role</div><div class="col-span-2">Last Login</div><div class="col-span-2">Created</div><div class="col-span-2">Status</div><div class="col-span-1"></div>
+                        </div>
+                        <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center">
+                            <div class="col-span-3"><div class="flex items-center gap-2.5"><div class="avatar-mono w-8 h-8 text-[10px]" style="border-color:var(--accent-red)">AB</div><div><div class="text-xs font-medium">Admin User</div><div class="mono text-[10px] text-tert">admin@bareng.bw</div></div></div></div>
+                            <div class="col-span-2"><span class="admin-badge admin">ADMIN</span></div>
+                            <div class="col-span-2 mono text-[11px] text-sec">22 Jul 2026</div>
+                            <div class="col-span-2 mono text-[11px] text-sec">01 Jul 2026</div>
+                            <div class="col-span-2"><span class="tag tag-green">ACTIVE</span></div>
+                            <div class="col-span-1 text-right mono text-[10px] text-blue cursor-pointer hover:underline">Edit</div>
+                        </div>
+                        <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center">
+                            <div class="col-span-3"><div class="flex items-center gap-2.5"><div class="avatar-mono w-8 h-8 text-[10px]" style="border-color:var(--accent-amber)">JO</div><div><div class="text-xs font-medium">Journalist One</div><div class="mono text-[10px] text-tert">editor@bareng.bw</div></div></div></div>
+                            <div class="col-span-2"><span class="admin-badge editor">EDITOR</span></div>
+                            <div class="col-span-2 mono text-[11px] text-sec">22 Jul 2026</div>
+                            <div class="col-span-2 mono text-[11px] text-sec">15 Jul 2026</div>
+                            <div class="col-span-2"><span class="tag tag-green">ACTIVE</span></div>
+                            <div class="col-span-1 text-right mono text-[10px] text-blue cursor-pointer hover:underline">Edit</div>
+                        </div>
+                        <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center">
+                            <div class="col-span-3"><div class="flex items-center gap-2.5"><div class="avatar-mono w-8 h-8 text-[10px]" style="border-color:var(--accent-blue)">RS</div><div><div class="text-xs font-medium">Research Scholar</div><div class="mono text-[10px] text-tert">viewer@bareng.bw</div></div></div></div>
+                            <div class="col-span-2"><span class="admin-badge viewer">VIEWER</span></div>
+                            <div class="col-span-2 mono text-[11px] text-sec">20 Jul 2026</div>
+                            <div class="col-span-2 mono text-[11px] text-sec">18 Jul 2026</div>
+                            <div class="col-span-2"><span class="tag tag-green">ACTIVE</span></div>
+                            <div class="col-span-1 text-right mono text-[10px] text-blue cursor-pointer hover:underline">Edit</div>
+                        </div>
+                        <div class="feed-row grid grid-cols-12 gap-3 px-4 py-3 items-center" style="opacity:0.5">
+                            <div class="col-span-3"><div class="flex items-center gap-2.5"><div class="avatar-mono w-8 h-8 text-[10px]" style="border-color:var(--text-tertiary)">DM</div><div><div class="text-xs font-medium">Former Dev</div><div class="mono text-[10px] text-tert">dev@bareng.bw</div></div></div></div>
+                            <div class="col-span-2"><span class="admin-badge admin">ADMIN</span></div>
+                            <div class="col-span-2 mono text-[11px] text-sec">10 Jul 2026</div>
+                            <div class="col-span-2 mono text-[11px] text-sec">01 Jul 2026</div>
+                            <div class="col-span-2"><span class="tag tag-red">DEACTIVATED</span></div>
+                            <div class="col-span-1 text-right mono text-[10px] text-blue cursor-pointer hover:underline">Edit</div>
+                        </div>
+                    </div>
+
+                    <div class="surface p-4 mt-6">
+                        <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3"><i data-lucide="user-plus" class="w-3 h-3 inline mr-1"></i> Invite New User</h3>
+                        <div class="grid grid-cols-3 gap-3 mb-3">
+                            <div><label class="mono text-[10px] text-tert block mb-1">Email</label><input type="text" placeholder="user@example.com" class="bp-input"></div>
+                            <div><label class="mono text-[10px] text-tert block mb-1">Display Name</label><input type="text" placeholder="Full name" class="bp-input"></div>
+                            <div><label class="mono text-[10px] text-tert block mb-1">Role</label><select class="bp-select"><option>Editor</option><option>Admin</option><option>Viewer</option></select></div>
+                        </div>
+                        <button class="btn-primary text-xs">Send Invitation</button>
+                    </div>
+
+                    <div class="mt-6 surface p-4">
+                        <h3 class="mono text-[10px] text-tert uppercase tracking-widest mb-3"><i data-lucide="shield" class="w-3 h-3 inline mr-1"></i> Role Permissions</h3>
+                        <div class="grid grid-cols-12 mono text-[10px] border-b border-subtle py-1.5">
+                            <div class="col-span-5 text-tert">Action</div>
+                            <div class="col-span-2 text-center text-green">Admin</div>
+                            <div class="col-span-2 text-center text-amber">Editor</div>
+                            <div class="col-span-3 text-center text-blue">Viewer</div>
+                        </div>
+                        <div class="grid grid-cols-12 mono text-[10px] border-b border-subtle py-1.5">
+                            <div class="col-span-5 text-sec">View system health / stats</div>
+                            <div class="col-span-2 text-center text-green">✓</div>
+                            <div class="col-span-2 text-center text-green">✓</div>
+                            <div class="col-span-3 text-center text-green">✓</div>
+                        </div>
+                        <div class="grid grid-cols-12 mono text-[10px] border-b border-subtle py-1.5">
+                            <div class="col-span-5 text-sec">Resolve entity matches</div>
+                            <div class="col-span-2 text-center text-green">✓</div>
+                            <div class="col-span-2 text-center text-green">✓</div>
+                            <div class="col-span-3 text-center text-tert">—</div>
+                        </div>
+                        <div class="grid grid-cols-12 mono text-[10px] border-b border-subtle py-1.5">
+                            <div class="col-span-5 text-sec">Flag / review contributions</div>
+                            <div class="col-span-2 text-center text-green">✓</div>
+                            <div class="col-span-2 text-center text-green">✓</div>
+                            <div class="col-span-3 text-center text-tert">—</div>
+                        </div>
+                        <div class="grid grid-cols-12 mono text-[10px] border-b border-subtle py-1.5">
+                            <div class="col-span-5 text-sec">Trigger manual crawl</div>
+                            <div class="col-span-2 text-center text-green">✓</div>
+                            <div class="col-span-2 text-center text-tert">—</div>
+                            <div class="col-span-3 text-center text-tert">—</div>
+                        </div>
+                        <div class="grid grid-cols-12 mono text-[10px] py-1.5">
+                            <div class="col-span-5 text-sec">Manage users (CRUD)</div>
+                            <div class="col-span-2 text-center text-green">✓</div>
+                            <div class="col-span-2 text-center text-tert">—</div>
+                            <div class="col-span-3 text-center text-tert">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL (col-3) — context-aware -->
+        <aside class="col-span-3 bg-[var(--bg-surface)] overflow-y-auto border-l border-subtle hidden md:block">
+            <!-- Data screens right panel (default) -->
+            <div id="rightpanel-data" class="rightpanel-content active">
+                <div class="p-4 border-b border-default">
+                    <div class="flex items-center justify-between mb-3"><h3 class="text-xs font-semibold uppercase tracking-wider">Participation Index</h3><span class="mono text-[10px] text-amber flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> PROXY</span></div>
+                    <div class="space-y-2.5">
+                        <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">01</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Duma Boko</span><span class="mono text-xs text-blue">142</span></div><div class="bar-thin"><div style="width:100%"></div></div></div></div>
+                        <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">02</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Wynter Mmolotsi</span><span class="mono text-xs text-blue">118</span></div><div class="bar-thin"><div style="width:83%"></div></div></div></div>
+                        <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">03</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Liakat Kablay</span><span class="mono text-xs text-blue">95</span></div><div class="bar-thin"><div style="width:67%"></div></div></div></div>
+                        <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">04</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Kapinga Kapinga</span><span class="mono text-xs text-blue">87</span></div><div class="bar-thin"><div style="width:61%"></div></div></div></div>
+                        <div class="flex items-center gap-2.5"><span class="mono text-[10px] text-tert w-4 text-right">05</span><div class="flex-1 min-w-0"><div class="flex justify-between items-baseline mb-0.5"><span class="text-xs font-medium truncate">Thabologo Furniture</span><span class="mono text-xs text-blue">73</span></div><div class="bar-thin"><div style="width:51%"></div></div></div></div>
+                    </div>
+                    <a href="#" class="pill-link mt-3 inline-block">View full leaderboard →</a>
+                </div>
+                <div class="p-4 border-b border-subtle" style="background:var(--bg-elevated)">
+                    <div class="flex items-start gap-2.5">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber mt-0.5 flex-shrink-0"></i>
+                        <div>
+                            <h4 class="text-xs font-semibold text-amber mb-1">Constraint: No Attendance Data</h4>
+                            <p class="text-[11px] text-sec leading-relaxed">Botswana Parliament does not publish attendance records. This index tracks <span class="mono text-[var(--text-primary)] surface px-1 py-0.5 text-[10px]">RECORDED_CONTRIBUTIONS</span> only.</p>
+                            <a href="#" class="pill-link mt-1">VIEW_METHODOLOGY →</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider mb-3">Unresolved Entities</h3>
+                    <p class="text-[11px] text-tert leading-relaxed mb-3">These names could not be matched to the MP roster.</p>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center px-2.5 py-1.5 surface-elevated"><div><span class="mono text-xs text-sec">"Mr. T. Furniture"</span><div class="mono text-[10px] text-tert mt-0.5">botswanaspeaks · 2026-07-22</div></div><span class="tag tag-amber">REVIEW</span></div>
+                        <div class="flex justify-between items-center px-2.5 py-1.5 surface-elevated"><div><span class="mono text-xs text-sec">"Member for South"</span><div class="mono text-[10px] text-tert mt-0.5">botswanaspeaks · 2026-07-18</div></div><span class="tag tag-amber">REVIEW</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin right panel -->
+            <div id="rightpanel-admin" class="rightpanel-content">
+                <div class="p-4 border-b border-default">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider mb-3">System Health</h3>
+                    <div class="space-y-3 text-[11px]">
+                        <div class="flex items-center justify-between"><span class="text-sec">Crawl status</span><span class="mono text-green flex items-center gap-1"><span class="status-dot bg-green"></span> Healthy</span></div>
+                        <div class="flex items-center justify-between"><span class="text-sec">Last crawl</span><span class="mono text-tert">22 Jul 06:00</span></div>
+                        <div class="flex items-center justify-between"><span class="text-sec">Documents parsed</span><span class="mono text-blue">142</span></div>
+                        <div class="flex items-center justify-between"><span class="text-sec">Contributions</span><span class="mono text-blue">378</span></div>
+                        <div class="flex items-center justify-between"><span class="text-sec">Auto-resolved rate</span><span class="mono text-green">98.6%</span></div>
+                        <div class="flex items-center justify-between"><span class="text-sec">Unresolved entities</span><span class="mono text-amber">2 <span class="text-tert">· <a href="#" class="text-blue hover:underline">Review</a></span></span></div>
+                        <div class="flex items-center justify-between"><span class="text-sec">Active users</span><span class="mono text-blue">4</span></div>
+                        <div class="flex items-center justify-between"><span class="text-sec">Uptime</span><span class="mono text-green">99.8%</span></div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider mb-3">Audit Trail</h3>
+                    <div class="space-y-2 text-[11px]">
+                        <div class="py-1 border-b border-subtle"><span class="text-green">✓</span> <span class="text-sec">admin resolved "Ms. Tsheko"</span><div class="mono text-[9px] text-tert mt-0.5">2h ago</div></div>
+                        <div class="py-1 border-b border-subtle"><span class="text-blue">→</span> <span class="text-sec">editor logged in</span><div class="mono text-[9px] text-tert mt-0.5">4h ago</div></div>
+                        <div class="py-1"><span class="text-amber">↻</span> <span class="text-sec">Crawl triggered manually</span><div class="mono text-[9px] text-tert mt-0.5">6h ago</div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+</div>
+
+<script>
+    const DATA_SCREENS = ['screen-feed', 'screen-findmp', 'screen-profile', 'screen-compare', 'screen-leaderboard', 'screen-bills', 'screen-search'];
+    const ADMIN_SCREENS = ['screen-admin', 'screen-entities', 'screen-users'];
+    const FEED_SCREENS = [...DATA_SCREENS, ...ADMIN_SCREENS];
+
+    const SCREEN_LABELS = {
+        'screen-feed':      'LIVE_RECORD_STREAM',
+        'screen-findmp':    'FIND_MY_MP',
+        'screen-profile':   'MP_PROFILE',
+        'screen-compare':   'MP_COMPARE',
+        'screen-leaderboard': 'PARTICIPATION_INDEX',
+        'screen-bills':     'BILL_TRACKER',
+        'screen-search':    'SEARCH',
+        'screen-admin':     'ADMIN_DASHBOARD',
+        'screen-entities':  'ENTITY_REVIEW',
+        'screen-users':     'USER_MANAGEMENT'
+    };
+
+    const SCREEN_ICONS = {
+        'screen-feed':      'radio',
+        'screen-findmp':    'search',
+        'screen-profile':   'user',
+        'screen-compare':   'git-compare',
+        'screen-leaderboard': 'bar-chart-3',
+        'screen-bills':     'file-text',
+        'screen-search':    'search',
+        'screen-admin':     'shield',
+        'screen-entities':  'search',
+        'screen-users':     'users'
+    };
+
+    let currentFeedScreen = 'screen-feed';
+
+    function switchScreen(target) {
+        const isHome = target === 'screen-home';
+        const isFeedScreen = FEED_SCREENS.includes(target);
+        const isAdmin = ADMIN_SCREENS.includes(target);
+
+        // Update nav buttons
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.nav-btn[data-target="${target}"]`)?.classList.add('active');
+
+        if (isHome) {
+            // Show home, hide feed mode
+            document.getElementById('screen-home').classList.add('active');
+            document.getElementById('feed-mode').classList.remove('active');
+            return;
+        }
+
+        if (isFeedScreen) {
+            // Show feed mode, hide home
+            document.getElementById('screen-home').classList.remove('active');
+            document.getElementById('feed-mode').classList.add('active');
+
+            // Update feed screen label
+            const label = document.getElementById('feed-screen-label');
+            label.innerHTML = `<i data-lucide="${SCREEN_ICONS[target] || 'radio'}" class="w-3 h-3"></i> ${SCREEN_LABELS[target] || target}`;
+
+            // Animate transition: fade out old, swap, fade in new
+            const oldView = document.getElementById(currentFeedScreen);
+            const newView = document.getElementById(target);
+
+            if (oldView && oldView !== newView) {
+                oldView.classList.remove('active', 'anim-in');
+                oldView.classList.add('anim-out');
+                setTimeout(() => {
+                    oldView.classList.remove('anim-out');
+                    oldView.style.display = 'none';
+                    newView.style.display = 'block';
+                    newView.classList.remove('anim-out');
+                    newView.classList.add('active', 'anim-in');
+                    setTimeout(() => {
+                        newView.classList.remove('anim-in');
+                    }, 300);
+                }, 150);
+            } else if (newView) {
+                newView.style.display = 'block';
+                newView.classList.add('active', 'anim-in');
+                setTimeout(() => newView.classList.remove('anim-in'), 300);
+            }
+
+            // Switch sidebar context
+            document.querySelectorAll('.sidebar-content').forEach(s => s.classList.remove('active'));
+            if (isAdmin) {
+                document.getElementById('sidebar-admin').classList.add('active');
+            } else {
+                document.getElementById('sidebar-data').classList.add('active');
+            }
+
+            // Switch right panel context
+            document.querySelectorAll('.rightpanel-content').forEach(r => r.classList.remove('active'));
+            if (isAdmin) {
+                document.getElementById('rightpanel-admin').classList.add('active');
+            } else {
+                document.getElementById('rightpanel-data').classList.add('active');
+            }
+
+            currentFeedScreen = target;
+        }
+    }
+
+    // Click handlers
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            switchScreen(this.dataset.target);
+        });
+    });
+
+    // Initialize: show only screen-home, hide others
+    document.querySelectorAll('.feed-view').forEach(v => v.style.display = 'none');
+    document.getElementById('screen-home').classList.add('active');
+    document.getElementById('feed-mode').classList.remove('active');
+
+    lucide.createIcons();
+</script>
+</body>
+</html>
