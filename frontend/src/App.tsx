@@ -1,23 +1,56 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import LoginPage from './auth/LoginPage';
 import ProtectedRoute from './auth/ProtectedRoute';
 import AdminLayout from './admin/AdminLayout';
 import AppShell from './layout/AppShell';
+import DashboardMain from './dashboard/DashboardMain';
+import DashboardSidebar from './dashboard/DashboardSidebar';
+import { useDashboardData } from './dashboard/useDashboardData';
 
 function Home() {
+  const { data, error } = useDashboardData();
+
+  if (error) {
+    return (
+      <AppShell>
+        <span style={{ color: 'var(--accent-red)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+          Could not load dashboard data. Is the API running?
+        </span>
+      </AppShell>
+    );
+  }
+
+  if (!data) {
+    return (
+      <AppShell>
+        <span style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+          Loading this week in parliament…
+        </span>
+      </AppShell>
+    );
+  }
+
   return (
-    <AppShell fullWidth>
-      <div style={{ padding: '2rem' }}>
-        <h1 style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', fontSize: 24, margin: 0 }}>
-          This Week in Parliament
-        </h1>
-        <p style={{ color: 'var(--text-tertiary)', marginTop: 8 }}>
-          Ba Reng? — Botswana Parliament MP Monitor
-        </p>
-      </div>
+    <AppShell rightPanel={<DashboardSidebar data={data} />}>
+      <DashboardMain data={data} />
     </AppShell>
   );
+}
+
+function ComingSoon({ title }: { title: string }) {
+  return (
+    <AppShell>
+      <span style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+        {title} — coming soon
+      </span>
+    </AppShell>
+  );
+}
+
+function MpProfileStub() {
+  const { mpId } = useParams();
+  return <ComingSoon title={`MP Profile #${mpId}`} />;
 }
 
 function Feed() {
@@ -74,6 +107,9 @@ export default function App() {
         <Route path="/feed" element={<Feed />} />
         <Route path="/find" element={<FindMp />} />
         <Route path="/rankings" element={<Rankings />} />
+        <Route path="/mp/:mpId" element={<MpProfileStub />} />
+        <Route path="/compare" element={<ComingSoon title="Compare MPs" />} />
+        <Route path="/bills" element={<ComingSoon title="Bill Tracker" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/admin/*"
