@@ -12,20 +12,21 @@
   },
   "dependencies": {
     "@blueprintjs/core": "^6.16",
+    "@blueprintjs/icons": "^6.12",
     "@blueprintjs/select": "^6.0",
     "@blueprintjs/table": "^6.0",
-    "@blueprintjs/icons": "^6.12",
     "react": "^19.0",
     "react-dom": "^19.0",
     "react-router-dom": "^7.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3",
     "@types/react": "^19.0",
     "@types/react-dom": "^19.0",
     "@vitejs/plugin-react": "^4.4",
-    "@tailwindcss/vite": "^4.3",
     "eslint": "^9.0",
     "typescript": "^5.7",
+    "typescript-eslint": "^8.65.0",
     "vite": "^6.0"
   }
 }
