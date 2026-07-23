@@ -41,7 +41,7 @@ export default function DashboardMain({ data }: DashboardMainProps) {
         >
           13th Parliament
         </div>
-        <h1 style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontSize: 22, margin: 0 }}>
+        <h1 style={{ color: 'var(--text-primary)', fontSize: 18, fontWeight: 600, margin: 0 }}>
           This Week in Parliament
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', marginTop: 4, fontSize: 11 }}>

@@ -17,8 +17,7 @@ export default function CaveatBanner({ caveat }: CaveatBannerProps) {
       <div>
         <div
           style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
             color: 'var(--accent-amber)',
             marginBottom: 4,

@@ -1,5 +1,5 @@
 import { Contribution } from './types';
-import { card, grid, statLabel, statValue } from './styles';
+import { statCard, grid, statLabel, statValue } from './styles';
 
 interface WeekAtGlanceProps {
   contributions: Contribution[];
@@ -36,9 +36,9 @@ export default function WeekAtGlance({ contributions, activeMpCount }: WeekAtGla
   return (
     <div style={grid}>
       {stats.map((stat) => (
-        <div key={stat.label} style={card}>
-          <div style={statValue}>{stat.value}</div>
+        <div key={stat.label} style={statCard}>
           <div style={statLabel}>{stat.label}</div>
+          <div style={statValue}>{stat.value}</div>
         </div>
       ))}
     </div>

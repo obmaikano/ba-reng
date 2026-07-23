@@ -6,6 +6,12 @@ export const card: CSSProperties = {
   padding: 16,
 };
 
+export const statCard: CSSProperties = {
+  border: '1px solid var(--border-subtle)',
+  background: 'var(--bg-elevated)',
+  padding: 12,
+};
+
 export const sectionTitle: CSSProperties = {
   fontFamily: 'var(--font-mono)',
   fontSize: 11,
@@ -21,16 +27,19 @@ export const mono: CSSProperties = {
 
 export const statValue: CSSProperties = {
   fontFamily: 'var(--font-mono)',
-  fontSize: 28,
+  fontSize: 20,
+  fontWeight: 600,
   color: 'var(--text-primary)',
   lineHeight: 1.1,
+  marginTop: 2,
 };
 
 export const statLabel: CSSProperties = {
   fontFamily: 'var(--font-mono)',
-  fontSize: 11,
+  fontSize: 10,
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase',
   color: 'var(--text-tertiary)',
-  marginTop: 4,
 };
 
 export const grid: CSSProperties = {
