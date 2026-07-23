@@ -1,0 +1,31 @@
+{
+  "name": "ba-reng-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@blueprintjs/core": "^6.16",
+    "@blueprintjs/select": "^6.0",
+    "@blueprintjs/table": "^6.0",
+    "@blueprintjs/icons": "^6.12",
+    "react": "^19.0",
+    "react-dom": "^19.0",
+    "react-router-dom": "^7.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0",
+    "@types/react-dom": "^19.0",
+    "@vitejs/plugin-react": "^4.4",
+    "@tailwindcss/vite": "^4.3",
+    "eslint": "^9.0",
+    "typescript": "^5.7",
+    "vite": "^6.0"
+  }
+}

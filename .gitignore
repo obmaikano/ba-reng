@@ -1,0 +1,48 @@
+# Agent/execution contract — project-local workflow, never public
+AGENTS.md
+VIBE.md
+PLAN.md
+
+# Skills and agent tooling
+.codex/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+backend/.venv/
+
+# Node
+node_modules/
+dist/
+
+# Env — never commit .env files
+.env
+.env.*
+!.env.example
+
+# Data
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor swap/backup
+*.swp
+*.swo
+*~
+
+# Build
+*.log
+.history/
+
+# Runtime state — never committed
+.vibe/
