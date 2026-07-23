@@ -15,6 +15,7 @@ def list_contributions(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> list[dict]:
+    """List contributions, optionally filtered by type, ministry, party, or constituency."""
     conn = get_connection()
     try:
         clauses = ['1=1']
@@ -52,6 +53,7 @@ def list_contributions(
 
 @router.get('/{contribution_id}')
 def get_contribution(contribution_id: int) -> dict:
+    """Get a single contribution by id."""
     conn = get_connection()
     try:
         row = conn.execute(

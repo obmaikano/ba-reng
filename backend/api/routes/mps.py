@@ -9,6 +9,7 @@ router = APIRouter(prefix='/api/v1/mps', tags=['mps'])
 
 @router.get('')
 def list_mps() -> list[dict]:
+    """List all MPs with contribution counts and participation index."""
     conn = get_connection()
     try:
         rows = conn.execute(
@@ -42,6 +43,7 @@ def list_mps() -> list[dict]:
 
 @router.get('/{mp_id}')
 def get_mp(mp_id: int) -> dict:
+    """Get a single MP's profile with breakdown by contribution type."""
     conn = get_connection()
     try:
         row = conn.execute(
@@ -76,6 +78,7 @@ def get_mp_contributions(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> list[dict]:
+    """List an MP's contributions, most recent first."""
     conn = get_connection()
     try:
         rows = conn.execute(

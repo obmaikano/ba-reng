@@ -12,6 +12,7 @@ WEIGHTS: dict[str, float] = {
 
 
 def compute(contributions_by_type: list[dict]) -> dict:
+    """Compute the weighted Participation Index and per-type breakdown for one MP."""
     total = 0.0
     breakdown = []
     for item in contributions_by_type:

@@ -8,6 +8,7 @@ router = APIRouter(prefix='/api/v1/search', tags=['search'])
 
 @router.get('')
 def search(q: str = Query(..., min_length=1)) -> list[dict]:
+    """Search contributions by subject text, MP name, ministry, or constituency."""
     conn = get_connection()
     try:
         pattern = f'%{q}%'
