@@ -91,9 +91,11 @@ Each active issue in `.vibe/STATE.md` must use:
 
 ### Branch discipline (hard rule)
 
-- Work on the **current branch**.
-- **Do not create, switch, or delete branches** unless the user explicitly instructs you to.
-- If the current branch is unsuitable (protected, detached HEAD, missing upstream), record a **BLOCKER** issue and stop.
+- Create a **feature branch** for each checkpoint: `checkpoint/0.1-scraper-skeleton`.
+- Work on the feature branch, not `main`.
+- Push the feature branch when the checkpoint is ready for review.
+- Open a **Pull Request** against `main` for every checkpoint completion.
+- Never push directly to `main`.
 
 ### Commit discipline (hard rule)
 
@@ -103,6 +105,9 @@ Each active issue in `.vibe/STATE.md` must use:
 - Use imperative mood. Prefix with checkpoint ID, e.g., `0.1: Add scraper skeleton`.
 - Never commit knowingly broken builds/tests.
 
-### Safety
+### PR discipline (hard rule)
 
-- Do not push, open PRs, or change remotes unless explicitly instructed.
+- Always create a PR for every checkpoint, even single-commit checkpoints.
+- PR title: checkpoint ID + short description, e.g. `0.1: Add scraper skeleton`.
+- Do not merge your own PR unless the user explicitly asks.
+- After PR is created, present the PR URL to the user.

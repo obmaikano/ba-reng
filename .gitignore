@@ -9,8 +9,10 @@ backend/.venv/
 node_modules/
 dist/
 
-# Env
+# Env — never commit .env files
 .env
+.env.*
+!.env.example
 
 # Data
 data/*.db
@@ -25,5 +27,14 @@ data/*.db-shm
 .DS_Store
 Thumbs.db
 
+# Editor swap/backup
+*.swp
+*.swo
+*~
+
 # Build
 *.log
+.history/
+
+# Runtime state — never committed
+.vibe/
