@@ -8,16 +8,20 @@ router = APIRouter(prefix='/api/v1/status', tags=['status'])
 
 @router.get('')
 def system_status() -> dict:
+    """Report system health: record counts and last crawl outcome."""
     conn = get_connection()
     try:
         mp_count = conn.execute('SELECT COUNT(*) AS cnt FROM mps').fetchone()['cnt']
-        contribution_count = conn.execute('SELECT COUNT(*) AS cnt FROM contributions').fetchone()['cnt']
+        contribution_count = conn.execute(
+            'SELECT COUNT(*) AS cnt FROM contributions',
+        ).fetchone()['cnt']
         doc_count = conn.execute('SELECT COUNT(*) AS cnt FROM documents').fetchone()['cnt']
         unresolved = conn.execute(
             "SELECT COUNT(*) AS cnt FROM entity_review_queue WHERE status = 'UNRESOLVED'",
         ).fetchone()['cnt']
         last_crawl = conn.execute(
-            'SELECT started_at, status, new_documents FROM crawl_runs ORDER BY started_at DESC LIMIT 1',
+            'SELECT started_at, status, new_documents FROM crawl_runs '
+            'ORDER BY started_at DESC LIMIT 1',
         ).fetchone()
         return {
             'status': 'ok',

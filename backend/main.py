@@ -7,9 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.admin.routes import router as admin_router
 from backend.api.auth.routes import router as auth_router
-from backend.api.routes.mps import router as mps_router
-from backend.api.routes.contributions import router as contributions_router
 from backend.api.routes.constituencies import router as constituencies_router
+from backend.api.routes.contributions import router as contributions_router
+from backend.api.routes.mps import router as mps_router
 from backend.api.routes.search import router as search_router
 from backend.api.routes.status import router as status_router
 

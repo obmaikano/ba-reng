@@ -28,23 +28,25 @@ def get_applied(conn: sqlite3.Connection) -> set[str]:
 def migrate() -> None:
     """Apply all pending migrations in order."""
     conn = get_connection()
-    ensure_tracking_table(conn)
-    applied = get_applied(conn)
+    try:
+        ensure_tracking_table(conn)
+        applied = get_applied(conn)
 
-    migrations = sorted(MIGRATIONS_DIR.glob('*.sql'))
-    for path in migrations:
-        if path.name in applied:
-            continue
-        sql = path.read_text()
-        conn.executescript(sql)
-        conn.execute(
-            'INSERT INTO applied_migrations (filename) VALUES (?)',
-            (path.name,),
-        )
-        print(f'  Applied: {path.name}')
+        migrations = sorted(MIGRATIONS_DIR.glob('*.sql'))
+        for path in migrations:
+            if path.name in applied:
+                continue
+            sql = path.read_text()
+            conn.executescript(sql)
+            conn.execute(
+                'INSERT INTO applied_migrations (filename) VALUES (?)',
+                (path.name,),
+            )
+            print(f'  Applied: {path.name}')
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+    finally:
+        conn.close()
 
 
 if __name__ == '__main__':

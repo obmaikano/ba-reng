@@ -9,7 +9,7 @@ install:
 	python3 -m venv $(VENV)
 	$(VENV)/bin/pip install --upgrade pip -q
 	$(VENV)/bin/pip install -e . -q
-	$(VENV)/bin/pip install pytest ruff -q
+	$(VENV)/bin/pip install "pytest>=8" "pytest-cov>=6" "httpx>=0.27" "ruff>=0.6" -q
 	cd $(FRONTEND_DIR) && npm install
 
 dev-backend:
