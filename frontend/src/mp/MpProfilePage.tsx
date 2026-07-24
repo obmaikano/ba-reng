@@ -61,8 +61,36 @@ export default function MpProfilePage() {
   const [ministries, setMinistries] = useState<MinistryCount[]>([]);
   const [utterances, setUtterances] = useState<HansardUtterance[]>([]);
   const [evidence, setEvidence] = useState<EvidenceBreakdown | null>(null);
+  const [debateSourceUrl, setDebateSourceUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<'timeline' | 'type' | 'ministries' | 'compare' | 'debate'>('timeline');
   const [loadError, setLoadError] = useState<'not_found' | 'other' | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [timelineLimit, setTimelineLimit] = useState(15);
+
+  const handleLoadMore = () => setTimelineLimit(prev => prev + 15);
+
+  const handleExportCSV = () => {
+    const header = 'Date,Type,Ministry,Subject,Source URL';
+    const rows = contributions.slice(0, timelineLimit).map(c => {
+      const date = new Date(c.date).toISOString().slice(0, 10);
+      const type = typeLabel(c.contribution_type);
+      const ministry = (c.ministry_addressed || '').replace(/,/g, ';');
+      const subject = (c.subject_text || '').replace(/"/g, '""').replace(/,/g, ';');
+      const url = c.source_url || '';
+      return `${date},"${type}","${ministry}","${subject}","${url}"`;
+    });
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `mp-${mpId}-contributions.csv`;
+    a.click();
+  };
+
+  const handleViewSources = () => {
+    const urls = [...new Set(contributions.slice(0, timelineLimit).map(c => c.source_url).filter(Boolean))];
+    urls.forEach(url => window.open(url as string, '_blank'));
+  };
 
   useEffect(() => {
     if (!mpId) return;
@@ -95,11 +123,12 @@ export default function MpProfilePage() {
         .then(res => setUtterances(Array.isArray(res.data) ? res.data : []))
         .catch(() => setUtterances([]));
       // Fetch recent evidence breakdown from sessions endpoint
-      get<Array<{ session_id: number }>>('/api/v1/hansard/sessions')
+      get<Array<{ session_id: number; source_url?: string }>>('/api/v1/hansard/sessions')
         .then(sessions => {
           if (Array.isArray(sessions) && sessions.length > 0) {
-            const latestId = sessions[0].session_id;
-            return get<EvidenceBreakdown>(`/api/v1/hansard/evidence-breakdown/${mpid}?session_id=${latestId}`);
+            const latest = sessions[0];
+            if (latest.source_url) setDebateSourceUrl(latest.source_url);
+            return get<EvidenceBreakdown>(`/api/v1/hansard/evidence-breakdown/${mpid}?session_id=${latest.session_id}`);
           }
           return null;
         })
@@ -176,9 +205,20 @@ export default function MpProfilePage() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             Compare
           </button>
-          <button style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-secondary)', padding: '4px 10px', border: '1px solid var(--border-subtle)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            Share
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }).catch(() => {});
+            }}
+            style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: copied ? 'var(--accent-green)' : 'var(--text-secondary)', padding: '4px 10px', border: copied ? '1px solid var(--accent-green)' : '1px solid var(--border-subtle)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            {copied ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            )}
+            {copied ? 'Copied!' : 'Share'}
           </button>
         </div>
       </div>
@@ -247,7 +287,7 @@ export default function MpProfilePage() {
 
       {tab === 'timeline' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {contributions.slice(0, 15).map((c) => {
+          {contributions.slice(0, timelineLimit).map((c) => {
             const tagColors: Record<string, string> = { question: 'var(--accent-blue)', oral_question: 'var(--accent-blue)', motion: 'var(--accent-amber)', bill_2nd: 'var(--accent-green)', bill_presentation: 'var(--accent-green)' };
             const dotColor = tagColors[c.contribution_type] ?? 'var(--text-secondary)';
             const date = new Date(c.date);
@@ -280,11 +320,16 @@ export default function MpProfilePage() {
             </div>
           )}
           <div style={{ marginTop: 16, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-tertiary)' }}>
-            <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>Load more</span>
+            {contributions.length > timelineLimit ? (
+              <><span onClick={handleLoadMore} style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>Load more</span>
+              <span style={{ margin: '0 8px' }}>·</span></>
+            ) : contributions.length > 0 && (
+              <><span style={{ color: 'var(--text-tertiary)' }}>All {contributions.length} shown</span>
+              <span style={{ margin: '0 8px' }}>·</span></>
+            )}
+            <span onClick={handleExportCSV} style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>Export CSV</span>
             <span style={{ margin: '0 8px' }}>·</span>
-            <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>Export CSV</span>
-            <span style={{ margin: '0 8px' }}>·</span>
-            <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>View source docs</span>
+            <span onClick={handleViewSources} style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>View source docs</span>
           </div>
         </div>
       )}
@@ -303,7 +348,7 @@ export default function MpProfilePage() {
         </div>
       )}
 
-            {tab === 'type' && (
+      {tab === 'type' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {mp.breakdown_by_type
             .filter(t => t.cnt > 0)
@@ -381,9 +426,9 @@ export default function MpProfilePage() {
         </div>
       )}
 
-{tab === 'debate' && (
+      {tab === 'debate' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {evidence && (
+          {evidence && evidence.empirical_pct !== undefined ? (
             <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 16 }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Debate Evidence Profile
@@ -394,6 +439,15 @@ export default function MpProfilePage() {
                 <EvidenceBar label="Anecdotal" pct={evidence.anecdotal_pct} color="var(--accent-amber)" />
                 <EvidenceBar label="Normative" pct={evidence.normative_pct} color="var(--text-secondary)" />
               </div>
+            </div>
+          ) : null}
+
+          {debateSourceUrl && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 0' }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <a href={debateSourceUrl} target="_blank" rel="noreferrer" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-blue)', textDecoration: 'none' }}>
+                View source Hansard document →
+              </a>
             </div>
           )}
 

@@ -197,6 +197,22 @@ export default function SearchPage() {
                 {r.procedural_notes}
               </span>
             )}
+            <div style={{ marginTop: 8, display: 'flex', gap: 12 }}>
+              {r.mp_id && (
+                <span
+                  onClick={(e) => { e.stopPropagation(); navigate(`/mp/${r.mp_id}`); }}
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-blue)', cursor: 'pointer' }}
+                >
+                  View MP profile →
+                </span>
+              )}
+              <span
+                onClick={(e) => { e.stopPropagation(); navigate('/feed'); }}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', cursor: 'pointer' }}
+              >
+                View in Feed →
+              </span>
+            </div>
           </div>
         )})}
       </div>

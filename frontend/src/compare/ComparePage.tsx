@@ -64,6 +64,8 @@ export default function ComparePage() {
   const [bId, setBId] = useState(0);
   const [mpA, setMpA] = useState<CompareData | null>(null);
   const [mpB, setMpB] = useState<CompareData | null>(null);
+  const [loadingA, setLoadingA] = useState(false);
+  const [loadingB, setLoadingB] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,6 +74,8 @@ export default function ComparePage() {
 
   useEffect(() => {
     if (aId) {
+      setMpA(null);
+      setLoadingA(true);
       get<CompareData>(`/api/v1/mps/${aId}`)
         .then(async (mp) => {
           const contribs = await get<{ministry_addressed: string | null}[]>(`/api/v1/mps/${aId}/contributions?limit=200`);
@@ -81,13 +85,16 @@ export default function ComparePage() {
             byMinistry.set(c.ministry_addressed, (byMinistry.get(c.ministry_addressed) ?? 0) + 1);
           }
           setMpA({ ...mp, ministries: Array.from(byMinistry.entries()).map(([ministry, count]) => ({ ministry, count })).sort((a, b) => b.count - a.count) });
+          setLoadingA(false);
         })
-        .catch(() => setMpA(null));
+        .catch(() => { setMpA(null); setLoadingA(false); });
     }
   }, [aId]);
 
   useEffect(() => {
     if (bId) {
+      setMpB(null);
+      setLoadingB(true);
       get<CompareData>(`/api/v1/mps/${bId}`)
         .then(async (mp) => {
           const contribs = await get<{ministry_addressed: string | null}[]>(`/api/v1/mps/${bId}/contributions?limit=200`);
@@ -97,8 +104,9 @@ export default function ComparePage() {
             byMinistry.set(c.ministry_addressed, (byMinistry.get(c.ministry_addressed) ?? 0) + 1);
           }
           setMpB({ ...mp, ministries: Array.from(byMinistry.entries()).map(([ministry, count]) => ({ ministry, count })).sort((a, b) => b.count - a.count) });
+          setLoadingB(false);
         })
-        .catch(() => setMpB(null));
+        .catch(() => { setMpB(null); setLoadingB(false); });
     }
   }, [bId]);
 
@@ -155,7 +163,13 @@ export default function ComparePage() {
         </div>
       </div>
 
-      {mpA && mpB && (
+      {(loadingA || loadingB) && (aId > 0 && bId > 0) && (
+        <div style={{ padding: 24, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-tertiary)' }}>
+          Loading comparison data…
+        </div>
+      )}
+
+      {mpA && mpB && !loadingA && !loadingB && (
         <>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: 12, marginBottom: 16, background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid var(--accent-blue)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2, flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
@@ -207,7 +221,7 @@ export default function ComparePage() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2, flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0 }}>
               This comparison uses the Participation Index, which counts some kinds of activity more than others.{' '}
-              <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>Download as PDF</span>.
+              <span onClick={() => window.print()} style={{ color: "var(--accent-blue)", cursor: "pointer" }}>Download as PDF</span>.
             </p>
           </div>
         </>

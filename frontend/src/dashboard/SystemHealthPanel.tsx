@@ -55,7 +55,7 @@ export default function SystemHealthPanel({ status }: SystemHealthPanelProps) {
               <>
                 {' · '}
                 <span
-                  onClick={() => navigate('/admin/entities')}
+                  onClick={() => navigate('/admin/entity-review')}
                   style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}
                 >
                   Review

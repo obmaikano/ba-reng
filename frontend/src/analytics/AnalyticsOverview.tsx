@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import { useAnalytics } from '../hooks/useAnalytics';
 
 export default function AnalyticsOverview() {
+  const navigate = useNavigate();
   const { dodgeData, velocityData, loading, error } = useAnalytics();
 
   if (loading) {
@@ -93,6 +95,18 @@ export default function AnalyticsOverview() {
             ))}
           </div>
         )}
+      </div>
+
+      <div style={{ marginTop: 24, padding: 16, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
+        <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 8px 0' }}>
+          For per-MP analytics including CLAI constituency alignment scores and executive responsiveness grades, visit an MP profile.
+        </p>
+        <span
+          onClick={() => navigate('/find')}
+          style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-blue)', cursor: 'pointer' }}
+        >
+          Find an MP →
+        </span>
       </div>
     </div>
   );
