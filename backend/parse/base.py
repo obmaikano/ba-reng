@@ -63,4 +63,5 @@ def normalise_ministry(raw: str) -> str:
     name = MINISTRY_NORMALISE_RE.sub('', name)
     name = MINISTRY_CLEANUP_RE.sub('', name).strip()
     name = MINISTRY_TRAILING.sub('', name).strip()
+    name = re.sub(r'\s+for the\s*$', '', name, flags=re.IGNORECASE).strip()
     return name
