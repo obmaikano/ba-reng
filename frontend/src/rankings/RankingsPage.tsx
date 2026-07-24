@@ -278,7 +278,7 @@ export default function RankingsPage() {
         <div style={thRight}>Total</div>
         <div style={thRight}>Questions</div>
         <div style={thRight}>Motions</div>
-        <div style={thRight} title="Committee of Supply — budget review sessions">Budget</div>
+        <div style={thRight} title="Committee of Supply — budget review sessions" aria-label="Committee of Supply column — budget review sessions">Budget</div>
       </div>
 
       {filtered.map((mp, idx) => (

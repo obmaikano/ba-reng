@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { get } from '../api';
 import { sectionTitle, mono, surface, narrativeSection } from '../dashboard/styles';
 
@@ -10,6 +11,7 @@ interface BillItem {
   ministry_addressed: string;
   mp_name: string | null;
   mp_party: string | null;
+  mp_id: number | null;
 }
 
 interface BillsResponse {
@@ -21,6 +23,7 @@ interface BillsResponse {
 export default function BillTrackerPage() {
   const [bills, setBills] = useState<BillItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -92,7 +95,20 @@ export default function BillTrackerPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
                 <span>Introduced: {b.date}</span>
                 {shortSponsor && <><span>&middot;</span><span>{shortSponsor}</span></>}
-                {b.mp_party && <><span>&middot;</span><span>{b.mp_party}</span></>}
+                {b.mp_party && (
+                  <>
+                    <span>&middot;</span>
+                    <span>{b.mp_party}</span>
+                  </>
+                )}
+                {b.mp_id && (
+                  <span
+                    style={{ cursor: 'pointer', color: 'var(--accent-blue)', marginLeft: 'auto' }}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/mp/${b.mp_id}`); }}
+                  >
+                    View MP →
+                  </span>
+                )}
               </div>
             </div>
           );

@@ -147,8 +147,8 @@ export default function MpProfilePage() {
                 {i < topMinistries.length - 1 ? ' and ' : '. '}
               </span>
             ))}
-            {oralQuestions > motions ? 'Questions' : 'Motions'} dominate his record — {bills} bill reading{bills === 1 ? '' : 's'}.{' '}
-            He has raised matters with {ministries.length} ministr{ministries.length === 1 ? 'y' : 'ies'} this session.
+            {oralQuestions > motions ? 'Questions' : 'Motions'} dominate this record — {bills} bill reading{bills === 1 ? '' : 's'}.{' '}
+            Matters raised with {ministries.length} ministr{ministries.length === 1 ? 'y' : 'ies'} this session.
           </p>
         </div>
       </div>

@@ -84,7 +84,7 @@ export default function HotTopics({ contributions, narrativeTopics }: HotTopicsP
                     {topic.ministry}
                   </span>
                   <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
-                    {topic.count} question{topic.count === 1 ? '' : 's'}
+                    {topic.count} matter{topic.count === 1 ? '' : 's'}
                     {topic.pct !== undefined && ` (${topic.pct}%)`}
                   </span>
                 </div>

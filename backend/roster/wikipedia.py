@@ -15,20 +15,59 @@ HEADERS = {
     'User-Agent': 'BaReng/0.1 (Botswana Parliament MP Monitor; research)',
 }
 
-PARTY_SHORT: dict[str, str] = {
+# Common party abbreviations found in Wikipedia tables — used only as fallback
+# when the raw text is a short abbreviation with no other context.
+_PARTY_FALLBACK: dict[str, str] = {
     'BCP': 'BCP',
     'UDC': 'UDC',
     'BDP': 'BDP',
     'BPF': 'BPF',
-    'Ind.': 'Independent',
-    'Ind': 'Independent',
-    'Spkr.': 'Speaker',
 }
 
-SPECIAL_LABELS: dict[int, str] = {
-    68: 'President',
-    69: 'Speaker',
-}
+
+def _normalize_party(raw: str) -> str:
+    """Normalize a party name from the Wikipedia table cell.
+
+    Prefer the full name as-is from the cell text.
+    Only use the fallback map for single-word abbreviations.
+    """
+    party = raw.strip()
+    if party in _PARTY_FALLBACK:
+        return _PARTY_FALLBACK[party]
+    if party in ('Ind.', 'Ind'):
+        return 'Independent'
+    if party in ('Spkr.',):
+        return 'Speaker'
+    return party
+
+
+def _detect_special_row(no: int, cells: list) -> str | None:
+    """Detect if a row represents the President or Speaker from cell text.
+
+    Returns the descriptive label, or None if this is a regular MP row.
+    """
+    all_text = ' '.join(c.get_text(strip=True).lower() for c in cells)
+    if 'president' in all_text and 'speaker' not in all_text:
+        return 'President'
+    if 'speaker' in all_text:
+        return 'Speaker'
+    return None
+
+
+def _detect_from_section(section: str | None) -> str | None:
+    """Detect President/Speaker from a preceding section header row.
+
+    Section headers like 'President' or 'Presiding officer' appear
+    as interleaved rows before the actual MP data row.
+    """
+    if not section:
+        return None
+    s = section.lower()
+    if 'president' in s and 'presiding' not in s:
+        return 'President'
+    if 'presiding officer' in s or 'speaker' in s:
+        return 'Speaker'
+    return None
 
 
 def _normalize_constituency(name: str) -> str:
@@ -50,6 +89,7 @@ def fetch_roster() -> list[dict]:
     Returns list of dicts with keys: name, constituency, party.
     Specially-elected MPs and ex-officio members (President, Speaker)
     use a descriptive constituency label that satisfies UNIQUE.
+    Party names are detected from the Wikipedia table cell content.
     """
     resp = requests.get(WIKIPEDIA_URL, headers=HEADERS, timeout=30)
     resp.raise_for_status()
@@ -61,15 +101,23 @@ def fetch_roster() -> list[dict]:
 
     rows = table.find_all('tr')
     mps: list[dict] = []
+    current_section: str | None = None
     for row in rows:
         cells = row.find_all(['td', 'th'])
         ncols = len(cells)
 
-        if ncols < 2:
+        first_text = cells[0].get_text(strip=True)
+
+        # Track section headers (e.g. "President", "Specially-elected MPs")
+        # Must run BEFORE the ncols<2 guard — section headers with colspan
+        # have only one cell and would otherwise be skipped.
+        if not first_text.isdigit():
+            all_text = ' '.join(c.get_text(strip=True).lower() for c in cells)
+            if any(s in all_text for s in ('president', 'speaker', 'presiding officer', 'specially-elected')):
+                current_section = all_text
             continue
 
-        first_text = cells[0].get_text(strip=True)
-        if not first_text.isdigit():
+        if ncols < 2:
             continue
 
         no = int(first_text)
@@ -80,17 +128,25 @@ def fetch_roster() -> list[dict]:
         if ncols == 5:
             name = _clean_wiki_name(cells[1].get_text(strip=True))
             party_text = cells[3].get_text(strip=True) if len(cells) > 3 else ''
-            party = PARTY_SHORT.get(party_text, party_text)
+            party = _normalize_party(party_text)
 
-            if no in SPECIAL_LABELS:
-                constituency = SPECIAL_LABELS[no]
+            if party == 'Speaker':
+                constituency = 'Speaker'
             else:
-                constituency = f'Specially-elected ({name})'
+                special = _detect_special_row(no, cells) or _detect_from_section(current_section)
+                if special:
+                    constituency = special
+                else:
+                    constituency = f'Specially-elected ({name})'
         elif ncols == 8:
             constituency = cells[1].get_text(strip=True)
             name = _clean_wiki_name(cells[2].get_text(strip=True))
             party_text = cells[4].get_text(strip=True) if len(cells) > 4 else ''
-            party = PARTY_SHORT.get(party_text, party_text)
+            party = _normalize_party(party_text)
+
+            special = _detect_special_row(no, cells)
+            if special:
+                constituency = special
         else:
             continue
 

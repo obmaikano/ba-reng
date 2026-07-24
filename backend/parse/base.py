@@ -48,40 +48,20 @@ MINISTRY_LEAKED_SUBJECT = re.compile(
 
 MINISTRY_BARE_ROMAN = re.compile(r'\s+\(?[ivx]+\)?\s*$', re.IGNORECASE)
 
-CANONICAL_MINISTRY: dict[str, str] = {
-    'finance': 'Finance',
-    'health': 'Health',
-    'president': 'State President, Defence and Security',
-    'president, defence and security': 'State President, Defence and Security',
-    'president, defence': 'State President, Defence and Security',
-    'lands and agriculture': 'Lands and Agriculture',
-    'local government and traditional affairs': 'Local Government and Traditional Affairs',
-    'local government': 'Local Government and Traditional Affairs',
-    'local government and': 'Local Government and Traditional Affairs',
-    'child welfare and basic education': 'Child Welfare and Basic Education',
-    'transport and infrastructure': 'Transport and Infrastructure',
-    'trade and entrepreneurship': 'Trade and Entrepreneurship',
-    'environment and tourism': 'Environment and Tourism',
-    'minerals and energy': 'Minerals and Energy',
-    'water and human settlement': 'Water and Human Settlement',
-    'labour and home affairs': 'Labour and Home Affairs',
-    'sport and arts': 'Sports and Arts',
-    'sports and arts': 'Sports and Arts',
-    'justice and correctional services': 'Justice and Correctional Services',
-    'justice and correctional': 'Justice and Correctional Services',
-    'justice and': 'Justice and Correctional Services',
-    'justice': 'Justice and Correctional Services',
-    'communications and innovation': 'Communications and Innovation',
-    'communications and': 'Communications and Innovation',
-    'higher education': 'Higher Education',
-    'youth and gender affairs': 'Youth and Gender Affairs',
-    'international relations': 'International Relations',
-    'honourable minister': '',
-    'minister': '',
-    'honourable minister of justice': 'Justice and Correctional Services',
-    'honourable minister of justice & correctional services': 'Justice and Correctional Services',
-    'honourable minister of justice and correctional services': 'Justice and Correctional Services',
-}
+def _get_canonical_ministry(name: str) -> str:
+    """Look up a canonical ministry name from the database keywords table."""
+    from backend.db.connection import get_connection
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT m.canonical_name FROM ministry_keywords k JOIN ministries m ON m.id = k.ministry_id WHERE k.keyword = ?",
+            (name.lower().strip().rstrip('.').rstrip(','),),
+        ).fetchone()
+        if row:
+            return row['canonical_name']
+        return ''
+    finally:
+        conn.close()
 
 
 MOTION_SIGNATURE = re.compile(
@@ -214,7 +194,8 @@ def normalise_ministry(raw: str) -> str:
         return ''
 
     lower = name.lower().strip().rstrip('.').rstrip(',')
-    if lower in CANONICAL_MINISTRY:
-        return CANONICAL_MINISTRY[lower]
+    result = _get_canonical_ministry(name)
+    if result:
+        return result
 
     return name.title() if name.isupper() else name

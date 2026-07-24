@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { get } from '../api';
 import { MpSummary } from '../dashboard/types';
 
@@ -63,6 +64,7 @@ export default function ComparePage() {
   const [bId, setBId] = useState(0);
   const [mpA, setMpA] = useState<CompareData | null>(null);
   const [mpB, setMpB] = useState<CompareData | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     get<MpSummary[]>('/api/v1/mps').then(setMps).catch(() => {});
@@ -168,8 +170,8 @@ export default function ComparePage() {
           <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '4fr 4fr 4fr', borderBottom: '1px solid var(--border-subtle)' }}>
               <div style={{ padding: 12, borderRight: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Metric</div>
-              <div style={{ padding: 12, borderRight: '1px solid var(--border-subtle)', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{mpA.name}</div>
-              <div style={{ padding: 12, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{mpB.name}</div>
+              <div style={{ padding: 12, borderRight: '1px solid var(--border-subtle)', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer' }} onClick={() => navigate(`/mp/${mpA.id}`)}>{mpA.name}</div>
+              <div style={{ padding: 12, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '0.08em', cursor: 'pointer' }} onClick={() => navigate(`/mp/${mpB.id}`)}>{mpB.name}</div>
             </div>
             {[
               { label: 'Total Contributions', a: mpA.contribution_count, b: mpB.contribution_count },
