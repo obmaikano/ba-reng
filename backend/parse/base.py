@@ -41,8 +41,8 @@ MINISTRY_ARTIFACTS = re.compile(
 MINISTRY_LEAKED_SUBJECT = re.compile(
     r'\s+(?:if|whether|when|why|how|to\s+state|to\s+update|to\s+apprise|'
     r'to\s+explain|to\s+clarify|to\s+give|to\s+indicate|'
-    r'to\s+confirm|to\s+provide|to\s+brief|to\s+inform|'
-    r'what\s+plans|what\s+steps|what\s+action)\b.*$',
+    r'to\s+confirm|to\s+provide|to\s+brief|to\s+inform|to\s+establish|'
+    r'what\s+plans|what\s+steps|what\s+action|what\s+the)\b.*$',
     re.IGNORECASE,
 )
 
@@ -51,9 +51,9 @@ MINISTRY_BARE_ROMAN = re.compile(r'\s+\(?[ivx]+\)?\s*$', re.IGNORECASE)
 CANONICAL_MINISTRY: dict[str, str] = {
     'finance': 'Finance',
     'health': 'Health',
-    'president': 'President',
-    'president, defence and security': 'President, Defence and Security',
-    'president, defence': 'President, Defence and Security',
+    'president': 'State President, Defence and Security',
+    'president, defence and security': 'State President, Defence and Security',
+    'president, defence': 'State President, Defence and Security',
     'lands and agriculture': 'Lands and Agriculture',
     'local government and traditional affairs': 'Local Government and Traditional Affairs',
     'local government': 'Local Government and Traditional Affairs',
@@ -65,8 +65,8 @@ CANONICAL_MINISTRY: dict[str, str] = {
     'minerals and energy': 'Minerals and Energy',
     'water and human settlement': 'Water and Human Settlement',
     'labour and home affairs': 'Labour and Home Affairs',
-    'sport and arts': 'Sport and Arts',
-    'sports and arts': 'Sport and Arts',
+    'sport and arts': 'Sports and Arts',
+    'sports and arts': 'Sports and Arts',
     'justice and correctional services': 'Justice and Correctional Services',
     'justice and correctional': 'Justice and Correctional Services',
     'justice and': 'Justice and Correctional Services',
@@ -76,7 +76,6 @@ CANONICAL_MINISTRY: dict[str, str] = {
     'higher education': 'Higher Education',
     'youth and gender affairs': 'Youth and Gender Affairs',
     'international relations': 'International Relations',
-    'education': 'Education',
     'honourable minister': '',
     'minister': '',
     'honourable minister of justice': 'Justice and Correctional Services',
@@ -129,7 +128,12 @@ def normalise_ministry(raw: str) -> str:
 
     name = MINISTRY_ARTIFACTS.sub('', name).strip()
     name = MINISTRY_LEAKED_SUBJECT.sub('', name).strip()
+    name = re.sub(r'\s*:\s*\(?[ivx]+\)?\s*', ' ', name).strip()
+    name = MINISTRY_LEAKED_SUBJECT.sub('', name).strip()
+    name = re.sub(r'\s*:\s*\(?[ivx]+\)?\s*$', '', name, flags=re.IGNORECASE).strip()
+    name = re.sub(r'\s+\b(?:on|at|in|by|for the)\s*$', '', name, flags=re.IGNORECASE).strip()
     name = re.sub(r'([a-z])(if|whether|when|why|how|to\s+)', r'\1 \2', name, flags=re.IGNORECASE)
+    name = re.sub(r'\s+:\s*$', '', name)
     name = MINISTRY_BARE_ROMAN.sub('', name).strip()
     name = re.sub(r'\s+:\s*$', '', name)
     name = re.sub(r'[:\s]+$', '', name)
