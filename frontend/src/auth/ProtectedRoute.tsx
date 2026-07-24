@@ -4,10 +4,10 @@ import { useAuth } from './AuthContext';
 
 interface Props {
   children: React.ReactNode;
-  requiredRole?: string;
+  requiredRoles?: string[];
 }
 
-export default function ProtectedRoute({ children, requiredRole }: Props) {
+export default function ProtectedRoute({ children, requiredRoles }: Props) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -22,8 +22,9 @@ export default function ProtectedRoute({ children, requiredRole }: Props) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (requiredRole && user.role !== requiredRole && user.role !== 'admin') {
-    return <Navigate to="/admin" replace />;
+  // Admin bypasses all role checks.
+  if (requiredRoles && user.role !== 'admin' && !requiredRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
   return <>{children}</>;
 }

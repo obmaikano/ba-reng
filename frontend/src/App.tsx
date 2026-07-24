@@ -4,6 +4,10 @@ import { AuthProvider } from './auth/AuthContext';
 import LoginPage from './auth/LoginPage';
 import ProtectedRoute from './auth/ProtectedRoute';
 import AdminLayout from './admin/AdminLayout';
+import AdminDashboardPage from './admin/AdminDashboardPage';
+import MinistryMappingPage from './admin/MinistryMappingPage';
+import EntityReviewPage from './admin/EntityReviewPage';
+import UserManagementPage from './admin/UserManagementPage';
 import AppShell from './layout/AppShell';
 import DashboardMain from './dashboard/DashboardMain';
 import DashboardSidebar from './dashboard/DashboardSidebar';
@@ -196,13 +200,18 @@ export default function App() {
         <Route path="/search" element={<Search />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
-          path="/admin/*"
+          path="/admin"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRoles={["editor"]}>
               <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="ministry-mappings" element={<MinistryMappingPage />} />
+          <Route path="entity-review" element={<EntityReviewPage />} />
+          <Route path="users" element={<UserManagementPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

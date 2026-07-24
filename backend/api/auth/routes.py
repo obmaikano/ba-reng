@@ -21,6 +21,8 @@ def login(body: dict, response: Response) -> dict:
 
     if not email or not password:
         raise HTTPException(status_code=400, detail='Email and password required')
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail='Password must be at least 8 characters')
 
     conn = get_connection()
     try:
