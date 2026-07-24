@@ -84,6 +84,72 @@ CANONICAL_MINISTRY: dict[str, str] = {
 }
 
 
+MOTION_SIGNATURE = re.compile(
+    r'\(((?:MR|MS|MRS|DR|HON|BRIGADIER)\.?\s+.+?),\s+MP\.\s*[-\u2013]\s*(.+?)\)',
+    re.IGNORECASE,
+)
+
+# Real Notice/Order Paper motion lists are almost always closed with a curly
+# opening quote, but at least one real document used a straight quote for one
+# motion in an otherwise-curly-quoted list -- a genuine inconsistency in the
+# source PDF, not a formatting choice we control.
+MOTION_LINE = re.compile(r'^\s*(\d+)\.\s*["“](.+)', re.DOTALL)
+
+
+def parse_numbered_motions(text: str, date: str | None) -> list[dict]:
+    """Parse a numbered "(Mover, MP. - Constituency)"-signed motion list."""
+    contributions: list[dict] = []
+    lines = text.split('\n')
+
+    current_motion_lines: list[str] = []
+    in_motion = False
+
+    def finalize_unsigned() -> None:
+        full_text = ' '.join(current_motion_lines).strip()
+        contributions.append({
+            'contribution_type': 'motion',
+            'raw_match_name': '',
+            'raw_constituency': '',
+            'ministry_addressed': '',
+            'subject_text': full_text,
+            'date': date or '',
+        })
+
+    for line in lines:
+        ls = line.strip()
+        if not ls:
+            continue
+
+        motion_match = MOTION_LINE.match(ls)
+        if motion_match:
+            if in_motion and current_motion_lines:
+                finalize_unsigned()
+            current_motion_lines = [motion_match.group(2)]
+            in_motion = True
+        elif in_motion:
+            sig_match = MOTION_SIGNATURE.search(ls)
+            if sig_match:
+                current_motion_lines.append(ls[:sig_match.start()].strip())
+                full_text = ' '.join(current_motion_lines).strip()
+                contributions.append({
+                    'contribution_type': 'motion',
+                    'raw_match_name': sig_match.group(1).strip(),
+                    'raw_constituency': sig_match.group(2).strip(),
+                    'ministry_addressed': '',
+                    'subject_text': full_text,
+                    'date': date or '',
+                })
+                in_motion = False
+                current_motion_lines = []
+            else:
+                current_motion_lines.append(ls)
+
+    if in_motion and current_motion_lines:
+        finalize_unsigned()
+
+    return contributions
+
+
 def extract_text(pdf_path: str) -> str:
     """Extract and concatenate text from all PDF pages."""
     with pdfplumber.open(pdf_path) as pdf:

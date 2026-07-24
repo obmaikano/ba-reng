@@ -7,6 +7,7 @@ from backend.parse.base import (
     _extract_date_from_header,
     extract_text,
     normalise_ministry,
+    parse_numbered_motions,
 )
 
 SECTION_TYPES: list[tuple[re.Pattern, str]] = [
@@ -24,13 +25,6 @@ SECTION_TYPES: list[tuple[re.Pattern, str]] = [
 ]
 
 QUESTION_START = re.compile(r'^(\d+)\.\s+(.+)')
-
-MOTION_SIGNATURE = re.compile(
-    r'\(((?:MR|MS|MRS|DR|HON)\.\s+.+?),\s+MP\.\s*[-\u2013]\s*(.+?)\)',
-    re.IGNORECASE,
-)
-
-MOTION_LINE = re.compile(r'^\s*(\d+)\.\s*\u201c(.+)', re.DOTALL)
 
 TABLING_ENTRY = re.compile(r'^\s*\u2022\s+(.+)')
 TABLING_MINISTER = re.compile(r'\((.+?)\)')
@@ -183,62 +177,7 @@ def _parse_questions(text: str, date: str | None) -> list[dict]:
 
 
 def _parse_motions(text: str, date: str | None) -> list[dict]:
-    contributions: list[dict] = []
-    text = _remove_inline_page_numbers(text)
-    lines = text.split('\n')
-
-    current_motion_lines: list[str] = []
-    in_motion = False
-
-    for line in lines:
-        ls = line.strip()
-        if not ls:
-            continue
-
-        motion_match = MOTION_LINE.match(ls)
-        if motion_match:
-            if in_motion and current_motion_lines:
-                _finalize_motion(contributions, current_motion_lines, date)
-            current_motion_lines = [motion_match.group(2)]
-            in_motion = True
-        elif in_motion:
-            sig_match = MOTION_SIGNATURE.search(ls)
-            if sig_match:
-                current_motion_lines.append(ls[:sig_match.start()].strip())
-                full_text = ' '.join(current_motion_lines).strip()
-                raw_name = sig_match.group(1).strip()
-                constituency = sig_match.group(2).strip()
-                contributions.append({
-                    'contribution_type': 'motion',
-                    'raw_match_name': raw_name,
-                    'raw_constituency': constituency,
-                    'ministry_addressed': '',
-                    'subject_text': full_text,
-                    'date': date or '',
-                })
-                in_motion = False
-                current_motion_lines = []
-            else:
-                current_motion_lines.append(ls)
-
-    if in_motion and current_motion_lines:
-        _finalize_motion(contributions, current_motion_lines, date)
-
-    return contributions
-
-
-def _finalize_motion(
-    contributions: list[dict], lines: list[str], date: str | None,
-) -> None:
-    full_text = ' '.join(lines).strip()
-    contributions.append({
-        'contribution_type': 'motion',
-        'raw_match_name': '',
-        'raw_constituency': '',
-        'ministry_addressed': '',
-        'subject_text': full_text,
-        'date': date or '',
-    })
+    return parse_numbered_motions(_remove_inline_page_numbers(text), date)
 
 
 def _finalize_tabling(
