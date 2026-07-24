@@ -31,12 +31,12 @@ export default function MpProfilePage() {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [ministries, setMinistries] = useState<MinistryCount[]>([]);
   const [tab, setTab] = useState<'timeline' | 'type' | 'ministries' | 'compare'>('timeline');
-  const [loadError, setLoadError] = useState(false);
+  const [loadError, setLoadError] = useState<'not_found' | 'other' | null>(null);
 
   useEffect(() => {
     if (!mpId) return;
     setMp(null);
-    setLoadError(false);
+    setLoadError(null);
     Promise.all([
       get<MpProfile>(`/api/v1/mps/${mpId}`),
       get<Contribution[]>(`/api/v1/mps/${mpId}/contributions?limit=50`),
@@ -53,16 +53,27 @@ export default function MpProfilePage() {
           .map(([ministry, count]) => ({ ministry, count }))
           .sort((a, b) => b.count - a.count),
       );
-    }).catch(() => setLoadError(true));
+    }).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : '';
+      setLoadError(message === 'MP not found' ? 'not_found' : 'other');
+    });
   }, [mpId]);
 
-  if (loadError) {
+  if (loadError === 'not_found') {
     return (
       <div style={{ padding: 24, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-tertiary)' }}>
         MP not found.{' '}
         <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }} onClick={() => navigate('/find')}>
           Find your representative →
         </span>
+      </div>
+    );
+  }
+
+  if (loadError === 'other') {
+    return (
+      <div style={{ padding: 24, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-tertiary)' }}>
+        Could not load this MP's profile. Please try again later.
       </div>
     );
   }
