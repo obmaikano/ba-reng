@@ -5,6 +5,8 @@ import { useAuth } from '../auth/AuthContext';
 const NAV_ITEMS = [
   { path: "/admin", label: "Dashboard" },
   { path: '/admin/ministry-mappings', label: 'Ministry Mappings' },
+  { path: '/admin/entity-review', label: 'Entity Review' },
+  { path: '/admin/users', label: 'User Management' },
 ];
 
 export default function AdminLayout() {

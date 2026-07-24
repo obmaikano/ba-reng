@@ -11,7 +11,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: '01 Week', path: '/' },
   { label: '02 Feed', path: '/feed' },
   { label: '03 Find MP', path: '/find' },
-  { label: '04 Profile', path: '/mp/1' },
+  { label: '04 Profile', path: '/find' },
   { label: '05 Compare', path: '/compare' },
   { label: '06 Index', path: '/rankings' },
   { label: '07 Bills', path: '/bills' },
@@ -20,7 +20,7 @@ const NAV_ITEMS: NavItem[] = [
 
 const ADMIN_ITEMS: NavItem[] = [
   { label: '09 Admin', path: '/admin', admin: true },
-  { label: '10 Entities', path: '/admin/entities', admin: true },
+  { label: '10 Entities', path: '/admin/entity-review', admin: true },
   { label: '11 Users', path: '/admin/users', admin: true },
 ];
 
