@@ -400,7 +400,7 @@ class TestRunAll:
         conn.execute(
             'INSERT INTO documents (id, title, doc_type, file_path, source_url) '
             'VALUES (?, ?, ?, ?, ?)',
-            (1, 'Bill Text', 'bill', '/fake/bill.pdf', ''),
+            (1, 'Hansard', 'hansard', '/fake/hansard.pdf', ''),
         )
         conn.commit()
 
