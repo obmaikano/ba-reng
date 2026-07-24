@@ -7,7 +7,9 @@ from unittest.mock import MagicMock, patch
 from backend.db.connection import _sha256_hex
 from backend.parse.order_paper import (
     _extract_date_from_header,
+    _parse_bill_amendments,
     _parse_bills,
+    _parse_motions,
     _parse_questions,
     extract_text,
     parse_pdf,
@@ -166,6 +168,117 @@ class TestParseQuestions:
         assert len(results) == 1
         assert 'President' in results[0]['ministry_addressed']
 
+    def test_marks_questions_after_qwn_header_as_question_without_notice(self) -> None:
+        text = (
+            'QUESTIONS\n'
+            '1. MR. A. B, MP. (CONST1): To ask the Minister of Health\n'
+            'whether he has any plans.\n'
+            'QUESTION WITHOUT NOTICE\n'
+            '2. MS. C. D, MP. (CONST2): To ask the Minister for State\n'
+            'President, Defence and Security to brief this House.\n'
+        )
+        results = _parse_questions(text, '2026-07-01')
+        assert len(results) == 2
+        assert results[0]['contribution_type'] == 'oral_question'
+        assert results[1]['contribution_type'] == 'question_without_notice'
+
+    def test_no_qwn_header_means_all_oral_questions(self) -> None:
+        results = _parse_questions(SAMPLE_QUESTIONS, '2026-02-16')
+        assert all(r['contribution_type'] == 'oral_question' for r in results)
+
+    def test_qwn_section_does_not_bleed_into_later_questions_section(self) -> None:
+        text = (
+            'QUESTIONS\n'
+            '1. MR. A. B, MP. (CONST1): To ask the Minister of Health\n'
+            'whether he has any plans.\n'
+            'QUESTION WITHOUT NOTICE\n'
+            '2. MS. C. D, MP. (CONST2): To ask the Minister for State\n'
+            'President, Defence and Security to brief this House.\n'
+            'QUESTIONS\n'
+            '3. MR. E. F, MP. (CONST3): To ask the Minister of Education\n'
+            'if schools have enough textbooks.\n'
+        )
+        results = _parse_questions(text, '2026-07-01')
+        assert len(results) == 3
+        assert results[0]['contribution_type'] == 'oral_question'
+        assert results[1]['contribution_type'] == 'question_without_notice'
+        assert results[2]['contribution_type'] == 'oral_question'
+
+
+# ---------------------------------------------------------------------------
+# _parse_motions
+# ---------------------------------------------------------------------------
+
+
+SAMPLE_MOTIONS = (
+    'MOTIONS\n'
+    '1. “That this Honourable House requests Government to do the first thing.”\n'
+    '(Mr. S. O. Mapulanga, MP. – Chobe)\n'
+    '2. "That this Honourable House requests Government to do the second thing."\n'
+    '(Mr. C. K. Jacobs, MP. – Lobatse)\n'
+)
+
+
+class TestParseMotions:
+    def test_parses_curly_and_straight_quoted_motions(self) -> None:
+        results = _parse_motions(SAMPLE_MOTIONS, '2026-04-10')
+        assert len(results) == 2
+        assert results[0]['raw_match_name'] == 'Mr. S. O. Mapulanga'
+        assert results[0]['raw_constituency'] == 'Chobe'
+        assert 'first thing' in results[0]['subject_text']
+        assert results[1]['raw_match_name'] == 'Mr. C. K. Jacobs'
+        assert results[1]['raw_constituency'] == 'Lobatse'
+        assert 'second thing' in results[1]['subject_text']
+        assert all(r['contribution_type'] == 'motion' for r in results)
+
+    def test_handles_empty_text(self) -> None:
+        assert _parse_motions('', '2026-04-10') == []
+
+
+# ---------------------------------------------------------------------------
+# _parse_bill_amendments
+# ---------------------------------------------------------------------------
+
+
+SAMPLE_AMENDMENTS = (
+    'Cinematograph Bill, 2025 (Bill No. 31 of 2025)\n'
+    'AMENDMENTS\n'
+    '1. The Bill is amended in clause 25 appearing at page B.719 by substituting for the\n'
+    'clause, the following new clause.\n'
+    '(Minister of Sport and Arts)\n'
+    '2. The Bill is amended in clause 28 appearing at page B.720 by deleting the\n'
+    'words appearing in subclause (1).\n'
+    '(Minister of Sport and Arts)\n'
+    '3. Clause 15 appearing on page B264 is amended by deleting sub-clause (5).\n'
+    '(Mr. S. O. Mapulanga, MP. – Chobe)\n'
+)
+
+
+class TestParseBillAmendments:
+    def test_extracts_clause_page_and_action(self) -> None:
+        results = _parse_bill_amendments(SAMPLE_AMENDMENTS, '2026-04-09')
+        assert len(results) == 3
+        assert all(r['contribution_type'] == 'bill_amendment' for r in results)
+        assert results[0]['extracted_data'] == {
+            'clause_number': '25', 'page_reference': 'B.719', 'action': 'substituting',
+        }
+        assert results[1]['extracted_data'] == {
+            'clause_number': '28', 'page_reference': 'B.720', 'action': 'deleting',
+        }
+
+    def test_handles_clause_first_phrasing(self) -> None:
+        results = _parse_bill_amendments(SAMPLE_AMENDMENTS, '2026-04-09')
+        assert results[2]['extracted_data']['clause_number'] == '15'
+        assert results[2]['extracted_data']['action'] == 'deleting'
+        assert results[2]['raw_match_name'] == 'Mr. S. O. Mapulanga'
+        assert results[2]['raw_constituency'] == 'Chobe'
+
+    def test_no_amendments_section_returns_empty(self) -> None:
+        assert _parse_bill_amendments('NOTICE OF MOTIONS\n1. Some motion.', '2026-04-09') == []
+
+    def test_handles_empty_text(self) -> None:
+        assert _parse_bill_amendments('', '2026-04-09') == []
+
 
 # ---------------------------------------------------------------------------
 # _parse_bills
@@ -222,6 +335,38 @@ class TestParsePdf:
         questions = [r for r in results if r['contribution_type'] == 'oral_question']
         assert len(questions) == 3
         assert all(r['source_url'] == 'https://example.com/doc' for r in results)
+
+    def test_motion_scan_does_not_bleed_into_later_amendments_section(self) -> None:
+        # A clause substitution can quote new clause text that itself starts
+        # with a bare "N. " numbering (e.g. "25. The Commission may..."), which
+        # would look like a motion's numbered-quote opener if the motion scan
+        # ran unbounded to end of document instead of stopping at AMENDMENTS.
+        full_text = (
+            'NOTICE OF MOTIONS AND ORDERS OF THE DAY\n'
+            'MOTIONS\n'
+            '1. “That this Honourable House requests Government to act.”\n'
+            '(Mr. S. O. Mapulanga, MP. – Chobe)\n'
+            'Cinematograph Bill, 2025 (Bill No. 31 of 2025)\n'
+            'AMENDMENTS\n'
+            '1. The Bill is amended in clause 25 appearing at page B.719 by substituting for the\n'
+            'clause, the following new clause.\n'
+            '“25. The Commission may issue a film permit.”\n'
+            '(Minister of Sport and Arts)\n'
+        )
+
+        mock_page = MagicMock()
+        mock_page.extract_text.return_value = full_text
+
+        mock_pdf = MagicMock()
+        mock_pdf.__enter__.return_value = mock_pdf
+        mock_pdf.pages = [mock_page]
+
+        with patch('pdfplumber.open', return_value=mock_pdf):
+            results = parse_pdf('/fake/op.pdf', 'https://example.com/doc')
+
+        motions = [r for r in results if r['contribution_type'] == 'motion']
+        assert len(motions) == 1
+        assert motions[0]['raw_match_name'] == 'Mr. S. O. Mapulanga'
 
 
 # ---------------------------------------------------------------------------
