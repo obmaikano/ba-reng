@@ -16,6 +16,7 @@ import MpProfilePage from './mp/MpProfilePage';
 import ComparePage from './compare/ComparePage';
 import RankingsPage from './rankings/RankingsPage';
 import BillTrackerPage from './bills/BillTrackerPage';
+import SearchPage from './search/SearchPage';
 
 function Home() {
   const { data, error } = useDashboardData();
@@ -43,16 +44,6 @@ function Home() {
   return (
     <AppShell rightPanel={<DashboardSidebar data={data} />}>
       <DashboardMain data={data} />
-    </AppShell>
-  );
-}
-
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <AppShell>
-      <span style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-        {title} — coming soon
-      </span>
     </AppShell>
   );
 }
@@ -150,6 +141,14 @@ function Bills() {
   );
 }
 
+function Search() {
+  return (
+    <AppShell>
+      <SearchPage />
+    </AppShell>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -161,7 +160,7 @@ export default function App() {
         <Route path="/mp/:mpId" element={<MpProfile />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/bills" element={<Bills />} />
-        <Route path="/search" element={<ComingSoon title="Search" />} />
+        <Route path="/search" element={<Search />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/admin/*"
