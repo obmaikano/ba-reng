@@ -169,7 +169,14 @@ export default function UserManagementPage() {
                 <td style={{ padding: '8px 12px' }}>{user.email}</td>
                 <td style={{ padding: '8px 12px' }}>{user.display_name}</td>
                 <td style={{ padding: '8px 12px' }}>
-                  <HTMLSelect
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Tag minimal style={{
+                      background: ROLE_COLORS[user.role] || '#BDC1C9',
+                      color: '#0B0E14', fontSize: 10,
+                    }}>
+                      {user.role}
+                    </Tag>
+                    <HTMLSelect
                     minimal
                     value={editingRole[user.id] ?? user.role}
                     onChange={(e) => setEditingRole((prev) => ({ ...prev, [user.id]: e.target.value }))}
@@ -192,7 +199,8 @@ export default function UserManagementPage() {
                     >
                       Save
                     </Button>
-                  )}
+                    )}
+                  </div>
                 </td>
                 <td style={{ padding: '8px 12px' }}>
                   <Tag minimal style={{
