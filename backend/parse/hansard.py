@@ -12,10 +12,55 @@ import re
 from pathlib import Path
 from typing import Any
 
-from backend.parse.base import DATE_PATTERN, _extract_date_from_header, extract_text
+import pdfplumber
+
+from backend.narrative.evidence_classifier import classify_evidence
+from backend.parse.base import _extract_date_from_header
 from backend.parse.language_tagger import detect_language
 from backend.parse.nlp_extract import extract_entities, strip_honorifics
-from backend.narrative.evidence_classifier import classify_evidence
+
+STRADDLE_FRACTION_THRESHOLD = 0.05
+# Running headers/footers (page-top date line, page-bottom folio number) sit
+# in a thin band and can legitimately span the full page width; excluding
+# that band from the straddle count keeps a few full-width header/footer
+# words from skewing the ratio on pages with otherwise-sparse body content.
+HEADER_FOOTER_MARGIN_FRACTION = 0.08
+
+
+def _extract_hansard_text(pdf_path: str) -> str:
+    """Extract Hansard PDF text in correct reading order.
+
+    Daily Hansard body pages are two-column; pdfplumber's default
+    page.extract_text() reads left-to-right across the full page width,
+    interleaving both columns line-by-line into garbled text. Detects
+    two-column pages (few/no body words straddle the page midline) and
+    crops+extracts each column separately in reading order; single-column
+    pages (title page, some front-matter) are left untouched.
+    """
+    pages: list[str] = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            words = page.extract_words()
+            mid = page.width / 2
+            margin = page.height * HEADER_FOOTER_MARGIN_FRACTION
+            body_words = [w for w in words if margin < w['top'] < page.height - margin]
+
+            straddling = sum(1 for w in body_words if w['x0'] < mid < w['x1'])
+            is_two_column = (
+                bool(body_words) and (straddling / len(body_words)) < STRADDLE_FRACTION_THRESHOLD
+            )
+
+            if is_two_column:
+                left = page.crop((0, 0, mid, page.height)).extract_text() or ''
+                right = page.crop((mid, 0, page.width, page.height)).extract_text() or ''
+                text = '\n'.join(t for t in (left, right) if t)
+            else:
+                text = page.extract_text() or ''
+
+            if text:
+                pages.append(text)
+
+    return '\n'.join(pages)
 
 HANSARD_NO_RE = re.compile(r'HANSARD\s+NO:\s*(\d+)', re.IGNORECASE)
 
@@ -49,18 +94,54 @@ AGENDA_HEADERS: list[tuple[re.Pattern, str]] = [
     (re.compile(r'BILLS?\s*[–\u2013\u2014-]\s*(?:FIRST|SECOND|THIRD)\s+READING', re.IGNORECASE), 'Bill Readings'),
 ]
 
-SPEAKER_WITH_CONSTITUENCY = re.compile(
-    r'^(\d+\.\s*)?([A-Z][A-Z\s\.\-]{2,}(?:MP\.)?)\s*\(([^)]+)\):\s*',
-    re.MULTILINE,
+# Real speaker headers always start with one of these title words right at a
+# line boundary (verified against Hansard No. 221 - the PLAN.md benchmark
+# document, plus known Botswana parliamentary title variants). Anchoring on a
+# known title prefix, rather than "any run of uppercase text ending in a
+# colon", is what keeps this from matching agenda/question-title text that
+# happens to precede a real speaker line (e.g. "QUESTIONS FOR ORAL ANSWER\n
+# TOURISTIC DEVELOPMENTS...\nMR KAPINGA (...):") or from stopping mid-
+# portfolio-name at a line wrap (e.g. "MINISTER FOR STATE PRESIDENT, DEFENCE\n
+# AND SECURITY (MR MOHWASA):" previously matched as just "AND SECURITY"
+# because a bare uppercase-run regex can restart at any line).
+#
+# Personal honorifics prefix an actual person's own name/surname (e.g. "MR
+# K. K. KAPINGA" - the name itself, not a parenthetical, is the person).
+PERSONAL_HONORIFICS = (
+    'MR', 'MRS', 'MS', 'DR', 'PROF',
+    'HON', 'HONOURABLE',
+    'BRIG', 'BRIGADIER', 'COL', 'COLONEL', 'MAJOR GENERAL', 'LIEUTENANT GENERAL',
+    'MADAM',
 )
 
-SPEAKER_WITH_PORTFOLIO = re.compile(
-    r'^([A-Z\s]{10,})\s*\(([A-Z\s\.]+)\):\s*',
-    re.MULTILINE,
+# Institutional role titles: the captured "name" is a chamber role, not a
+# person - the real speaker's identity is in the parenthetical detail
+# instead (e.g. speaker_name='MINISTER OF ENVIRONMENT AND TOURISM',
+# detail='MR MMOLOTSI'). Single source of truth: backend.parse.run imports
+# this tuple directly (rather than maintaining a second list) so the
+# speaker-header regex and the run.py identity-resolution role check cannot
+# drift out of sync with each other - this is exactly the class of bug an
+# adversarial review caught for 'ATTORNEY GENERAL'/'ASSISTANT MINISTER'
+# turns silently failing to resolve because the two lists had diverged.
+INSTITUTIONAL_ROLE_TITLES = (
+    'MINISTER', 'ASSISTANT MINISTER',
+    'SPEAKER', 'DEPUTY SPEAKER',
+    'PRESIDENT', 'VICE PRESIDENT',
+    'ATTORNEY GENERAL',
 )
 
-ABBREVIATED_SPEAKER = re.compile(
-    r'^([A-Z][A-Z\s\.]{3,}):\s*',
+CHAMBER_ROLE_TITLES = PERSONAL_HONORIFICS + INSTITUTIONAL_ROLE_TITLES
+
+_ROLE_TITLE_ALTERNATION = '|'.join(
+    re.escape(title).replace(r'\ ', r'\s+') for title in CHAMBER_ROLE_TITLES
+)
+SPEAKER_TITLE_PREFIX = (
+    rf'(?:{_ROLE_TITLE_ALTERNATION})(?:\s+(?:FOR|OF))?'
+)
+
+SPEAKER_HEADER_RE = re.compile(
+    rf"^(\d+\.\s*)?({SPEAKER_TITLE_PREFIX}[A-Z0-9\s,.\-']{{0,90}}?)"
+    r'\s*(?:\(([^)]{1,60})\))?\s*:\s*',
     re.MULTILINE,
 )
 
@@ -71,7 +152,7 @@ SPEECH_TYPE_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(r'^(?:Later\s+Date|Deferred)\.?\s*$', re.IGNORECASE | re.MULTILINE), 'question_deferral'),
 ]
 
-PROCEDURAL_NOTES_RE = re.compile(r'\(\.\.\.(.*?)\.\.\.\)', re.DOTALL)
+PROCEDURAL_NOTES_RE = re.compile(r'\.\.\.\(([^)]*)\)\.\.\.', re.DOTALL)
 
 
 def _extract_metadata(text: str) -> dict[str, Any]:
@@ -130,10 +211,11 @@ def _extract_utterances(section_text: str, agenda_id: int) -> list[dict[str, Any
     turns = _split_turns(section_text)
 
     seq = 0
-    for speaker_raw, speech_text in turns:
+    for name, detail, speech_text in turns:
         seq += 1
-        speaker_name, constituency = _parse_speaker(speaker_raw)
-        speech_type = _classify_turn_type(speech_text)
+        speaker_name, constituency = _parse_speaker(name, detail)
+        speaker_raw = f'{name} ({detail})' if detail else name
+        speech_type = _classify_turn_type(speaker_name, speech_text)
         language = detect_language(speech_text)
         procedural = _extract_procedural(speech_text)
         cleaned = strip_honorifics(speech_text)
@@ -144,6 +226,7 @@ def _extract_utterances(section_text: str, agenda_id: int) -> list[dict[str, Any
             'agenda_id': agenda_id,
             'speaker_raw_title': speaker_raw.strip(),
             'speaker_name': speaker_name,
+            'speaker_detail': constituency,
             'speech_type': speech_type,
             'speech_text': speech_text.strip(),
             'cleaned_text': cleaned,
@@ -159,57 +242,34 @@ def _extract_utterances(section_text: str, agenda_id: int) -> list[dict[str, Any
     return utterances
 
 
-def _split_turns(text: str) -> list[tuple[str, str]]:
-    speaker_positions: list[tuple[int, int, str]] = []
+def _split_turns(text: str) -> list[tuple[str, str, str]]:
+    """Split text into (speaker_name, constituency_or_portfolio, speech_body) turns."""
+    matches = list(SPEAKER_HEADER_RE.finditer(text))
+    turns: list[tuple[str, str, str]] = []
 
-    for m in SPEAKER_WITH_CONSTITUENCY.finditer(text):
-        speaker_positions.append((m.start(), m.end(), m.group(2).strip()))
-
-    for m in SPEAKER_WITH_PORTFOLIO.finditer(text):
-        pos = (m.start(), m.end(), m.group(0).rstrip(':').strip())
-        overlapping = any(p[0] <= m.start() < p[1] for p in speaker_positions)
-        if not overlapping:
-            speaker_positions.append(pos)
-
-    if not speaker_positions:
-        for m in ABBREVIATED_SPEAKER.finditer(text):
-            speaker_positions.append((m.start(), m.end(), m.group(1).strip()))
-
-    speaker_positions.sort(key=lambda x: x[0])
-    turns: list[tuple[str, str]] = []
-
-    for i, (start, end, speaker) in enumerate(speaker_positions):
-        next_start = speaker_positions[i + 1][0] if i + 1 < len(speaker_positions) else len(text)
-        body = text[end:next_start].strip()
+    for i, m in enumerate(matches):
+        name = re.sub(r'\s+', ' ', m.group(2)).strip()
+        detail = re.sub(r'\s+', ' ', m.group(3) or '').strip()
+        next_start = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        body = text[m.end():next_start].strip()
         if body:
-            turns.append((speaker, body))
+            turns.append((name, detail, body))
 
     return turns
 
 
-def _parse_speaker(raw: str) -> tuple[str, str]:
-    raw = raw.strip()
-    const_match = re.search(r'\(([^)]+)\)', raw)
-    if const_match:
-        const = const_match.group(1).strip()
-        name = raw[:const_match.start()].strip()
-        return name, const
-
-    name = re.sub(r'^\d+\.\s*', '', raw).strip()
-    if re.match(r'^[A-Z\s\.]{5,}$', name):
-        return name, ''
-    return raw, ''
+def _parse_speaker(name: str, detail: str) -> tuple[str, str]:
+    return name.strip(), detail.strip()
 
 
-def _classify_turn_type(text: str) -> str:
+def _classify_turn_type(speaker_name: str, text: str) -> str:
     text_clean = text.strip()
     for pattern, label in SPEECH_TYPE_PATTERNS:
         if pattern.match(text_clean):
             return label
 
-    if re.match(r'^MINISTER\s+(?:OF|FOR)\b', text_clean, re.IGNORECASE):
-        return 'minister_answer'
-    if SPEAKER_WITH_PORTFOLIO.match(text_clean):
+    name_upper = speaker_name.strip().upper()
+    if name_upper.startswith(('MINISTER', 'ASSISTANT MINISTER')):
         return 'minister_answer'
     if re.match(r'^(?:Supplementary|Further\s+Supplementary)', text_clean, re.IGNORECASE):
         return 'supplementary_question'
@@ -231,16 +291,19 @@ def parse_pdf(pdf_path: str, source_url: str = '') -> list[dict]:
     if not path.is_file():
         raise FileNotFoundError(f'Hansard PDF not found: {pdf_path}')
 
-    text = extract_text(str(path))
+    text = _extract_hansard_text(str(path))
     meta = _extract_metadata(text)
     agenda_sections = _segment_agenda(text)
 
     results: list[dict] = []
 
     if not agenda_sections:
-        utterances = _extract_utterances(text, 0)
+        utterances = _extract_utterances(text, 1)
         for u in utterances:
             u['_meta'] = meta
+            u['_agenda_category'] = 'General Proceedings'
+            u['_agenda_title'] = 'General Proceedings'
+            u['_agenda_sequence'] = 1
             u['source_url'] = source_url
         return utterances
 

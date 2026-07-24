@@ -1,0 +1,32 @@
+{
+  "ministries": [
+    {"term_setswana": "Temothuo", "term_english": "Agriculture", "category": "ministry"},
+    {"term_setswana": "Thuto", "term_english": "Education", "category": "ministry"},
+    {"term_setswana": "Boitekanelo", "term_english": "Health", "category": "ministry"},
+    {"term_setswana": "Tshireletso", "term_english": "Defence and Security", "category": "ministry"},
+    {"term_setswana": "Merafe le Puso ya Selegae", "term_english": "Local Government and Traditional Affairs", "category": "ministry"},
+    {"term_setswana": "Toka le Tshwanelo", "term_english": "Justice and Correctional Services", "category": "ministry"},
+    {"term_setswana": "Ditirelo Kwa Ntle", "term_english": "International Relations", "category": "ministry"},
+    {"term_setswana": "Madi le Ditlhabololo", "term_english": "Finance", "category": "ministry"},
+    {"term_setswana": "Metsi", "term_english": "Water", "category": "ministry"},
+    {"term_setswana": "Enetjhi", "term_english": "Energy", "category": "ministry"},
+    {"term_setswana": "Ditsela", "term_english": "Transport and Public Works", "category": "ministry"},
+    {"term_setswana": "Mafatlha", "term_english": "Minerals", "category": "ministry"},
+    {"term_setswana": "Naga le Temothuo", "term_english": "Lands and Agriculture", "category": "ministry"},
+    {"term_setswana": "Boipuso jwa Bana", "term_english": "Child Welfare and Basic Education", "category": "ministry"},
+    {"term_setswana": "Thuto e e Kwa Godimo", "term_english": "Higher Education", "category": "ministry"},
+    {"term_setswana": "Tikologo le Bojanala", "term_english": "Environment and Tourism", "category": "ministry"},
+    {"term_setswana": "Dikgokagano le Boitlhamedi", "term_english": "Communications and Innovation", "category": "ministry"}
+  ],
+  "parliamentary_terms": [
+    {"term_setswana": "Palamente", "term_english": "Parliament", "category": "general"},
+    {"term_setswana": "Motlotlegi", "term_english": "Honourable", "category": "general"},
+    {"term_setswana": "Mopalamente", "term_english": "Member of Parliament", "category": "general"},
+    {"term_setswana": "Kgosi", "term_english": "Chief", "category": "general"},
+    {"term_setswana": "Tona", "term_english": "Minister", "category": "general"},
+    {"term_setswana": "Potso", "term_english": "Question", "category": "general"},
+    {"term_setswana": "Tshwetso", "term_english": "Motion", "category": "general"},
+    {"term_setswana": "Molao", "term_english": "Bill", "category": "general"},
+    {"term_setswana": "Kgaolo", "term_english": "Constituency", "category": "general"}
+  ]
+}
