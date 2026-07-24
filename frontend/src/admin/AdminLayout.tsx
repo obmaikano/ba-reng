@@ -3,6 +3,7 @@ import { Button, Classes } from '@blueprintjs/core';
 import { useAuth } from '../auth/AuthContext';
 
 const NAV_ITEMS = [
+  { path: "/admin", label: "Dashboard" },
   { path: '/admin/ministry-mappings', label: 'Ministry Mappings' },
 ];
 
