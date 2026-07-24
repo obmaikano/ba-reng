@@ -15,16 +15,33 @@ from backend.parse.base import (
 
 ORG_CODE_RE = re.compile(r'(?:ORGANISATION|ORG|ORGANIZATION)\s*(?:CODE)?:?\s*(\d{4})', re.IGNORECASE)
 
+PULA_FIGURE = r'Pula\s*\(P\s*([\d][\d,\s]*\d(?:\.\d+)?)\)'
+
+# Committee of Supply speeches restate prior-year budget allocations as
+# context before stating the current request, using near-identical wording
+# ("...was allocated a recurrent budget of ... Pula (PNNN)"). Anchoring to a
+# first-person or passive request verb distinguishes the actual ask from that
+# historical reference. Only "I request" is verified against real benchmark
+# PDFs; the other alternatives are plausible formal-English variants for the
+# same document type but unverified — see ISSUE in .vibe/STATE.md.
+REQUEST_PREFIX = (
+    r'(?:(?:I|We)\s+request\b|(?:is|are)\s+(?:hereby\s+)?(?:requested|sought)\b)'
+)
+
 RECURRENT_RE = re.compile(
-    r'(?:Recurrent|Recurrent\s*Budget|Operating)\s*(?:Budget|Expenditure)?:?\s*'
-    r'P?([\d,]+(?:\.\d+)?)\s*(million|billion|thousand)?',
-    re.IGNORECASE,
+    REQUEST_PREFIX + r'.{0,160}?Recurrent\s+Budget\s+(?:of|in\s+the\s+sum\s+of)\s+.{0,200}?'
+    + PULA_FIGURE
+    + r'|' + REQUEST_PREFIX + r'.{0,160}?' + PULA_FIGURE + r'\s+for\s+the\s+recurrent\s+budget',
+    re.IGNORECASE | re.DOTALL,
 )
 
 DEVELOPMENT_RE = re.compile(
-    r'(?:Development|Development\s*Budget|Capital)\s*(?:Budget|Expenditure)?:?\s*'
-    r'P?([\d,]+(?:\.\d+)?)\s*(million|billion|thousand)?',
-    re.IGNORECASE,
+    REQUEST_PREFIX
+    + r'.{0,160}?Development\s+Budget\s+(?:of|in\s+the\s+sum\s+of|amounting\s+to)\s+.{0,200}?'
+    + PULA_FIGURE
+    + r'|' + REQUEST_PREFIX + r'.{0,160}?' + PULA_FIGURE
+    + r'\s+for\s+the\s+[Dd]evelopment\s+[Bb]udget',
+    re.IGNORECASE | re.DOTALL,
 )
 
 TOTAL_RE = re.compile(
@@ -33,8 +50,10 @@ TOTAL_RE = re.compile(
     re.IGNORECASE,
 )
 
-COMPLETION_TARGET_RE = re.compile(
-    r'(\d+(?:\.\d+)?)\s*(?:per\s*cent|%)\s*(?:completion|target|achieved)',
+PERCENT_MENTION_RE = re.compile(r'(\d+(?:\.\d+)?)\s*%')
+
+BACKLOG_PARENTHETICAL_RE = re.compile(
+    r'\((\d+)\)\s*of\s+the\s+pending\s+cases\s+(?:are\s+)?considered\s+backlog',
     re.IGNORECASE,
 )
 
@@ -43,17 +62,28 @@ CASE_BACKLOG_RE = re.compile(
     re.IGNORECASE,
 )
 
+COLLECTION_TARGET_RE = re.compile(
+    r'target\s+of\s+(P[\d][\d,.\s]*\d\s*(?:billion|million|thousand)?)',
+    re.IGNORECASE,
+)
+
+
+def _clean_pula_digits(raw: str) -> int:
+    return int(float(re.sub(r'[,\s]', '', raw)))
+
 
 def _parse_budget_value(text: str) -> dict[str, Any]:
     budget: dict[str, Any] = {}
 
     rec_match = RECURRENT_RE.search(text)
     if rec_match:
-        budget['recurrent'] = f'P{rec_match.group(1)}{rec_match.group(2) or ""}'.strip()
+        raw = rec_match.group(1) or rec_match.group(2)
+        budget['recurrent'] = _clean_pula_digits(raw)
 
     dev_match = DEVELOPMENT_RE.search(text)
     if dev_match:
-        budget['development'] = f'P{dev_match.group(1)}{dev_match.group(2) or ""}'.strip()
+        raw = dev_match.group(1) or dev_match.group(2)
+        budget['development'] = _clean_pula_digits(raw)
 
     total_match = TOTAL_RE.search(text)
     if total_match:
@@ -65,13 +95,21 @@ def _parse_budget_value(text: str) -> dict[str, Any]:
 def _extract_performance_metrics(text: str) -> dict[str, Any]:
     metrics: dict[str, Any] = {}
 
-    completion = COMPLETION_TARGET_RE.search(text)
-    if completion:
-        metrics['completion_rate_pct'] = float(completion.group(1))
+    percentages = sorted({float(m) for m in PERCENT_MENTION_RE.findall(text)})
+    if percentages:
+        metrics['percentage_mentions'] = percentages
 
-    backlog = CASE_BACKLOG_RE.search(text)
-    if backlog:
-        metrics['case_backlog'] = int(backlog.group(1).replace(',', ''))
+    backlog_match = BACKLOG_PARENTHETICAL_RE.search(text)
+    if backlog_match:
+        metrics['case_backlog'] = int(backlog_match.group(1))
+    else:
+        fallback = CASE_BACKLOG_RE.search(text)
+        if fallback:
+            metrics['case_backlog'] = int(fallback.group(1).replace(',', ''))
+
+    targets = COLLECTION_TARGET_RE.findall(text)
+    if targets:
+        metrics['collection_targets'] = [re.sub(r'\s+', ' ', t).strip() for t in targets]
 
     return metrics
 
