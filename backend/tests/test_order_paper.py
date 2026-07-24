@@ -312,6 +312,50 @@ class TestParseBills:
     def test_empty_text(self) -> None:
         assert _parse_bills('', '2026-07-23') == []
 
+    def test_extracted_data_has_bill_chronology_key(self) -> None:
+        results = _parse_bills(SAMPLE_BILLS, '2026-07-23')
+        assert results[0]['extracted_data'] == {
+            'bill_no': 1, 'bill_year': 2026, 'stage': 'second_reading',
+        }
+
+    def test_recovers_bill_number_split_across_a_line_wrap(self) -> None:
+        # Mirrors a real Cinematograph Bill Order Paper (Bill No. 31 of 2025):
+        # a two-column PDF layout artifact splits "(Bill No. 31 of 2025)" so
+        # "(Bill" ends one line and "No. 31 of 2025)" starts the next, with
+        # unrelated description text from the other column in between.
+        text = (
+            'NOTICE OF MOTIONS AND ORDERS OF THE DAY HRS/MINS\n'
+            'COMMITTEE STAGE 0945 – 1230\n'
+            '• Cinematograph Bill, 2025 (Bill An Act to provide for the making and\n'
+            'No. 31 of 2025) exhibition of cinematograph films.\n'
+            '(Minister of Sport and Arts)\n'
+            '(Published on 14th November, 2025)\n'
+        )
+        results = _parse_bills(text, '2026-04-09')
+        assert results[0]['extracted_data'] == {
+            'bill_no': 31, 'bill_year': 2025, 'stage': 'committee_stage',
+        }
+
+    def test_split_bill_number_fallback_does_not_bleed_into_next_bill(self) -> None:
+        # Two bills back-to-back in the same reading stage, the first one
+        # split across a line wrap like the real Cinematograph Bill case.
+        # The fallback search must stop at the next bullet, not attribute
+        # the second bill's number to the first.
+        text = (
+            'NOTICE OF MOTIONS AND ORDERS OF THE DAY HRS/MINS\n'
+            'COMMITTEE STAGE 0945 – 1230\n'
+            '• Cinematograph Bill, 2025 (Bill An Act to provide for the making and\n'
+            'No. 31 of 2025) exhibition of cinematograph films.\n'
+            '(Minister of Sport and Arts)\n'
+            '• Forestry Bill, 2025 (Bill No. 40 of 2025) An Act to provide for\n'
+            'forestry management.\n'
+            '(Minister of Environment and Tourism)\n'
+        )
+        results = _parse_bills(text, '2026-04-09')
+        assert len(results) == 2
+        assert results[0]['extracted_data']['bill_no'] == 31
+        assert results[1]['extracted_data']['bill_no'] == 40
+
 
 # ---------------------------------------------------------------------------
 # parse_pdf integration

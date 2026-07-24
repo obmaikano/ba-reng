@@ -117,6 +117,15 @@ BILL_ITEM = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+# PDF line-wrap can split "(Bill No. 31 of 2025)" across two lines as
+# "...(Bill" / "No. 31 of 2025)", which BILL_ITEM (no DOTALL, so its title
+# capture can't cross that line break) then reports as having no bill
+# number at all. Recovered by searching a bounded window after the bullet
+# separately, rather than rewriting BILL_ITEM's anchoring to allow
+# arbitrary DOTALL spans (which would risk the title capture swallowing
+# far more than one bullet item).
+BILL_NO_FALLBACK = re.compile(r'No\.?\s*(\d+)\s+of\s+(\d{4})\s*\)', re.IGNORECASE)
+
 
 def _stage_to_type(stage: str) -> str:
     stage = stage.upper()
@@ -131,6 +140,28 @@ def _stage_to_type(stage: str) -> str:
     if 'ADOPTION' in stage:
         return 'motion_adoption'
     return 'bill_reading'
+
+
+def _stage_to_chronology_key(stage: str) -> str:
+    """Canonical stage label, shared with bill.py's 'introduced' stage.
+
+    Lets a bill's introduction record (from bill.py) and its Order Paper
+    reading records be grouped and ordered by (bill_no, bill_year, stage)
+    into a single chronology, rather than each parser's own contribution_type
+    taxonomy (which exists for UI tagging, not stage ordering).
+    """
+    stage = stage.upper()
+    if 'FIRST' in stage:
+        return 'first_reading'
+    if 'SECOND' in stage:
+        return 'second_reading'
+    if 'THIRD' in stage:
+        return 'third_reading'
+    if 'COMMITTEE' in stage:
+        return 'committee_stage'
+    if 'ADOPTION' in stage:
+        return 'motion_adoption'
+    return 'reading'
 
 
 def _parse_bills(text: str, date: str | None) -> list[dict]:
@@ -152,10 +183,33 @@ def _parse_bills(text: str, date: str | None) -> list[dict]:
                 bill_no = item_match.group(2) or ''
                 bill_year = item_match.group(3) or ''
                 minister = item_match.group(4) or ''
+                if not bill_no:
+                    next_bullet = re.search(r'[•\-\*•]\s', part[item_match.end():])
+                    window_end = (
+                        item_match.end() + next_bullet.start()
+                        if next_bullet
+                        else len(part)
+                    )
+                    window_end = min(item_match.end() + 100, window_end)
+                    fallback_match = BILL_NO_FALLBACK.search(
+                        part, item_match.start(), window_end,
+                    )
+                    if fallback_match:
+                        bill_no = fallback_match.group(1)
+                        bill_year = fallback_match.group(2)
                 if bill_no:
                     title = f'{title} (Bill No. {bill_no} of {bill_year})'.strip()
                 if len(title) < 5:
                     continue
+
+                extracted_data = None
+                if bill_no and bill_year:
+                    extracted_data = {
+                        'bill_no': int(bill_no),
+                        'bill_year': int(bill_year),
+                        'stage': _stage_to_chronology_key(current_stage),
+                    }
+
                 contributions.append({
                     'contribution_type': _stage_to_type(current_stage),
                     'raw_match_name': minister.strip() if minister else '',
@@ -164,6 +218,7 @@ def _parse_bills(text: str, date: str | None) -> list[dict]:
                     'subject_text': title,
                     'date': date or '',
                     'source_url': '',
+                    'extracted_data': extracted_data,
                 })
 
     return contributions
