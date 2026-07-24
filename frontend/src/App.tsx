@@ -22,6 +22,7 @@ import ComparePage from './compare/ComparePage';
 import RankingsPage from './rankings/RankingsPage';
 import BillTrackerPage from './bills/BillTrackerPage';
 import SearchPage from './search/SearchPage';
+import AboutPage from './about/AboutPage';
 import AnalyticsOverview from './analytics/AnalyticsOverview';
 
 function Home() {
@@ -61,7 +62,6 @@ function MpProfile() {
 
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
       rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
     >
       <MpProfilePage />
@@ -76,7 +76,6 @@ function Compare() {
 
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
       rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
     >
       <ComparePage />
@@ -115,6 +114,10 @@ function Feed() {
     new Set(data.contributions.map((c) => c.ministry_addressed).filter((m): m is string => Boolean(m))),
   ).sort();
 
+  const partyNames = Array.from(
+    new Set(data.mps.map((m) => m.party).filter((p): p is string => Boolean(p))),
+  ).sort();
+
   const ministryCounts: Record<string, number> = {};
   for (const c of data.contributions) {
     if (c.ministry_addressed) {
@@ -124,7 +127,7 @@ function Feed() {
 
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={ministryNames} filters={filters} onChange={handleFilterChange} ministryCounts={ministryCounts} />}
+      sidebar={<FilterSidebar ministries={ministryNames} parties={partyNames} filters={filters} onChange={handleFilterChange} ministryCounts={ministryCounts} />}
       rightPanel={<FeedRightPanel mps={data.mps} unresolvedCount={data.unresolvedCount} />}
     >
       <FeedPage contributions={data.contributions} totalCount={data.totalCount} />
@@ -134,9 +137,7 @@ function Feed() {
 
 function FindMp() {
   return (
-    <AppShell
-      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
-    >
+    <AppShell>
       <FindMpPage />
     </AppShell>
   );
@@ -149,10 +150,17 @@ function Rankings() {
 
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
       rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
     >
       <RankingsPage />
+    </AppShell>
+  );
+}
+
+function About() {
+  return (
+    <AppShell>
+      <AboutPage />
     </AppShell>
   );
 }
@@ -179,7 +187,6 @@ function Bills() {
 
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
       rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
     >
       <BillTrackerPage />
@@ -194,7 +201,6 @@ function Search() {
 
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
       rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
     >
       <SearchPage />
@@ -214,6 +220,7 @@ export default function App() {
         <Route path="/compare" element={<Compare />} />
         <Route path="/bills" element={<Bills />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/about" element={<About />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/login" element={<LoginPage />} />
         <Route

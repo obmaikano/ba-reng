@@ -53,6 +53,26 @@ interface EvidenceBreakdown {
   normative_pct: number;
 }
 
+interface SpeakerScorecard {
+  overall_score: number;
+  dimensions: {
+    substance_depth: number;
+    evidence_density: number;
+    relevance_focus: number;
+    intervention_efficiency: number;
+    decorum_compliance: number;
+  };
+  evidence_breakdown: Record<string, number>;
+  total_utterances: number;
+  total_words: number;
+  interventions: number;
+  decorum_violations: number;
+  mp_name: string;
+  constituency: string;
+  party: string;
+  session?: { hansard_no: string; session_date: string; meeting_description: string };
+}
+
 export default function MpProfilePage() {
   const { mpId } = useParams();
   const navigate = useNavigate();
@@ -61,6 +81,7 @@ export default function MpProfilePage() {
   const [ministries, setMinistries] = useState<MinistryCount[]>([]);
   const [utterances, setUtterances] = useState<HansardUtterance[]>([]);
   const [evidence, setEvidence] = useState<EvidenceBreakdown | null>(null);
+  const [scorecard, setScorecard] = useState<SpeakerScorecard | null>(null);
   const [debateSourceUrl, setDebateSourceUrl] = useState<string | null>(null);
   const [tab, setTab] = useState<'timeline' | 'type' | 'ministries' | 'compare' | 'debate'>('timeline');
   const [loadError, setLoadError] = useState<'not_found' | 'other' | null>(null);
@@ -134,6 +155,16 @@ export default function MpProfilePage() {
         })
         .then(eb => { if (eb) setEvidence(eb as EvidenceBreakdown); })
         .catch(() => setEvidence(null));
+      // Fetch speaker scorecard
+      get<Array<{ session_id: number }>>('/api/v1/hansard/sessions')
+        .then(sessions => {
+          if (Array.isArray(sessions) && sessions.length > 0) {
+            return get<SpeakerScorecard>(`/api/v1/hansard/scorecard/${mpid}?session_id=${sessions[0].session_id}`);
+          }
+          return null;
+        })
+        .then(sc => { if (sc) setScorecard(sc as SpeakerScorecard); })
+        .catch(() => setScorecard(null));
     }
   }, [mpId]);
 
@@ -428,6 +459,32 @@ export default function MpProfilePage() {
 
       {tab === 'debate' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Speaker Scorecard — 5-dimension weighted evaluation */}
+          {scorecard ? (
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Speaker Scorecard
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: scorecard.overall_score >= 70 ? 'var(--accent-green)' : scorecard.overall_score >= 40 ? 'var(--accent-amber)' : 'var(--accent-red)' }}>
+                  {scorecard.overall_score}%
+                </span>
+              </div>
+              {scorecard.session && (
+                <p style={{ fontSize: 10, color: 'var(--text-tertiary)', margin: '0 0 10px 0' }}>
+                  Hansard No. {scorecard.session.hansard_no} · {scorecard.session.session_date} · {scorecard.total_words} words · {scorecard.total_utterances} turns
+                </p>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                <DimensionBar label="Substance" value={scorecard.dimensions.substance_depth} color="var(--accent-blue)" />
+                <DimensionBar label="Evidence" value={scorecard.dimensions.evidence_density} color="var(--accent-green)" />
+                <DimensionBar label="Relevance" value={scorecard.dimensions.relevance_focus} color="var(--accent-amber)" />
+                <DimensionBar label="Efficiency" value={scorecard.dimensions.intervention_efficiency} color="#8B5CF6" />
+                <DimensionBar label="Decorum" value={scorecard.dimensions.decorum_compliance} color="#EC4899" />
+              </div>
+            </div>
+          ) : null}
+
           {evidence && evidence.empirical_pct !== undefined ? (
             <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 16 }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -508,6 +565,20 @@ function EvidenceBar({ label, pct, color }: { label: string; pct: number; color:
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{label}</span>
       <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color, marginTop: 2 }}>
         {pct}%
+      </span>
+    </div>
+  );
+}
+
+function DimensionBar({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: 8, textAlign: 'center' }}>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{label}</span>
+      <div style={{ height: 4, background: 'var(--border-subtle)', marginTop: 4 }}>
+        <div style={{ height: 4, background: color, width: `${value}%` }} />
+      </div>
+      <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color, marginTop: 2 }}>
+        {value}%
       </span>
     </div>
   );

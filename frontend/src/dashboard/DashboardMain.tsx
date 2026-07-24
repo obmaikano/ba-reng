@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DashboardData } from './useDashboardData';
 import WeekAtGlance from './WeekAtGlance';
 import TopStory from './TopStory';
@@ -24,6 +25,7 @@ function formatDateRange(weekStart: string | null, weekEnd: string | null): stri
 
 export default function DashboardMain({ data }: DashboardMainProps) {
   const { weekContributions, weekStart, weekEnd, sittingDays, prevWeekCount, mps, status, narrative } = data;
+  const [weekSelectorOpen, setWeekSelectorOpen] = useState(false);
   const activeMpCount = new Set(
     weekContributions.filter((c) => c.mp_id !== null).map((c) => c.mp_id),
   ).size;
@@ -121,6 +123,7 @@ export default function DashboardMain({ data }: DashboardMainProps) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
+            onClick={() => setWeekSelectorOpen(!weekSelectorOpen)}
             style={{
               fontFamily: 'var(--font-mono)',
               fontSize: 10,
@@ -135,9 +138,10 @@ export default function DashboardMain({ data }: DashboardMainProps) {
             }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Change week
+            {weekSelectorOpen ? 'Close selector' : 'Change week'}
           </button>
           <button
+            onClick={() => window.print()}
             style={{
               fontFamily: 'var(--font-mono)',
               fontSize: 10,
@@ -188,6 +192,19 @@ export default function DashboardMain({ data }: DashboardMainProps) {
           narrativeTopics={narrative?.hot_topics ?? null}
         />
       </div>
+
+      {weekSelectorOpen && (
+        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: 12, marginTop: 4, marginBottom: 16 }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Week Navigator
+          </span>
+          <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '8px 0 0 0' }}>
+            Currently showing: {weekLabel}. This dashboard shows the most recent parliamentary week.
+            The API provides data for the latest available week. To view a different week, select it on the
+            {' '}<a href="/feed" style={{ color: 'var(--accent-blue)', textDecoration: 'none' }}>Feed page</a> using the date filters.
+          </p>
+        </div>
+      )}
 
       <RecentContributions contributions={weekContributions} />
       <CaveatBanner />

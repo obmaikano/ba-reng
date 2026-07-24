@@ -11,12 +11,12 @@ const NAV_ITEMS: NavItem[] = [
   { label: '01 Week', path: '/' },
   { label: '02 Feed', path: '/feed' },
   { label: '03 Find MP', path: '/find' },
-  { label: '04 Profile', path: '/find' },
   { label: '05 Compare', path: '/compare' },
   { label: '06 Index', path: '/rankings' },
   { label: '07 Bills', path: '/bills' },
   { label: '08 Search', path: '/search' },
   { label: 'Analytics', path: '/analytics' },
+  { label: 'About', path: '/about' },
 ];
 
 const ADMIN_ITEMS: NavItem[] = [

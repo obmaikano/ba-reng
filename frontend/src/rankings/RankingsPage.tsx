@@ -1,32 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePartyMeta } from '../hooks/useMetadata';
 import { get } from '../api';
 import { MpSummary, BreakdownItem } from '../dashboard/types';
 import { sectionTitle, mono } from '../dashboard/styles';
 
-const PARTY_SHORT: Record<string, string> = {
-  'Umbrella for Democratic Change (UDC)': 'UDC',
-  'Botswana Democratic Party (BDP)': 'BDP',
-  'Botswana Congress Party (BCP)': 'BCP',
-  'Botswana Patriotic Front (BPF)': 'BPF',
-};
-
-const PARTY_COLOR: Record<string, string> = {
-  'Umbrella for Democratic Change (UDC)': 'var(--accent-blue)',
-  'Botswana Democratic Party (BDP)': 'var(--accent-blue)',
-  'Botswana Congress Party (BCP)': 'var(--accent-amber)',
-  'Botswana Patriotic Front (BPF)': 'var(--accent-green)',
-};
-
 const ROW_COLS = '36px minmax(120px, 2fr) 64px 1fr 1fr 1fr 1fr 1fr' as const;
 const ROW_GAP = 12;
 
-function shortParty(party: string): string {
-  return PARTY_SHORT[party] ?? party;
-}
-
-function partyColor(party: string): string {
-  return PARTY_COLOR[party] ?? 'var(--accent-blue)';
+function shortPartyName(party: string): string {
+  return party.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 5);
 }
 
 function downloadCSV(mps: MpSummary[]) {
@@ -37,7 +20,7 @@ function downloadCSV(mps: MpSummary[]) {
       i + 1,
       mp.name,
       mp.constituency,
-      shortParty(mp.party),
+      shortPartyName(mp.party),
       mp.participation_index.participation_index,
       mp.contribution_count,
       getCount(b, 'oral_question'),
@@ -111,7 +94,8 @@ function RankRow({ mp, rank, maxIndex, onSelect }: RankRowProps) {
   const motion = getTypeCount(breakdown, 'motion');
   const cos = getTypeCount(breakdown, 'committee_of_supply');
   const barWidth = (score / maxIndex) * 100;
-  const pColor = partyColor(mp.party);
+  const partyMeta = usePartyMeta(mp.party);
+  const pColor = partyMeta.color;
 
   return (
     <div
@@ -138,7 +122,7 @@ function RankRow({ mp, rank, maxIndex, onSelect }: RankRowProps) {
       </div>
       <div>
         <span style={{ ...mono, fontSize: 10, color: pColor, border: `1px solid ${pColor}`, padding: '1px 6px', display: 'inline-block' }}>
-          {shortParty(mp.party)}
+          {shortPartyName(mp.party)}
         </span>
       </div>
       <div style={{ textAlign: 'right' }}>
@@ -250,7 +234,7 @@ export default function RankingsPage() {
             }}
           >
             {parties.map((p) => (
-              <option key={p} value={p}>{p === 'All' ? 'All Parties' : shortParty(p)}</option>
+              <option key={p} value={p}>{p === 'All' ? 'All Parties' : p.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 5)}</option>
             ))}
           </select>
         </div>

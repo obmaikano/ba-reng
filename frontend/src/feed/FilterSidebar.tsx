@@ -20,12 +20,13 @@ export const DEFAULT_FILTERS: FilterState = {
 
 interface FilterSidebarProps {
   ministries: string[];
+  parties?: string[];
   filters: FilterState;
   onChange: (filters: FilterState) => void;
   ministryCounts?: Record<string, number>;
 }
 
-export default function FilterSidebar({ ministries, filters, onChange, ministryCounts }: FilterSidebarProps) {
+export default function FilterSidebar({ ministries, parties = [], filters, onChange, ministryCounts }: FilterSidebarProps) {
   const set = (key: keyof FilterState, value: string) => {
     onChange({ ...filters, [key]: value });
   };
@@ -97,10 +98,9 @@ export default function FilterSidebar({ ministries, filters, onChange, ministryC
           <span style={sidebarLabel}>Party</span>
           <select value={filters.party} onChange={(e) => set('party', e.target.value)} style={selectStyle}>
             <option>All Parties</option>
-            <option>BDP</option>
-            <option>UDC</option>
-            <option>BCP</option>
-            <option>AP</option>
+            {parties.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
           </select>
         </div>
 
