@@ -391,3 +391,107 @@ def _suggest_mp(raw_name: str, conn: Any) -> list[dict]:
         suggestions.append(dict(r))
 
     return suggestions
+
+
+# ---------------------------------------------------------------------------
+# User Management (admin only)
+# ---------------------------------------------------------------------------
+
+require_admin_only = require_role('admin')
+
+
+@router.get('/users')
+def list_users(current_user: dict[str, Any] = Depends(require_admin_only)) -> list[dict]:
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            'SELECT id, email, display_name, role, is_active, created_at, last_login_at '
+            'FROM users ORDER BY created_at DESC',
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+@router.post('/users', status_code=201)
+def create_user(
+    body: dict[str, Any],
+    current_user: dict[str, Any] = Depends(require_admin_only),
+) -> dict:
+    email = (body.get('email') or '').strip().lower()
+    display_name = (body.get('display_name') or '').strip()
+    role = (body.get('role') or 'viewer').strip().lower()
+    password = (body.get('password') or '').strip()
+
+    if not email or not display_name:
+        raise HTTPException(status_code=400, detail='Email and display name required')
+    if role not in ('admin', 'editor', 'viewer'):
+        raise HTTPException(status_code=400, detail='Role must be admin, editor, or viewer')
+    if not password or len(password) < 8:
+        raise HTTPException(status_code=400, detail='Password must be at least 8 characters')
+
+    import bcrypt
+    password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+    conn = get_connection()
+    try:
+        conn.execute(
+            'INSERT INTO users (email, password_hash, display_name, role, is_active) '
+            'VALUES (?, ?, ?, ?, 1)',
+            (email, password_hash, display_name, role),
+        )
+        conn.commit()
+        user_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
+        return {
+            'id': user_id, 'email': email, 'display_name': display_name, 'role': role,
+        }
+    except sqlite3.IntegrityError as exc:
+        raise HTTPException(status_code=409, detail='User with this email already exists') from exc
+    finally:
+        conn.close()
+
+
+@router.put('/users/{user_id}')
+def update_user(
+    user_id: int,
+    body: dict[str, Any],
+    current_user: dict[str, Any] = Depends(require_admin_only),
+) -> dict:
+    conn = get_connection()
+    try:
+        existing = conn.execute(
+            'SELECT id FROM users WHERE id = ?', (user_id,),
+        ).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail='User not found')
+
+        updates: list[str] = []
+        params: list[Any] = []
+
+        if 'role' in body:
+            role = body['role'].strip().lower()
+            if role not in ('admin', 'editor', 'viewer'):
+                raise HTTPException(status_code=400, detail='Invalid role')
+            updates.append('role = ?')
+            params.append(role)
+
+        if 'is_active' in body:
+            updates.append('is_active = ?')
+            params.append(1 if body['is_active'] else 0)
+
+        if 'display_name' in body:
+            updates.append('display_name = ?')
+            params.append(body['display_name'].strip())
+
+        if not updates:
+            raise HTTPException(status_code=400, detail='No fields to update')
+
+        params.append(user_id)
+        conn.execute(
+            f"UPDATE users SET {', '.join(updates)} WHERE id = ?",
+            params,
+        )
+        conn.commit()
+        return {'detail': 'Updated'}
+    finally:
+        conn.close()
