@@ -6,6 +6,7 @@ import { sectionTitle, mono, surface, narrativeSection, typeTag, typeLabel } fro
 interface SearchResult {
   id: number;
   mp_id: number | null;
+  result_type?: string;
   contribution_type: string;
   subject_text: string;
   date: string;
@@ -14,6 +15,8 @@ interface SearchResult {
   mp_name: string | null;
   party: string | null;
   constituency: string | null;
+  procedural_notes?: string | null;
+  language?: string | null;
 }
 
 export default function SearchPage() {
@@ -60,7 +63,7 @@ export default function SearchPage() {
           Search Everything
         </h1>
         <p style={{ ...mono, fontSize: 11, color: 'var(--text-tertiary)', margin: 0 }}>
-          Search across subjects, MP names, and ministries
+          Search contributions and Hansard debates with bilingual Setswana/English expansion
         </p>
       </div>
 
@@ -72,7 +75,7 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search contributions, MPs, ministries..."
+            placeholder="Search contributions, debates, MPs, ministries... e.g. Agriculture or Temothuo"
             autoFocus
             style={{
               width: '100%',
@@ -129,18 +132,26 @@ export default function SearchPage() {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {results.map((r) => (
+        {results.map((r) => {
+          const isUtterance = r.result_type === 'utterance';
+          const borderColor = isUtterance ? 'var(--accent-amber)' : 'var(--accent-blue)';
+          return (
           <div
-            key={r.id}
+            key={`${r.result_type || 'contrib'}-${r.id}`}
             onClick={() => r.mp_id && navigate(`/mp/${r.mp_id}`)}
             style={{
               ...surface,
               padding: '12px 16px',
               cursor: r.mp_id ? 'pointer' : 'default',
-              borderLeft: '3px solid var(--accent-blue)',
+              borderLeft: `3px solid ${borderColor}`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              {isUtterance && (
+                <span style={{ ...mono, fontSize: 9, color: 'var(--accent-amber)', textTransform: 'uppercase', letterSpacing: '0.05em', border: '1px solid rgba(245,166,35,0.3)', background: 'rgba(245,166,35,0.1)', padding: '1px 5px' }}>
+                  HANSARD
+                </span>
+              )}
               <span style={typeTag(r.contribution_type)}>{typeLabel(r.contribution_type)}</span>
               <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
                 {r.date}
@@ -148,7 +159,7 @@ export default function SearchPage() {
               {r.mp_name && (
                 <>
                   <span style={{ color: 'var(--text-tertiary)' }}>&middot;</span>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent-blue)' }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: r.mp_id ? 'var(--accent-blue)' : 'var(--text-secondary)', cursor: r.mp_id ? 'pointer' : 'default' }}>
                     {r.mp_name}
                   </span>
                   {r.party && (
@@ -163,6 +174,11 @@ export default function SearchPage() {
                   )}
                 </>
               )}
+              {r.language && (
+                <span style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)', border: '1px solid var(--border-subtle)', padding: '1px 4px' }}>
+                  {r.language.toUpperCase()}
+                </span>
+              )}
             </div>
             <p style={{
               fontSize: 12, color: 'var(--text-secondary)', margin: 0,
@@ -171,13 +187,18 @@ export default function SearchPage() {
             }}>
               {r.subject_text}
             </p>
-            {r.ministry_addressed && (
+            {r.ministry_addressed && !isUtterance && (
               <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4, display: 'inline-block' }}>
                 {r.ministry_addressed}
               </span>
             )}
+            {isUtterance && r.procedural_notes && (
+              <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4, display: 'inline-block', fontStyle: 'italic' }}>
+                {r.procedural_notes}
+              </span>
+            )}
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );
