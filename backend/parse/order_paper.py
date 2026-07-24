@@ -6,6 +6,7 @@ from backend.parse.base import (
     _extract_date_from_header,
     extract_text,
     normalise_ministry,
+    parse_numbered_motions,
 )
 
 QUESTION_HEADER = re.compile(
@@ -90,68 +91,8 @@ def _parse_questions(text: str, date: str | None) -> list[dict]:
     return contributions
 
 
-MOTION_SIGNATURE = re.compile(
-    r'\(((?:MR|MS|MRS|DR|HON|BRIGADIER)\.?\s+.+?),\s+MP\.\s*[-–]\s*(.+?)\)',
-    re.IGNORECASE,
-)
-
-MOTION_LINE = re.compile(r'^\s*(\d+)\.\s*[“"](.+)', re.DOTALL)
-
-
-def _finalize_motion(contributions: list[dict], lines: list[str], date: str | None) -> None:
-    full_text = ' '.join(lines).strip()
-    contributions.append({
-        'contribution_type': 'motion',
-        'raw_match_name': '',
-        'raw_constituency': '',
-        'ministry_addressed': '',
-        'subject_text': full_text,
-        'date': date or '',
-        'source_url': '',
-    })
-
-
 def _parse_motions(text: str, date: str | None) -> list[dict]:
-    contributions: list[dict] = []
-    lines = text.split('\n')
-
-    current_motion_lines: list[str] = []
-    in_motion = False
-
-    for line in lines:
-        ls = line.strip()
-        if not ls:
-            continue
-
-        motion_match = MOTION_LINE.match(ls)
-        if motion_match:
-            if in_motion and current_motion_lines:
-                _finalize_motion(contributions, current_motion_lines, date)
-            current_motion_lines = [motion_match.group(2)]
-            in_motion = True
-        elif in_motion:
-            sig_match = MOTION_SIGNATURE.search(ls)
-            if sig_match:
-                current_motion_lines.append(ls[:sig_match.start()].strip())
-                full_text = ' '.join(current_motion_lines).strip()
-                contributions.append({
-                    'contribution_type': 'motion',
-                    'raw_match_name': sig_match.group(1).strip(),
-                    'raw_constituency': sig_match.group(2).strip(),
-                    'ministry_addressed': '',
-                    'subject_text': full_text,
-                    'date': date or '',
-                    'source_url': '',
-                })
-                in_motion = False
-                current_motion_lines = []
-            else:
-                current_motion_lines.append(ls)
-
-    if in_motion and current_motion_lines:
-        _finalize_motion(contributions, current_motion_lines, date)
-
-    return contributions
+    return parse_numbered_motions(text, date)
 
 
 BILL_SECTION = re.compile(
