@@ -25,15 +25,6 @@ SECTION_TYPES: list[tuple[re.Pattern, str]] = [
 
 QUESTION_START = re.compile(r'^(\d+)\.\s+(.+)')
 
-MP_QUESTION_LINE = re.compile(
-    r'((?:MR|MS|MRS|DR|HON)\.\s+.+?MP\.)'
-    r'\s*\(([^)]+)\):\s*To ask the (?:Minister of |Minister for State)'
-    r'\s*(.+?)(?:\s+(?:if|whether|to\s+state|to\s+update|what\s+plans|'
-    r'why|what\s+action|how\s+many|to\s+apprise|to\s+brief|to\s+update|'
-    r'whether\s+he|if\s+so))',
-    re.IGNORECASE | re.DOTALL,
-)
-
 MOTION_SIGNATURE = re.compile(
     r'\(((?:MR|MS|MRS|DR|HON)\.\s+.+?),\s+MP\.\s*[-\u2013]\s*(.+?)\)',
     re.IGNORECASE,
@@ -50,10 +41,29 @@ PETITION_MP = re.compile(
 
 PAGE_NUM = re.compile(r'\((\d+)\)\s*')
 
+NOTICE_NUMBER = re.compile(r'\((\d{2,4})\)')
+SUB_QUESTION_MARKER = re.compile(r'\((i{1,3}|iv|vi?)\)\s*')
+
 
 def _remove_inline_page_numbers(text: str) -> str:
     """Remove parenthesized page numbers inserted during PDF text extraction."""
     return PAGE_NUM.sub('', text)
+
+
+def _extract_sub_questions(text: str) -> tuple[str, list[str]]:
+    """Split a question body into its preamble and (i)-(vi) sub-questions, if any."""
+    markers = list(SUB_QUESTION_MARKER.finditer(text))
+    if not markers:
+        return text, []
+
+    sub_questions = []
+    for i, marker in enumerate(markers):
+        start = marker.end()
+        end = markers[i + 1].start() if i + 1 < len(markers) else len(text)
+        sub_questions.append(text[start:end].strip())
+
+    preamble = text[:markers[0].start()].strip()
+    return preamble, sub_questions
 
 
 def _split_sections(text: str) -> list[tuple[str, str, str]]:
@@ -87,22 +97,53 @@ def _split_sections(text: str) -> list[tuple[str, str, str]]:
 
 QUESTION_BLOCK = re.compile(
     r'(\d+)\.\s+'
-    r'((?:MR|MS|MRS|DR|HON)\.\s+.+?MP\.)'
+    r'((?:MR|MS|MRS|DR|HON|BRIGADIER)\.?\s+.+?MP\.)'
     r'\s*\(([^)]+)\):\s*To ask the (?:Minister of |Minister for State)'
-    r'\s*(.+?)(?=\d+\.\s+(?:MR|MS|MRS|DR|HON)\.|\Z|(?:\n(?:NOTICE|$)))',
+    r'\s*(.+?)(?=\d+\.\s+(?:MR|MS|MRS|DR|HON|BRIGADIER)\.?\s|\Z|(?:\n(?:NOTICE|$)))',
     re.IGNORECASE | re.DOTALL,
 )
 
 
+QUESTION_HEADER = re.compile(
+    r'\d+\.\s+(?:MR|MS|MRS|DR|HON|BRIGADIER)\.?\s+.+?MP\.\s*\([^)]+\):',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _extract_notice_numbers(text: str) -> list[int | None]:
+    """Return one notice number per question header, scoped to that question's own span.
+
+    Notice Numbers (e.g. "(381)") are injected mid-sentence at unpredictable
+    points during PDF text extraction — sometimes inside "Minister of",
+    sometimes further along in the ministry name. Scoping the search to the
+    span between one question's header and the next bounds the blast radius
+    of any stray parenthetical number elsewhere in the section (a page
+    number, a year, a statute reference) to at most the one question it
+    falls within, instead of desyncing every question that follows it.
+    """
+    headers = list(QUESTION_HEADER.finditer(text))
+    numbers: list[int | None] = []
+    for i, header in enumerate(headers):
+        span_end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
+        window = text[header.end():span_end]
+        match = NOTICE_NUMBER.search(window)
+        numbers.append(int(match.group(1)) if match else None)
+    return numbers
+
+
 def _parse_questions(text: str, date: str | None) -> list[dict]:
     contributions: list[dict] = []
-    text = _remove_inline_page_numbers(text)
     text = re.sub(r'\n\s*([a-z(])', r' \1', text)
 
-    for match in QUESTION_BLOCK.finditer(text):
+    notice_numbers = _extract_notice_numbers(text)
+    text = _remove_inline_page_numbers(text)
+
+    for idx, match in enumerate(QUESTION_BLOCK.finditer(text)):
         raw_name = match.group(2).strip()
         constituency = match.group(3).strip()
         block_text = match.group(4).strip()
+        notice_number = notice_numbers[idx] if idx < len(notice_numbers) else None
+
         # Extract ministry (everything up to first question word)
         min_match = re.search(
             r'(.+?)(?:\s+(?:if|whether|to\s+state|to\s+update|what\s+plans|'
@@ -119,6 +160,13 @@ def _parse_questions(text: str, date: str | None) -> list[dict]:
             subject_text = block_text.strip()
 
         subject_text = subject_text.lstrip(':').strip()
+        _, sub_questions = _extract_sub_questions(subject_text)
+
+        extracted_data: dict = {}
+        if notice_number is not None:
+            extracted_data['notice_number'] = notice_number
+        if sub_questions:
+            extracted_data['sub_questions'] = sub_questions
 
         contributions.append({
             'contribution_type': 'oral_question',
@@ -128,6 +176,7 @@ def _parse_questions(text: str, date: str | None) -> list[dict]:
             'subject_text': subject_text,
             'date': date or '',
             'source_url': '',
+            'extracted_data': extracted_data or None,
         })
 
     return contributions
