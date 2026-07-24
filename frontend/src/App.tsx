@@ -15,6 +15,7 @@ import FindMpPage from './findmp/FindMpPage';
 import MpProfilePage from './mp/MpProfilePage';
 import ComparePage from './compare/ComparePage';
 import RankingsPage from './rankings/RankingsPage';
+import BillTrackerPage from './bills/BillTrackerPage';
 
 function Home() {
   const { data, error } = useDashboardData();
@@ -141,6 +142,14 @@ function Rankings() {
   );
 }
 
+function Bills() {
+  return (
+    <AppShell>
+      <BillTrackerPage />
+    </AppShell>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -151,7 +160,7 @@ export default function App() {
         <Route path="/rankings" element={<Rankings />} />
         <Route path="/mp/:mpId" element={<MpProfile />} />
         <Route path="/compare" element={<Compare />} />
-        <Route path="/bills" element={<ComingSoon title="Bill Tracker" />} />
+        <Route path="/bills" element={<Bills />} />
         <Route path="/search" element={<ComingSoon title="Search" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
