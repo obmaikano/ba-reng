@@ -189,8 +189,4 @@ def crawl(conn: sqlite3.Connection | None = None) -> dict:
     }
 
 
-# Register with crawl module
-try:
-    register('parliament_hansard', crawl)
-except Exception:
-    pass
+register('parliament_hansard_conn')
