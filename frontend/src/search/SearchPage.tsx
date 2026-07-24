@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { get } from '../api';
-import { sectionTitle, mono, surface, narrativeSection, typeTag } from '../dashboard/styles';
+import { sectionTitle, mono, surface, narrativeSection, typeTag, typeLabel } from '../dashboard/styles';
 
 interface SearchResult {
   id: number;
@@ -57,7 +57,7 @@ export default function SearchPage() {
       <div style={{ ...narrativeSection }}>
         <span style={{ ...sectionTitle, marginBottom: 4 }}>SEARCH</span>
         <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>
-          Full-Text Search
+          Search Everything
         </h1>
         <p style={{ ...mono, fontSize: 11, color: 'var(--text-tertiary)', margin: 0 }}>
           Search across subjects, MP names, and ministries
@@ -141,7 +141,7 @@ export default function SearchPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={typeTag(r.contribution_type)}>{r.contribution_type.replace(/_/g, ' ')}</span>
+              <span style={typeTag(r.contribution_type)}>{typeLabel(r.contribution_type)}</span>
               <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
                 {r.date}
               </span>

@@ -129,7 +129,7 @@ export default function FindMpPage() {
       <div style={{ marginBottom: 24 }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          FIND_MY_MP
+          FIND_YOUR_MP
         </span>
         <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
           Find Your Representative

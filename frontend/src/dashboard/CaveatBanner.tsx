@@ -38,7 +38,7 @@ export default function CaveatBanner() {
               marginBottom: 4,
             }}
           >
-            Constraint: No Attendance Data
+            Proxy Metric — Not Attendance Data
           </h4>
           <p
             style={{
@@ -48,7 +48,7 @@ export default function CaveatBanner() {
               lineHeight: 1.5,
             }}
           >
-            This narrative reflects{' '}
+            Based on{' '}
             <span
               style={{
                 fontFamily: 'var(--font-mono)',
@@ -57,8 +57,9 @@ export default function CaveatBanner() {
             >
               RECORDED_CONTRIBUTIONS
             </span>{' '}
-            only. Botswana Parliament does not publish attendance records. A low count does not mean
-            absence — MPs engage in committee work, constituency duties, and silent voting.
+            only. Botswana Parliament keeps no attendance register. A low count does not mean an MP
+            was absent — MPs also work in committees, meet voters in their local area, and take part
+            in votes that are not read out by name.
           </p>
           <a
             href="#"
@@ -73,7 +74,7 @@ export default function CaveatBanner() {
               marginTop: 4,
             }}
           >
-            VIEW_METHODOLOGY →
+            HOW_THIS_WORKS →
           </a>
         </div>
       </div>

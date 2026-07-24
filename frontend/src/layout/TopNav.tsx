@@ -13,7 +13,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: '03 Find MP', path: '/find' },
   { label: '04 Profile', path: '/mp/1' },
   { label: '05 Compare', path: '/compare' },
-  { label: '06 Rank', path: '/rankings' },
+  { label: '06 Index', path: '/rankings' },
   { label: '07 Bills', path: '/bills' },
   { label: '08 Search', path: '/search' },
 ];
@@ -96,7 +96,7 @@ export default function TopNav() {
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)' }}>v0.1.0</span>
         <span style={{ color: 'var(--text-tertiary)', fontSize: 10 }}>·</span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-amber)' }}>
-          NARRATIVE_DASHBOARD
+          WEEKLY_DIGEST
         </span>
       </div>
 

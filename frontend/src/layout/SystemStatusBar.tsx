@@ -37,20 +37,20 @@ export default function SystemStatusBar() {
       }}
     >
       {error ? (
-        <span style={{ color: 'var(--accent-red)' }}>API_OFFLINE</span>
+        <span style={{ color: 'var(--accent-red)' }}>SERVICE_OFFLINE</span>
       ) : !status ? (
         <span>LOADING...</span>
       ) : (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: 'var(--accent-green)' }}>●</span> CRAWLER_ACTIVE
+              <span style={{ color: 'var(--accent-green)' }}>●</span> COLLECTING_DATA
             </span>
             <span>SOURCE: {CRAWL_SOURCE}</span>
-            {status.last_crawl && <span>LAST_RUN: {status.last_crawl.started_at}</span>}
-            <span>DOCS_PARSED: {status.document_count}</span>
+            {status.last_crawl && <span>LAST_UPDATE: {status.last_crawl.started_at}</span>}
+            <span>DOCUMENTS_READ: {status.document_count}</span>
             <span style={status.unresolved_entity_count > 0 ? { color: 'var(--accent-amber)' } : undefined}>
-              ENTITIES_UNRESOLVED: {status.unresolved_entity_count}
+              NAMES_UNMATCHED: {status.unresolved_entity_count}
             </span>
           </div>
           <span style={{ color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: 4 }}>

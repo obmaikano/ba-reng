@@ -1,5 +1,5 @@
 import { Contribution, NarrativeData } from './types';
-import { narrativeSection, sectionTitle, mono, surfaceElevated, typeTag } from './styles';
+import { narrativeSection, sectionTitle, mono, surfaceElevated, typeTag, typeLabel } from './styles';
 
 interface WeeklyTimelineProps {
   contributions: Contribution[];
@@ -51,7 +51,7 @@ function summarizeDays(contributions: Contribution[], narrative: NarrativeData |
 
 function describeDay(day: DaySummary): string {
   if (day.ministries.length === 0) return 'No ministry recorded for these contributions.';
-  return `${day.ministries.join(' and ')} addressed via ${day.types.map((t) => t.toUpperCase()).join(', ')}.`;
+  return `${day.ministries.join(' and ')} covered through ${day.types.map((t) => typeLabel(t)).join(', ')}.`;
 }
 
 export default function WeeklyTimeline({ contributions, narrative }: WeeklyTimelineProps) {
@@ -83,7 +83,7 @@ export default function WeeklyTimeline({ contributions, narrative }: WeeklyTimel
                   {formatDay(day.date)}
                 </span>
                 {day.types.map((type) => (
-                  <span key={type} style={typeTag(type)}>{type.toUpperCase()}</span>
+                  <span key={type} style={typeTag(type)}>{typeLabel(type)}</span>
                 ))}
               </div>
               <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>

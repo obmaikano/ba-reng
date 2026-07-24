@@ -46,12 +46,12 @@ export default function BillTrackerPage() {
     <div style={{ padding: 24 }}>
       <div style={{ ...narrativeSection, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <span style={{ ...sectionTitle, marginBottom: 4 }}>LEGISLATION</span>
+          <span style={{ ...sectionTitle, marginBottom: 4 }}>BILLS</span>
           <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>
-            Bills & Legislation Tracker
+            Bills Tracker
           </h1>
           <p style={{ ...mono, fontSize: 11, color: 'var(--text-tertiary)', margin: 0 }}>
-            Track bills through readings, committee stages, and assent
+            Track bills as they move through Parliament, from first draft to final approval
           </p>
         </div>
       </div>
@@ -78,7 +78,7 @@ export default function BillTrackerPage() {
                       ...mono, fontSize: 9, textTransform: 'uppercase', padding: '2px 6px',
                       color: 'var(--accent-green)', border: '1px solid var(--accent-green)',
                     }}>
-                      PRESENTED
+                      SUBMITTED
                     </span>
                   </div>
                   <h3 style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>
@@ -86,7 +86,7 @@ export default function BillTrackerPage() {
                   </h3>
                 </div>
                 <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)', flexShrink: 0, marginLeft: 12 }}>
-                  {b.ministry_addressed ? `Sponsor: ${b.ministry_addressed}` : ''}
+                  {b.ministry_addressed ? `Ministry: ${b.ministry_addressed}` : ''}
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
@@ -101,7 +101,7 @@ export default function BillTrackerPage() {
 
       {sorted.length === 0 && (
         <div style={{ padding: 12, ...surface, ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>
-          No bills found. Check the data pipeline.
+          No bills found yet.
         </div>
       )}
     </div>

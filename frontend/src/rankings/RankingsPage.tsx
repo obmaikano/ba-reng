@@ -201,7 +201,7 @@ export default function RankingsPage() {
     return (
       <div style={{ padding: 24 }}>
         <span style={{ color: 'var(--accent-red)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-          Could not load leaderboard data. Is the API running?
+          Could not load the rankings. Please try again later.
         </span>
       </div>
     );
@@ -260,12 +260,12 @@ export default function RankingsPage() {
         <AlertIcon />
         <div>
           <h4 style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-amber)', margin: '0 0 4px 0' }}>
-            Constraint: No Attendance Data
+            Proxy Metric — Not Attendance Data
           </h4>
           <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
             This index reflects{' '}
             <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>RECORDED_CONTRIBUTIONS</span>{' '}
-            only. Botswana Parliament does not publish attendance records.
+            only. Botswana Parliament keeps no attendance register.
           </p>
         </div>
       </div>
@@ -276,9 +276,9 @@ export default function RankingsPage() {
         <div style={sectionTitle}>Party</div>
         <div style={thRight}>Index</div>
         <div style={thRight}>Total</div>
-        <div style={thRight}>Oral Q</div>
-        <div style={thRight}>Motion</div>
-        <div style={thRight}>C.o.S</div>
+        <div style={thRight}>Questions</div>
+        <div style={thRight}>Motions</div>
+        <div style={thRight} title="Committee of Supply — budget review sessions">Budget</div>
       </div>
 
       {filtered.map((mp, idx) => (
@@ -289,7 +289,7 @@ export default function RankingsPage() {
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: 12, marginTop: 8, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
           <InfoIcon size={14} color="var(--accent-amber)" />
           <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.5 }}>
-            {zeroCount} of {totalMps} MPs have zero recorded contributions. Zero recorded &ne; absent.
+            {zeroCount} of {totalMps} MPs have zero recorded contributions. Zero recorded does not mean absent.
           </p>
         </div>
       )}

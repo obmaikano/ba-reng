@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Contribution } from './types';
-import { narrativeSection, sectionTitle, mono, typeTag } from './styles';
+import { narrativeSection, sectionTitle, mono, typeTag, typeLabel } from './styles';
 
 interface RecentContributionsProps {
   contributions: Contribution[];
@@ -72,7 +72,7 @@ export default function RecentContributions({ contributions }: RecentContributio
               {c.mp_name || 'Unresolved'}
             </div>
             <div>
-              <span style={typeTag(c.contribution_type)}>{c.contribution_type.toUpperCase()}</span>
+              <span style={typeTag(c.contribution_type)}>{typeLabel(c.contribution_type)}</span>
             </div>
             <div
               style={{

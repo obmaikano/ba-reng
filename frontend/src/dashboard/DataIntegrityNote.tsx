@@ -30,8 +30,8 @@ export default function DataIntegrityNote({ contributions }: DataIntegrityNotePr
         Data Integrity
       </span>
       <p style={{ fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4, lineHeight: 1.5, marginBottom: 0 }}>
-        {rate}% of contributions auto-resolved to correct MPs. Unresolved names are surfaced
-        transparently — never silently guessed.
+        {rate}% of records were automatically matched to the correct MP. Names we could not match
+        are shown as unmatched — we never guess.
       </p>
     </div>
   );

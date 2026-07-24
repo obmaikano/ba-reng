@@ -27,20 +27,20 @@ export default function AnalyticsOverview() {
       <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
-            MINISTERIAL DEFERRAL SCORECARD
+            MINISTER RESPONSE TIMES
           </h3>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent-amber)', border: '1px solid var(--accent-amber)', padding: '2px 6px' }}>
-            30-DAY LOOKBACK
+            LAST 30 DAYS
           </span>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-mono)', fontSize: 10 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-tertiary)' }}>
               <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500 }}>MINISTRY</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 500 }}>Q</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 500 }}>DEF</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 500 }}>RATE</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 500 }}>LAG (d)</th>
+              <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 500 }}>Asked</th>
+              <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 500 }}>Delayed</th>
+              <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 500 }}>Delay Rate</th>
+              <th style={{ textAlign: 'center', padding: '6px 8px', fontWeight: 500 }}>Days Late</th>
             </tr>
           </thead>
           <tbody>
@@ -65,10 +65,10 @@ export default function AnalyticsOverview() {
       <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
-            TOPIC VELOCITY RADAR (&Delta;f)
+            TOPICS ON THE RISE
           </h3>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '2px 6px' }}>
-            WEEK-OVER-WEEK
+            VS LAST WEEK
           </span>
         </div>
         {velocityData.length === 0 ? (
