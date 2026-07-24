@@ -8,6 +8,8 @@ interface ApiConstituency {
   mp_name: string;
   party: string;
   contribution_count: number;
+  oral_question_count: number;
+  motion_count: number;
 }
 
 interface ResolvedConstituency {
@@ -16,6 +18,8 @@ interface ResolvedConstituency {
   mp_id: number | null;
   party: string;
   contribution_count: number;
+  oral_question_count: number;
+  motion_count: number;
 }
 
 function ResultCard({ c }: { c: ResolvedConstituency }) {
@@ -71,10 +75,10 @@ function ResultCard({ c }: { c: ResolvedConstituency }) {
         </div>
       </div>
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent-blue)', textTransform: 'uppercase', letterSpacing: '0.05em', border: '1px solid rgba(45,127,249,0.3)', background: 'rgba(45,127,249,0.1)', padding: '2px 6px' }}>
-        ORAL_Q: {Math.floor(Math.random() * 50) + 1}
+        ORAL_Q: {c.oral_question_count}
       </span>
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent-amber)', textTransform: 'uppercase', letterSpacing: '0.05em', border: '1px solid rgba(245,166,35,0.3)', background: 'rgba(245,166,35,0.1)', padding: '2px 6px' }}>
-        MOTION: {Math.floor(Math.random() * 15) + 1}
+        MOTION: {c.motion_count}
       </span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
@@ -100,6 +104,8 @@ export default function FindMpPage() {
           mp_id: mpByName.get(c.mp_name.toLowerCase()) ?? null,
           party: c.party,
           contribution_count: c.contribution_count,
+          oral_question_count: c.oral_question_count ?? 0,
+          motion_count: c.motion_count ?? 0,
         }));
         setData(resolved);
       })
