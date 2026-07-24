@@ -1,5 +1,6 @@
 """Admin routes: ministry mapping CRUD."""
 
+import sqlite3
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -61,7 +62,7 @@ def create_ministry_mapping(
         )
         conn.commit()
         return {'id': cursor.lastrowid, 'normalized_title': normalized_title, 'mp_id': mp_id}
-    except Exception as exc:
+    except sqlite3.IntegrityError as exc:
         raise HTTPException(
             status_code=409,
             detail='Ministry mapping already exists',

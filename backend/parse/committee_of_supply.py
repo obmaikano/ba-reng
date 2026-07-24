@@ -1,12 +1,84 @@
-"""Parser for Botswana Parliament Committee of Supply speeches."""
+"""Parser for Botswana Parliament Committee of Supply speeches.
+
+Extracts organisation codes, recurrent/development budget figures,
+and operational performance metrics.
+"""
 
 import re
+from typing import Any
 
 from backend.parse.base import (
     _extract_date_from_header,
     extract_text,
     normalise_ministry,
 )
+
+ORG_CODE_RE = re.compile(r'(?:ORGANISATION|ORG|ORGANIZATION)\s*(?:CODE)?:?\s*(\d{4})', re.IGNORECASE)
+
+RECURRENT_RE = re.compile(
+    r'(?:Recurrent|Recurrent\s*Budget|Operating)\s*(?:Budget|Expenditure)?:?\s*'
+    r'P?([\d,]+(?:\.\d+)?)\s*(million|billion|thousand)?',
+    re.IGNORECASE,
+)
+
+DEVELOPMENT_RE = re.compile(
+    r'(?:Development|Development\s*Budget|Capital)\s*(?:Budget|Expenditure)?:?\s*'
+    r'P?([\d,]+(?:\.\d+)?)\s*(million|billion|thousand)?',
+    re.IGNORECASE,
+)
+
+TOTAL_RE = re.compile(
+    r'(?:Total|Total\s*Budget|Aggregate):?\s*'
+    r'P?([\d,]+(?:\.\d+)?)\s*(million|billion|thousand)?',
+    re.IGNORECASE,
+)
+
+COMPLETION_TARGET_RE = re.compile(
+    r'(\d+(?:\.\d+)?)\s*(?:per\s*cent|%)\s*(?:completion|target|achieved)',
+    re.IGNORECASE,
+)
+
+CASE_BACKLOG_RE = re.compile(
+    r'(?:backlog|pending)\s*(?:of\s*)?(\d+(?:,\d{3})*)\s*(?:cases?|files?)',
+    re.IGNORECASE,
+)
+
+
+def _parse_budget_value(text: str) -> dict[str, Any]:
+    budget: dict[str, Any] = {}
+
+    rec_match = RECURRENT_RE.search(text)
+    if rec_match:
+        budget['recurrent'] = f'P{rec_match.group(1)}{rec_match.group(2) or ""}'.strip()
+
+    dev_match = DEVELOPMENT_RE.search(text)
+    if dev_match:
+        budget['development'] = f'P{dev_match.group(1)}{dev_match.group(2) or ""}'.strip()
+
+    total_match = TOTAL_RE.search(text)
+    if total_match:
+        budget['total'] = f'P{total_match.group(1)}{total_match.group(2) or ""}'.strip()
+
+    return budget
+
+
+def _extract_performance_metrics(text: str) -> dict[str, Any]:
+    metrics: dict[str, Any] = {}
+
+    completion = COMPLETION_TARGET_RE.search(text)
+    if completion:
+        metrics['completion_rate_pct'] = float(completion.group(1))
+
+    backlog = CASE_BACKLOG_RE.search(text)
+    if backlog:
+        metrics['case_backlog'] = int(backlog.group(1).replace(',', ''))
+
+    return metrics
+
+
+def _extract_org_code(text: str) -> str | None:
+    m = ORG_CODE_RE.search(text)
+    return m.group(1) if m else None
 
 
 def _extract_minister_and_ministry(text: str) -> tuple[str, str]:
@@ -131,7 +203,19 @@ def parse_pdf(pdf_path: str, source_url: str = '') -> list[dict]:
     if not minister and not ministry:
         return []
 
-    return [{
+    org_code = _extract_org_code(text)
+    budget = _parse_budget_value(text)
+    performance = _extract_performance_metrics(text)
+
+    extracted_data: dict[str, Any] = {}
+    if org_code:
+        extracted_data['org_code'] = org_code
+    if budget:
+        extracted_data['budget'] = budget
+    if performance:
+        extracted_data['performance'] = performance
+
+    payload: dict[str, Any] = {
         'contribution_type': 'committee_of_supply',
         'raw_match_name': minister,
         'raw_constituency': '',
@@ -139,7 +223,10 @@ def parse_pdf(pdf_path: str, source_url: str = '') -> list[dict]:
         'subject_text': _clean_speech(text)[:8000],
         'date': date or '',
         'source_url': source_url,
-    }]
+        'extracted_data': extracted_data or None,
+    }
+
+    return [payload]
 
 
 def run_for_document(file_path: str, source_url: str = '') -> list[dict]:

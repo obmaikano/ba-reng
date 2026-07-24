@@ -17,6 +17,11 @@ SECRET_KEY: str = os.environ.get(
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 480
 
+# Cookies must be Secure (HTTPS-only) once this runs anywhere but local plain-HTTP dev.
+# Opt in explicitly with ENV=production rather than defaulting to secure=True, which
+# would silently break login on a bare `docker compose up` over http://localhost.
+COOKIE_SECURE: bool = os.environ.get('ENV', 'development').strip().lower() == 'production'
+
 
 def create_access_token(user_id: int, role: str) -> str:
     now = datetime.now(timezone.utc)

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { get } from '../api';
 
 export interface MinisterialDodgeItem {
   ministry: string;
@@ -37,19 +38,14 @@ export function useAnalytics(mpId?: number) {
 
     const fetchAll = async () => {
       try {
-        const [dodgeRes, velocityRes] = await Promise.all([
-          fetch('/api/v1/analytics/ministerial-dodge'),
-          fetch('/api/v1/analytics/topic-velocity'),
+        const [dodgeJson, velocityJson] = await Promise.all([
+          get<MinisterialDodgeItem[]>('/api/v1/analytics/ministerial-dodge'),
+          get<VelocityRadarItem[]>('/api/v1/analytics/topic-velocity'),
         ]);
 
-        const dodgeJson = await dodgeRes.json();
-        const velocityJson = await velocityRes.json();
-
-        let claiJson = null;
-        if (mpId) {
-          const claiRes = await fetch(`/api/v1/analytics/constituency-alignment/${mpId}`);
-          claiJson = await claiRes.json();
-        }
+        const claiJson = mpId
+          ? await get<CLAIMetric>(`/api/v1/analytics/constituency-alignment/${mpId}`)
+          : null;
 
         if (!cancelled) {
           setDodgeData(dodgeJson);

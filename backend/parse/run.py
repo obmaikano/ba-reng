@@ -1,6 +1,7 @@
 """Orchestration: iterate documents, parse, insert contributions."""
 
 import hashlib
+import json
 import logging
 import sqlite3
 from collections.abc import Callable
@@ -10,6 +11,9 @@ from backend.parse.notice_paper import parse_pdf as parse_notice_paper
 from backend.parse.order_paper import parse_pdf as parse_order_paper
 from backend.parse.committee_of_supply import parse_pdf as parse_committee_of_supply
 from backend.parse.bill import parse_pdf as parse_bill
+from backend.parse.motion import parse_pdf as parse_motion
+from backend.parse.ministerial_speech import parse_pdf as parse_ministerial_speech
+from backend.parse.hansard import parse_pdf as parse_hansard
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +22,10 @@ _PARSERS: dict[str, Callable[..., list[dict]]] = {
     'order_paper': parse_order_paper,
     'committee_of_supply': parse_committee_of_supply,
     'bill': parse_bill,
-    'motion': parse_notice_paper,
+    'motion': parse_motion,
+    'ministerial_statement': parse_ministerial_speech,
+    'ministerial_speech': parse_ministerial_speech,
+    'hansard': parse_hansard,
 }
 
 _PARSABLE_TYPES = tuple(_PARSERS.keys())
@@ -29,12 +36,14 @@ def _insert_contribution(
     doc_id: int,
     contrib: dict,
 ) -> int | None:
+    extracted_data = contrib.get('extracted_data')
     try:
         cursor.execute(
             """INSERT INTO contributions
                (document_id, contribution_type, subject_text, ministry_addressed,
-                date, raw_match_name, raw_constituency, source_url, subject_hash)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                date, raw_match_name, raw_constituency, source_url, subject_hash,
+                extracted_data)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 doc_id,
                 contrib['contribution_type'],
@@ -44,7 +53,8 @@ def _insert_contribution(
                 contrib['raw_match_name'],
                 contrib['raw_constituency'],
                 contrib['source_url'],
-                hashlib.md5(contrib['subject_text'][:200].encode()).hexdigest(),
+                hashlib.sha256(contrib['subject_text'][:200].encode()).hexdigest(),
+                json.dumps(extracted_data) if extracted_data else None,
             ),
         )
         return cursor.lastrowid
@@ -85,8 +95,11 @@ def parse_and_store(
 
     cursor = conn.cursor()
     if doc_type not in _PARSERS:
-        logger.warning('Unknown doc_type=%s for document %d, falling back to notice_paper parser', doc_type, doc_id)
-    parser = _PARSERS.get(doc_type, parse_notice_paper)
+        raise ValueError(
+            f'Unknown doc_type={doc_type} for document {doc_id}. '
+            f'Known types: {", ".join(sorted(_PARSERS.keys()))}',
+        )
+    parser = _PARSERS[doc_type]
     contributions = parser(file_path, source_url)
 
     parsed = 0

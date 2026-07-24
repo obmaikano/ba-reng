@@ -12,14 +12,20 @@ interface BillItem {
   mp_party: string | null;
 }
 
+interface BillsResponse {
+  data: BillItem[];
+  total_records: number;
+  returned_records: number;
+}
+
 export default function BillTrackerPage() {
   const [bills, setBills] = useState<BillItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    get<BillItem[]>('/api/v1/contributions?type=bill_presentation&limit=50')
-      .then((data) => { if (!cancelled) { setBills(data); setLoading(false); } })
+    get<BillsResponse>('/api/v1/contributions?type=bill_presentation&limit=50')
+      .then((resp) => { if (!cancelled) { setBills(resp.data); setLoading(false); } })
       .catch(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
