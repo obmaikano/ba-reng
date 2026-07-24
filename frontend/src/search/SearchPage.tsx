@@ -5,6 +5,7 @@ import { sectionTitle, mono, surface, narrativeSection, typeTag } from '../dashb
 
 interface SearchResult {
   id: number;
+  mp_id: number | null;
   contribution_type: string;
   subject_text: string;
   date: string;
@@ -131,11 +132,11 @@ export default function SearchPage() {
         {results.map((r) => (
           <div
             key={r.id}
-            onClick={() => r.mp_name && navigate(`/mp/${r.id}`)}
+            onClick={() => r.mp_id && navigate(`/mp/${r.mp_id}`)}
             style={{
               ...surface,
               padding: '12px 16px',
-              cursor: r.mp_name ? 'pointer' : 'default',
+              cursor: r.mp_id ? 'pointer' : 'default',
               borderLeft: '3px solid var(--accent-blue)',
             }}
           >
