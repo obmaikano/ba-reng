@@ -7,6 +7,7 @@ from typing import Any
 from backend.db.connection import get_connection
 
 _nlp_cache: Any = None
+_gazetteer_patterns_loaded = False
 
 
 def _get_nlp():
@@ -110,45 +111,61 @@ def extract_entities_fallback(text: str, conn: sqlite3.Connection | None = None)
             conn.close()
 
 
-def extract_entities(text: str, conn: sqlite3.Connection | None = None) -> dict[str, list[str]]:
-    """Extract entities from speech text using spaCy + DB-loaded EntityRuler.
+def _ensure_gazetteer_patterns_loaded(ruler: Any, conn: sqlite3.Connection | None) -> None:
+    """Load gazetteer patterns into the shared EntityRuler exactly once.
 
-    All gazetteer patterns are loaded from parliamentary_glossary at runtime.
-    Falls back to regex extraction if spaCy is unavailable.
+    The ruler and the spaCy pipeline are cached module-globally across calls;
+    without this guard, extract_entities() previously reloaded and re-added
+    the same patterns on every single utterance, growing the ruler's pattern
+    set unboundedly (O(n^2) over a document) and opening a fresh DB
+    connection per call purely to reload data that never changes mid-run.
     """
+    global _gazetteer_patterns_loaded
+    if _gazetteer_patterns_loaded:
+        return
+
     close_conn = conn is None
     if conn is None:
         conn = get_connection()
-
     try:
-        try:
-            nlp = _get_nlp()
-            ruler = nlp.get_pipe('entity_ruler')
-            patterns = _load_gazetteer_patterns(conn)
-            ruler.add_patterns(patterns['GPE'] + patterns['ORG'])
-
-            doc = nlp(text)
-            entities: dict[str, list[str]] = {
-                'locations': [],
-                'orgs': [],
-                'money': [],
-            }
-
-            for ent in doc.ents:
-                if ent.label_ in ('GPE', 'LOC'):
-                    entities['locations'].append(ent.text)
-                elif ent.label_ == 'ORG':
-                    entities['orgs'].append(ent.text)
-                elif ent.label_ == 'MONEY':
-                    entities['money'].append(ent.text)
-
-            money_matches = MONEY_RE.findall(text)
-            for m in money_matches:
-                entities['money'].append(m.strip())
-
-            return {k: sorted(set(v)) for k, v in entities.items() if v}
-        except Exception:
-            return extract_entities_fallback(text, conn)
+        patterns = _load_gazetteer_patterns(conn)
+        ruler.add_patterns(patterns['GPE'] + patterns['ORG'])
+        _gazetteer_patterns_loaded = True
     finally:
         if close_conn:
             conn.close()
+
+
+def extract_entities(text: str, conn: sqlite3.Connection | None = None) -> dict[str, list[str]]:
+    """Extract entities from speech text using spaCy + DB-loaded EntityRuler.
+
+    All gazetteer patterns are loaded from parliamentary_glossary at runtime,
+    once per process. Falls back to regex extraction if spaCy is unavailable.
+    """
+    try:
+        nlp = _get_nlp()
+        ruler = nlp.get_pipe('entity_ruler')
+        _ensure_gazetteer_patterns_loaded(ruler, conn)
+
+        doc = nlp(text)
+        entities: dict[str, list[str]] = {
+            'locations': [],
+            'orgs': [],
+            'money': [],
+        }
+
+        for ent in doc.ents:
+            if ent.label_ in ('GPE', 'LOC'):
+                entities['locations'].append(ent.text)
+            elif ent.label_ == 'ORG':
+                entities['orgs'].append(ent.text)
+            elif ent.label_ == 'MONEY':
+                entities['money'].append(ent.text)
+
+        money_matches = MONEY_RE.findall(text)
+        for m in money_matches:
+            entities['money'].append(m.strip())
+
+        return {k: sorted(set(v)) for k, v in entities.items() if v}
+    except Exception:
+        return extract_entities_fallback(text, conn)
