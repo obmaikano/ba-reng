@@ -40,41 +40,36 @@
                          │  Pipeline per doc_type:       │
                          │  notice_paper | order_paper   │
                          │  committee_of_supply | bill   │
-                         │  motion | hansard             │
+                         │  motion | HANSARD (Regex/NLP) │
                          └─────────────┬────────────────┘
-                                       │ structured Contribution records
-                                       ▼
-                         ┌──────────────────────────────┐
-                         │     Entity Resolution         │
-                         │  primary: constituency key    │
-                         │  fallback: surname            │
-                         │  unmatched → entity_review    │
-                         │         _queue (never guess)  │
-                         └─────────────┬────────────────┘
-                                       │ mp_id resolved or null
+                                       │
+                ┌──────────────────────┴──────────────────────┐
+                │                                             │
+                ▼                                             ▼
+  ┌──────────────────────────┐                  ┌──────────────────────────┐
+  │   Entity Resolution      │                  │    Offline spaCy NLP     │
+  │ primary: constituency    │                  │  Extract GPE/LOC, MONEY, │
+  │ fallback: surname        │                  │  ORG without an LLM      │
+  │ unmatched → review queue │                  └─────────────┬────────────┘
+  └─────────────┬────────────┘                                │
+                │                                             │
+                └──────────────────────┬──────────────────────┘
+                                       │
                                        ▼
                     ┌────────────────────────────────────┐
                     │          Datastore (SQLite)         │
                     │  mps | documents | contributions   │
-                    │  crawl_runs | entity_review_queue  │
-                    │  crawl_run_logs | sit_calendar     │
+                    │  hansard_sessions | agenda_items   │
+                    │  utterances | entity_review_queue  │
                     └──────┬──────────────────────┬──────┘
                            │                      │
                            ▼                      ▼
               ┌─────────────────────┐   ┌────────────────────┐
               │   API (read-only)   │   │  Static Site Gen   │
-              │   FastAPI/Flask     │   │  React + Blueprint │
-              │   7 endpoints       │   │  + Vite            │
+              │   FastAPI            │   │  React + Blueprint │
+              │   9 endpoints        │   │  + Vite            │
               └─────────────────────┘   └────────────────────┘
-                           │
-                           ▼
-              ┌─────────────────────┐
-              │   Social Publisher  │
-              │  human-in-loop gate │
-              └─────────────────────┘
 
-All orchestrated by scheduler (cron / GitHub Actions):
-  crawl → parse → resolve → build → deploy
 ```
 
 ### 2.2 Data Model (Changes from PLAN.md)
@@ -119,6 +114,53 @@ All orchestrated by scheduler (cron / GitHub Actions):
 | source_url | text | order paper URL |
 
 Enables: sitting day counts, "no recorded activity" flags that explicitly show a sitting existed (stronger than "no data").
+
+**hansard_sessions** (new — Hansard free-text transcripts):
+
+| field | type | notes |
+|---|---|---|
+| session_id | pk (integer) | Auto-incrementing primary key |
+| document_id | fk → documents | Link to downloaded PDF document |
+| hansard_no | int (unique) | e.g. `221` |
+| session_date | date | e.g. `2026-07-14` |
+| meeting_description | text | e.g. `Third Meeting of the Second Session of the 13th Parliament` |
+| sitting_time | text | e.g. `2:00 p.m.` |
+
+**agenda_items** (new):
+
+| field | type | notes |
+|---|---|---|
+| agenda_id | pk (integer) | Auto-incrementing primary key |
+| session_id | fk → hansard_sessions | Linked session |
+| title | text | e.g. `IMPLEMENTATION OF GOVERNMENT REFORMS` |
+| category | text | `Questions for Oral Answer`, `Business Motion`, `Speaker's Announcements` |
+| sequence_order | int | Section order in the document |
+
+**utterances** (new — Updated with Language & Multilingual Fields):
+
+| field | type | notes |
+|---|---|---|
+| utterance_id | pk (integer) | Auto-incrementing primary key |
+| agenda_id | fk → agenda_items | Linked agenda item / topic |
+| mp_id | fk → mps (nullable) | Resolved MP ID |
+| speaker_raw_title | text | e.g. `MINISTER FOR STATE PRESIDENT, DEFENCE AND SECURITY` |
+| speaker_name | text | e.g. `MR MOHWASA`, `MR PULE` |
+| language | text | `en` (English), `tn` (Setswana), or `mixed` (code-switched) |
+| speech_type | text | `main_question`, `minister_answer`, `supplementary`, `point_of_order`, `procedural` |
+| speech_text | text | Raw speech turn content |
+| cleaned_text | text | Speech text with honorifics (`Motlotlegi`, `Rre`) normalized for FTS indexing |
+| procedural_notes | text (nullable) | Extracted events e.g. `Applause!`, `Laughter!` |
+| extracted_entities | json (nullable) | JSON array: `{"locations": [...], "money": [...], "orgs": [...]}` |
+| sequence_order | int | Turn sequence order |
+
+**parliamentary_glossary** (new — Static Terminology Mapping):
+
+| field | type | notes |
+|---|---|---|
+| id | pk | |
+| term_setswana | text (unique) | e.g., `Temothuo`, `Puso`, `Motsamaisa Dipuisanyo`, `Tona` |
+| term_english | text | e.g., `Agriculture`, `Government`, `Speaker`, `Minister` |
+| category | text | `ministry_keyword`, `title`, `procedural` |
 
 ### 2.3 API Surface
 
@@ -289,11 +331,12 @@ Every response includes `source_url` back to original PDF/document.
 
 | Layer | Choice | Rationale |
 |---|---|---|
-| Crawl/Parser | Python 3.12 + `requests` + `pdfplumber` + `PyMuPDF` + `BeautifulSoup` | Ecosystem for PDF parsing, OCR fallback |
+| Crawl/Parser | Python 3.12 + `requests` + `pdfplumber` + `PyMuPDF` + `re` + `lingua-py` | PDF text extraction, regex splitting, language detection |
+| Offline NLP | `spaCy` (`en_core_web_sm`) + custom `EntityRuler` | **Zero-LLM** entity extraction (locations, money, government entities) + Botswana gazetteer rules |
 | Entity Resolution | Python (custom, no ML) | Constituency normalization + fuzzy surname match |
-| Store | SQLite (single file) | Zero ops, git-versionable. Migrate to Postgres only if concurrent writes needed |
+| Store | SQLite (single file) | Zero ops, git-versionable, SQL queryable |
 | API | FastAPI | Async, auto-docs, lightweight |
-| Frontend | React 19 + Vite + Blueprint.js (v5) | Palantir's own UI toolkit for data-dense interfaces |
+| Frontend | React 19 + Vite + Blueprint.js (v5) | Data-dense Palantir-style interface |
 | CSS | Tailwind CSS (utility) + Blueprint tokens | BP7 design tokens as CSS custom properties |
 | Deploy | GitHub Actions → GitHub Pages / Vercel | Free tier, daily rebuild |
 | Social | Python script + review queue | Never auto-post |
@@ -384,6 +427,99 @@ def participation_index(mp_id: int) -> dict:
 ```
 
 The `is_proxy` flag controls UI rendering — any view displaying the index must show the caveat. This is enforced in the component, not left to the developer.
+
+### 5.6 Multilingual & Code-Switching Processing Engine
+
+Because the Botswana Hansard mixes English and Setswana within the same speech turn, a bilingual detection and normalization layer runs before entity extraction.
+
+```python
+import re
+import spacy
+from spacy.pipeline import EntityRuler
+from lingua import Language, LanguageDetectorBuilder
+
+# 1. Fast Language Detector for English / Setswana Code-Switching
+languages = [Language.ENGLISH, Language.TSWANA]
+detector = LanguageDetectorBuilder.from_languages(*languages).build()
+
+def detect_language(text: str) -> str:
+    """Classifies speech turn as 'en', 'tn', or 'mixed'."""
+    confidence_values = detector.compute_language_confidence_values(text)
+    scores = {val.language: val.value for val in confidence_values}
+
+    en_score = scores.get(Language.ENGLISH, 0.0)
+    tn_score = scores.get(Language.TSWANA, 0.0)
+
+    if abs(en_score - tn_score) < 0.2 and (en_score > 0.3 and tn_score > 0.3):
+        return "mixed"
+    return "tn" if tn_score > en_score else "en"
+
+# 2. Custom spaCy Pipeline with Botswana Gazetteer Rules
+nlp = spacy.load("en_core_web_sm")
+ruler = nlp.add_pipe("entity_ruler", before="ner")
+
+# Load Botswana Gazetteers (Villages, Constituencies, Ministries)
+patterns = [
+    {"label": "GPE", "pattern": "Mohembo"},
+    {"label": "GPE", "pattern": "Okavango"},
+    {"label": "GPE", "pattern": "Tsabong"},
+    {"label": "GPE", "pattern": "Mmopane-Metsimotlhabe"},
+    {"label": "ORG", "pattern": "DPSM"},
+    {"label": "ORG", "pattern": "Public Service Commission"},
+    {"label": "ORG", "pattern": "Lephata la Temothuo"},  # Ministry of Agriculture in Setswana
+]
+ruler.add_patterns(patterns)
+
+# 3. Honorific Normalizer for Entity Resolution & FTS
+BOTSWANA_HONORIFICS = r"\b(Motlotlegi|Rre|Mma|Kgosi|Tona|Honourable|Hon|Mr|Mrs|Ms|Dr)\b"
+
+def normalize_speaker_and_text(raw_text: str) -> str:
+    """Strips honorifics to allow accurate matching against standard MP names."""
+    return re.sub(BOTSWANA_HONORIFICS, "", raw_text, flags=re.IGNORECASE).strip()
+```
+
+### 5.7 Hansard Free-Text Parsing & Regex Engine Details
+
+Because parliamentary Hansard transcripts adhere to official formatting rules, they can be processed deterministically:
+
+**Hansard Session Header Patterns:**
+- Hansard Number: `r"HANSARD NO:\s*(\d+)"`
+- Session Date: `r"(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY)\s+(\d{1,2}(?:ST|ND|RD|TH)?\s+[A-Z]+\s*,?\s*\d{4})"`
+- Assembly Time: `r"THE ASSEMBLY met at\s*(\d{1,2}:\d{2}\s*[a-z\.]*)"`
+
+**Speaker Turn Regex Patterns:**
+- Speaker with constituency: `r"^([A-Z\s\.]+)\s*\(([^)]+)\):\s*"` (e.g., `MR K. K. KAPINGA (OKAVANGO WEST):`)
+- Speaker with Portfolio: `r"^([A-Z\s]+)\s*\(([A-Z\s\.]+)\):"` (e.g., `MINISTER OF ENVIRONMENT AND TOURISM (MR MMOLOTSI):`)
+- Abbreviated Speaker Turn: `r"^([A-Z\s\.]+):"` (e.g., `MR SPEAKER:`, `MR PULE:`, `DR DIKOLOTI:`)
+
+**Turn Type Qualifiers:**
+- Supplementary Question: Checks if text begins with `Supplementary.` or `Further Supplementary.`.
+- Point of Order / Procedure: Checks if turn begins with `On a point of procedure.`.
+- Deferral: Detects `Later Date.`.
+
+**Procedural Actions Regex:**
+- Parenthetical events: `r"\(\.\.\.(.*?)\dots\)"` (captures `...(Applause!)...`, `...(Laughter!)...`).
+
+**Entity Extraction Logic (`nlp_extract.py`):**
+```python
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+
+def extract_speech_entities(speech_text: str) -> dict:
+    doc = nlp(speech_text)
+    entities = {"locations": [], "money": [], "orgs": []}
+
+    for ent in doc.ents:
+        if ent.label_ in ["GPE", "LOC"]:
+            entities["locations"].append(ent.text)
+        elif ent.label_ == "MONEY":
+            entities["money"].append(ent.text)
+        elif ent.label_ == "ORG":
+            entities["orgs"].append(ent.text)
+
+    return {k: list(set(v)) for k, v in entities.items()}
+```
 
 ---
 

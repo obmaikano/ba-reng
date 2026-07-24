@@ -12,27 +12,48 @@ def list_contributions(
     ministry: str | None = None,
     party: str | None = None,
     constituency: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-) -> list[dict]:
-    """List contributions, optionally filtered by type, ministry, party, or constituency."""
+) -> dict:
+    """List contributions, optionally filtered by type, ministry, party, constituency, or date range."""
     conn = get_connection()
     try:
         clauses = ['1=1']
         params: list = []
+
         if contribution_type:
-            clauses.append('c.contribution_type = ?')
+            clauses.append('UPPER(c.contribution_type) = UPPER(?)')
             params.append(contribution_type)
+
         if ministry:
             clauses.append('c.ministry_addressed = ?')
             params.append(ministry)
+
         if party:
-            clauses.append('m.party = ?')
+            clauses.append('UPPER(m.party) = UPPER(?)')
             params.append(party)
-        if constituency:
-            clauses.append('m.constituency = ?')
-            params.append(constituency)
+
+        if constituency and constituency.strip():
+            clauses.append('m.constituency LIKE ?')
+            params.append(f'%{constituency.strip()}%')
+
+        if start_date:
+            clauses.append('c.date >= ?')
+            params.append(start_date)
+
+        if end_date:
+            clauses.append('c.date <= ?')
+            params.append(end_date if len(end_date) > 10 else f'{end_date} 23:59:59')
+
         where = ' AND '.join(clauses)
+
+        total = conn.execute(
+            f'SELECT COUNT(*) FROM contributions c LEFT JOIN mps m ON m.id = c.mp_id WHERE {where}',
+            params,
+        ).fetchone()[0]
+
         rows = conn.execute(
             f'''
             SELECT c.*, m.name AS mp_name, m.party, m.constituency,
@@ -46,7 +67,12 @@ def list_contributions(
             ''',
             (*params, limit, offset),
         ).fetchall()
-        return [dict(r) for r in rows]
+
+        return {
+            'total_records': total,
+            'returned_records': len(rows),
+            'data': [dict(r) for r in rows],
+        }
     finally:
         conn.close()
 

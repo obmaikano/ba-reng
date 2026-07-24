@@ -59,7 +59,8 @@ def test_list_contributions_filters_by_type(api_client):
     """Contributions can be filtered by type."""
     resp = api_client.client.get('/api/v1/contributions', params={'type': 'motion'})
     assert resp.status_code == 200
-    rows = resp.json()
+    body = resp.json()
+    rows = body['data']
     assert len(rows) == 1
     assert rows[0]['contribution_type'] == 'motion'
 
@@ -70,7 +71,8 @@ def test_list_contributions_filters_by_constituency(api_client):
         '/api/v1/contributions', params={'constituency': 'Francistown East'},
     )
     assert resp.status_code == 200
-    rows = resp.json()
+    body = resp.json()
+    rows = body['data']
     assert len(rows) == 1
     assert rows[0]['mp_name'] == 'John Kgosi'
 

@@ -9,7 +9,7 @@ router = APIRouter(prefix='/api/v1/mps', tags=['mps'])
 
 @router.get('')
 def list_mps() -> list[dict]:
-    """List all MPs with contribution counts and participation index."""
+    """List all MPs with contribution counts and participation index, ranked by score descending."""
     conn = get_connection()
     try:
         rows = conn.execute(
@@ -31,12 +31,18 @@ def list_mps() -> list[dict]:
             breakdowns.setdefault(r['mp_id'], []).append(
                 {'contribution_type': r['contribution_type'], 'cnt': r['cnt']},
             )
-        result = []
+        scored: list[dict] = []
         for row in rows:
             mp = dict(row)
             mp['participation_index'] = compute_index(breakdowns.get(mp['id'], []))
-            result.append(mp)
-        return result
+            scored.append(mp)
+
+        scored.sort(key=lambda m: m['participation_index']['participation_index'], reverse=True)
+        for rank_idx, mp in enumerate(scored, start=1):
+            mp['participation_rank'] = rank_idx
+            mp['participation_rank_of'] = len(scored)
+
+        return scored
     finally:
         conn.close()
 

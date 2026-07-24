@@ -7,10 +7,15 @@ async function request<T = unknown>(path: string, options: RequestInit = {}): Pr
     ...options,
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(body.detail || `HTTP ${res.status}`);
+    const body = await res.text().catch(() => '');
+    const detail = body ? (() => { try { return JSON.parse(body).detail; } catch { return body.slice(0, 200); } })() : res.statusText;
+    throw new Error(detail || `HTTP ${res.status}`);
   }
-  return res.json();
+  const text = await res.text();
+  if (!text || !text.trim()) {
+    throw new Error('Empty response from server');
+  }
+  return JSON.parse(text);
 }
 
 export function get<T = unknown>(path: string): Promise<T> {

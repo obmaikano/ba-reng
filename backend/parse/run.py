@@ -1,9 +1,34 @@
-"""Orchestration: iterate notice paper documents, parse, insert contributions."""
+"""Orchestration: iterate documents, parse, insert contributions."""
 
+import hashlib
+import json
+import logging
 import sqlite3
+from collections.abc import Callable
 
 from backend.db.connection import get_connection
-from backend.parse.notice_paper import parse_pdf
+from backend.parse.notice_paper import parse_pdf as parse_notice_paper
+from backend.parse.order_paper import parse_pdf as parse_order_paper
+from backend.parse.committee_of_supply import parse_pdf as parse_committee_of_supply
+from backend.parse.bill import parse_pdf as parse_bill
+from backend.parse.motion import parse_pdf as parse_motion
+from backend.parse.ministerial_speech import parse_pdf as parse_ministerial_speech
+from backend.parse.hansard import parse_pdf as parse_hansard
+
+logger = logging.getLogger(__name__)
+
+_PARSERS: dict[str, Callable[..., list[dict]]] = {
+    'notice_paper': parse_notice_paper,
+    'order_paper': parse_order_paper,
+    'committee_of_supply': parse_committee_of_supply,
+    'bill': parse_bill,
+    'motion': parse_motion,
+    'ministerial_statement': parse_ministerial_speech,
+    'ministerial_speech': parse_ministerial_speech,
+    'hansard': parse_hansard,
+}
+
+_PARSABLE_TYPES = tuple(_PARSERS.keys())
 
 
 def _insert_contribution(
@@ -11,12 +36,14 @@ def _insert_contribution(
     doc_id: int,
     contrib: dict,
 ) -> int | None:
+    extracted_data = contrib.get('extracted_data')
     try:
         cursor.execute(
             """INSERT INTO contributions
                (document_id, contribution_type, subject_text, ministry_addressed,
-                date, raw_match_name, raw_constituency, source_url)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                date, raw_match_name, raw_constituency, source_url, subject_hash,
+                extracted_data)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 doc_id,
                 contrib['contribution_type'],
@@ -26,6 +53,8 @@ def _insert_contribution(
                 contrib['raw_match_name'],
                 contrib['raw_constituency'],
                 contrib['source_url'],
+                hashlib.sha256(contrib['subject_text'][:200].encode()).hexdigest(),
+                json.dumps(extracted_data) if extracted_data else None,
             ),
         )
         return cursor.lastrowid
@@ -56,6 +85,8 @@ def parse_and_store(
     file_path: str,
     source_url: str,
     conn: sqlite3.Connection | None = None,
+    *,
+    doc_type: str,
 ) -> dict:
     """Parse a single document and store results in the database."""
     close_conn = conn is None
@@ -63,7 +94,13 @@ def parse_and_store(
         conn = get_connection()
 
     cursor = conn.cursor()
-    contributions = parse_pdf(file_path, source_url)
+    if doc_type not in _PARSERS:
+        raise ValueError(
+            f'Unknown doc_type={doc_type} for document {doc_id}. '
+            f'Known types: {", ".join(sorted(_PARSERS.keys()))}',
+        )
+    parser = _PARSERS[doc_type]
+    contributions = parser(file_path, source_url)
 
     parsed = 0
     stored = 0
@@ -94,22 +131,25 @@ def parse_and_store(
 
 
 def run_all(conn: sqlite3.Connection | None = None) -> list[dict]:
-    """Parse all notice paper documents and store contributions."""
+    """Parse all documents and store contributions."""
     close_conn = conn is None
     if conn is None:
         conn = get_connection()
 
     cursor = conn.cursor()
+    placeholders = ','.join('?' * len(_PARSERS))
     docs = cursor.execute(
-        """SELECT id, title, file_path, source_url
-           FROM documents WHERE doc_type = 'notice_paper'
+        f"""SELECT id, title, file_path, source_url, doc_type
+           FROM documents WHERE doc_type IN ({placeholders})
            ORDER BY id""",
+        list(_PARSERS.keys()),
     ).fetchall()
 
     results: list[dict] = []
     for doc in docs:
         result = parse_and_store(
-            doc['id'], doc['file_path'], doc['source_url'], conn,
+            doc['id'], doc['file_path'], doc['source_url'],
+            conn=conn, doc_type=doc['doc_type'],
         )
         results.append(result)
 

@@ -1,17 +1,28 @@
-import { Contribution } from './types';
+import { Contribution, HotTopicNarrative } from './types';
 import { narrativeSection, sectionTitle, mono, ACCENT_ROTATION } from './styles';
 
 interface HotTopicsProps {
   contributions: Contribution[];
+  narrativeTopics: HotTopicNarrative[] | null;
 }
 
 interface Topic {
   ministry: string;
   count: number;
   mpNames: string[];
+  pct?: number;
 }
 
-function topTopics(contributions: Contribution[]): Topic[] {
+function topTopics(contributions: Contribution[], narrativeTopics: HotTopicNarrative[] | null): Topic[] {
+  if (narrativeTopics && narrativeTopics.length > 0) {
+    return narrativeTopics.map((t) => ({
+      ministry: t.ministry,
+      count: t.count,
+      pct: t.pct,
+      mpNames: [],
+    }));
+  }
+
   const byMinistry = new Map<string, Contribution[]>();
   for (const c of contributions) {
     if (!c.ministry_addressed) continue;
@@ -30,8 +41,8 @@ function topTopics(contributions: Contribution[]): Topic[] {
     .slice(0, 5);
 }
 
-export default function HotTopics({ contributions }: HotTopicsProps) {
-  const topics = topTopics(contributions);
+export default function HotTopics({ contributions, narrativeTopics }: HotTopicsProps) {
+  const topics = topTopics(contributions, narrativeTopics);
 
   return (
     <div style={narrativeSection}>
@@ -74,6 +85,7 @@ export default function HotTopics({ contributions }: HotTopicsProps) {
                   </span>
                   <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
                     {topic.count} question{topic.count === 1 ? '' : 's'}
+                    {topic.pct !== undefined && ` (${topic.pct}%)`}
                   </span>
                 </div>
                 {topic.mpNames.length > 0 && (

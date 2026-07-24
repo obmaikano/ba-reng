@@ -4,6 +4,9 @@ import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from backend.db.connection import _sha256_hex
 from backend.parse.notice_paper import (
     _extract_date_from_header,
     _parse_motions,
@@ -99,7 +102,7 @@ class TestSplitSections:
     def test_splits_by_section_type(self) -> None:
         sections = _split_sections(SPLIT_INPUT)
         types = [s[0] for s in sections]
-        assert 'question' in types
+        assert 'oral_question' in types
         assert 'motion' in types
 
     def test_ignores_header_text_before_first_section(self) -> None:
@@ -207,7 +210,7 @@ class TestParseTablings:
         results = _parse_tablings_and_bills(text, '2026-07-24', 'tabling')
         assert len(results) == 1
         assert results[0]['subject_text'] == 'Financial Report for 2023/2024'
-        assert results[0]['ministry_addressed'] == 'Minister of Finance'
+        assert results[0]['ministry_addressed'] == 'Finance'
         assert results[0]['raw_match_name'] == 'Minister of Finance'
 
     def test_parses_petition_with_name(self) -> None:
@@ -241,7 +244,7 @@ class TestParseTablings:
         assert results[0]['subject_text'] == 'Report A (no minister)'
         assert results[0]['ministry_addressed'] == ''
         assert results[1]['subject_text'] == 'Report B'
-        assert results[1]['ministry_addressed'] == 'Minister of Finance'
+        assert results[1]['ministry_addressed'] == 'Finance'
 
     def test_empty_text(self) -> None:
         assert _parse_tablings_and_bills('', '2026-07-24', 'tabling') == []
@@ -286,7 +289,7 @@ class TestParsePdf:
 
         assert len(results) == 4
         types = [c['contribution_type'] for c in results]
-        assert types.count('question') == 2
+        assert types.count('oral_question') == 2
         assert types.count('motion') == 2
         assert all(c['source_url'] == 'https://example.com/doc' for c in results)
 
@@ -309,16 +312,24 @@ class TestParsePdf:
 # ---------------------------------------------------------------------------
 
 
-SCHEMA_SQL = (Path(__file__).resolve().parent.parent.parent
-              / 'backend' / 'db' / 'migrations' / '001_initial.sql').read_text()
+MIGRATIONS_DIR = (
+    Path(__file__).resolve().parent.parent.parent / 'backend' / 'db' / 'migrations'
+)
+SCHEMA_SQL = ''.join(p.read_text() for p in sorted(MIGRATIONS_DIR.glob('*.sql')))
+
+
+def _in_memory_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(':memory:')
+    conn.execute('PRAGMA foreign_keys=ON')
+    conn.row_factory = sqlite3.Row
+    conn.create_function('SHA256_HEX', 1, _sha256_hex, deterministic=True)
+    conn.executescript(SCHEMA_SQL)
+    return conn
 
 
 class TestParseAndStore:
     def test_stores_contributions_and_unresolved(self) -> None:
-        conn = sqlite3.connect(':memory:')
-        conn.execute('PRAGMA foreign_keys=ON')
-        conn.row_factory = sqlite3.Row
-        conn.executescript(SCHEMA_SQL)
+        conn = _in_memory_db()
 
         doc_id = 1
         conn.execute(
@@ -336,7 +347,7 @@ class TestParseAndStore:
         mock_pdf.pages = [mock_page]
 
         with patch('pdfplumber.open', return_value=mock_pdf):
-            result = parse_and_store(doc_id, '/fake/path.pdf', 'https://x.com/doc', conn)
+            result = parse_and_store(doc_id, '/fake/path.pdf', 'https://x.com/doc', conn, doc_type='notice_paper')
 
         assert result['parsed'] == 4
         assert result['stored'] == 4
@@ -346,7 +357,7 @@ class TestParseAndStore:
         assert len(rows) == 4
 
         q_count = conn.execute(
-            "SELECT COUNT(*) FROM contributions WHERE contribution_type='question'"
+            "SELECT COUNT(*) FROM contributions WHERE contribution_type='oral_question'"
         ).fetchone()[0]
         assert q_count == 2
 
@@ -361,10 +372,7 @@ class TestParseAndStore:
 
 class TestRunAll:
     def test_processes_all_notice_papers(self) -> None:
-        conn = sqlite3.connect(':memory:')
-        conn.execute('PRAGMA foreign_keys=ON')
-        conn.row_factory = sqlite3.Row
-        conn.executescript(SCHEMA_SQL)
+        conn = _in_memory_db()
 
         for i in range(1, 4):
             conn.execute(
@@ -391,16 +399,13 @@ class TestRunAll:
         total = conn.execute('SELECT COUNT(*) FROM contributions').fetchone()[0]
         assert total == 12
 
-    def test_skips_non_notice_papers(self) -> None:
-        conn = sqlite3.connect(':memory:')
-        conn.execute('PRAGMA foreign_keys=ON')
-        conn.row_factory = sqlite3.Row
-        conn.executescript(SCHEMA_SQL)
+    def test_skips_unsupported_doc_types(self) -> None:
+        conn = _in_memory_db()
 
         conn.execute(
             'INSERT INTO documents (id, title, doc_type, file_path, source_url) '
             'VALUES (?, ?, ?, ?, ?)',
-            (1, 'Order Paper', 'order_paper', '/fake/op.pdf', ''),
+            (1, 'Unknown', 'unknown_type', '/fake/unknown.pdf', ''),
         )
         conn.commit()
 
@@ -409,3 +414,34 @@ class TestRunAll:
 
         assert len(results) == 0
         mock_open.assert_not_called()
+
+    def test_processes_order_papers(self) -> None:
+        conn = _in_memory_db()
+
+        conn.execute(
+            'INSERT INTO documents (id, title, doc_type, file_path, source_url) '
+            'VALUES (?, ?, ?, ?, ?)',
+            (1, 'Test OP', 'order_paper', '/fake/op.pdf', ''),
+        )
+        conn.commit()
+
+        order_paper_text = (
+            'BOTSWANA NATIONAL ASSEMBLY\n'
+            'O R D E R P A P E R\n'
+            '(MONDAY 16 FEBRUARY, 2026)\n'
+            '1. MR. J. DOE, MP. (CONST): To ask the Minister of Health\n'
+            'whether he has any plans.\n'
+        )
+
+        mock_page = MagicMock()
+        mock_page.extract_text.return_value = order_paper_text
+
+        mock_pdf = MagicMock()
+        mock_pdf.__enter__.return_value = mock_pdf
+        mock_pdf.pages = [mock_page]
+
+        with patch('pdfplumber.open', return_value=mock_pdf):
+            results = run_all(conn)
+
+        assert len(results) == 1
+        assert results[0]['parsed'] == 1

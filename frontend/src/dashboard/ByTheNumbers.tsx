@@ -1,8 +1,9 @@
-import { Contribution } from './types';
+import { Contribution, NarrativeData } from './types';
 import { narrativeSection, sectionTitle, mono, surface, statRow, statRowLast } from './styles';
 
 interface ByTheNumbersProps {
   contributions: Contribution[];
+  narrative: NarrativeData | null;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -16,16 +17,16 @@ const TYPE_LABELS: Record<string, string> = {
   minist_question: "Minister's Question Time",
 };
 
-export default function ByTheNumbers({ contributions }: ByTheNumbersProps) {
+export default function ByTheNumbers({ contributions, narrative }: ByTheNumbersProps) {
   const counts = new Map<string, string>();
   for (const c of contributions) {
     const key = TYPE_LABELS[c.contribution_type] ?? c.contribution_type;
     counts.set(key, String((Number(counts.get(key)) || 0) + 1));
   }
 
-  const ministriesAddressed = new Set(
-    contributions.map((c) => c.ministry_addressed).filter((m): m is string => Boolean(m)),
-  ).size;
+  const ministriesAddressed = narrative?.summary_metrics
+    ? Object.keys(narrative.summary_metrics.ministry_breakdown).length
+    : 0;
 
   const rows: { label: string; count: string; color?: string }[] = [
     { label: 'Questions asked', count: counts.get('Questions asked') ?? '0' },

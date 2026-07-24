@@ -27,6 +27,7 @@ dist/
 data/*.db
 data/*.db-wal
 data/*.db-shm
+data/pdfs/
 
 # IDE
 .vscode/

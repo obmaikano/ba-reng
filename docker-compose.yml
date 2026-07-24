@@ -7,8 +7,9 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
+      - ./data:/app/data
     environment:
-      - DATABASE_PATH=/tmp/bareng.db
+      - DATABASE_PATH=/app/data/bareng.db
 
   frontend:
     image: node:22-slim

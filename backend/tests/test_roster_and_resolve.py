@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from backend.db.connection import _sha256_hex
 from backend.resolve.entity import (
     _build_constituency_map,
     _build_surname_map,
@@ -32,6 +33,7 @@ def _in_memory_db() -> sqlite3.Connection:
     conn = sqlite3.connect(':memory:')
     conn.execute('PRAGMA foreign_keys=ON')
     conn.row_factory = sqlite3.Row
+    conn.create_function('SHA256_HEX', 1, _sha256_hex, deterministic=True)
     conn.executescript(SCHEMA_SQL)
     return conn
 
@@ -481,11 +483,11 @@ class TestResolveAll:
         mp_id = conn.execute("SELECT mp_id FROM contributions WHERE id=1").fetchone()[0]
         assert mp_id == 1
 
-        mp_id = conn.execute("SELECT mp_id FROM contributions WHERE id=3").fetchone()[0]
-        assert mp_id == 1
-
         mp_id = conn.execute("SELECT mp_id FROM contributions WHERE id=2").fetchone()[0]
         assert mp_id is None
+
+        mp_id_3 = conn.execute("SELECT mp_id FROM contributions WHERE id=3").fetchone()[0]
+        assert mp_id_3 is None
 
     def test_no_unresolved(self) -> None:
         conn = _in_memory_db()

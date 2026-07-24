@@ -1,5 +1,6 @@
 """SQLite connection management."""
 
+import hashlib
 import os
 import sqlite3
 from pathlib import Path
@@ -14,6 +15,12 @@ def get_db_path() -> str:
     return str(data_dir / 'bareng.db')
 
 
+def _sha256_hex(text: str | None) -> str | None:
+    if text is None:
+        return None
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
 def get_connection() -> sqlite3.Connection:
     """Get a SQLite connection with WAL mode and foreign keys enabled."""
     db_path = get_db_path()
@@ -22,4 +29,5 @@ def get_connection() -> sqlite3.Connection:
     conn.execute('PRAGMA journal_mode=WAL')
     conn.execute('PRAGMA foreign_keys=ON')
     conn.row_factory = sqlite3.Row
+    conn.create_function('SHA256_HEX', 1, _sha256_hex, deterministic=True)
     return conn

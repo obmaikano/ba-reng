@@ -15,7 +15,7 @@ def search(q: str = Query(..., min_length=1)) -> list[dict]:
         rows = conn.execute(
             '''
             SELECT c.id, c.contribution_type, c.subject_text, c.date,
-                   c.ministry_addressed, c.source_url,
+                   c.ministry_addressed, c.source_url, c.mp_id,
                    m.name AS mp_name, m.party, m.constituency
             FROM contributions c
             LEFT JOIN mps m ON m.id = c.mp_id

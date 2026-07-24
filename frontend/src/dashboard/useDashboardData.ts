@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { get } from '../api';
-import { Contribution, MpSummary } from './types';
+import { Contribution, MpSummary, NarrativeData } from './types';
 
 export interface StatusData {
   mp_count: number;
@@ -19,11 +19,18 @@ export interface DashboardData {
   prevWeekCount: number;
   mps: MpSummary[];
   status: StatusData;
+  narrative: NarrativeData | null;
 }
 
 interface DashboardDataState {
   data: DashboardData | null;
   error: boolean;
+}
+
+interface ContributionsResponse {
+  data: Contribution[];
+  total_records: number;
+  returned_records: number;
 }
 
 const WEEK_WINDOW_DAYS = 7;
@@ -64,13 +71,15 @@ export function useDashboardData(): DashboardDataState {
 
   useEffect(() => {
     Promise.all([
-      get<Contribution[]>('/api/v1/contributions?limit=200'),
+      get<ContributionsResponse>('/api/v1/contributions?limit=200'),
       get<MpSummary[]>('/api/v1/mps'),
       get<StatusData>('/api/v1/status'),
+      get<NarrativeData>('/api/v1/narrative/weekly'),
     ])
-      .then(([contributions, mps, status]) => {
+      .then(([contributionsResp, mps, status, narrative]) => {
+        const contributions = contributionsResp.data;
         const scoped = scopeToLatestWeek(contributions);
-        setData({ contributions, ...scoped, mps, status });
+        setData({ contributions, ...scoped, mps, status, narrative });
       })
       .catch(() => setError(true));
   }, []);
