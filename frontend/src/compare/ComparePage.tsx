@@ -204,7 +204,7 @@ export default function ComparePage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 12, marginTop: 16, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2, flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0 }}>
-              This comparison uses each MP's Participation Index score.{' '}
+              This comparison uses the Participation Index, which counts some kinds of activity more than others.{' '}
               <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>Download as PDF</span>.
             </p>
           </div>

@@ -137,10 +137,14 @@ const TYPE_LABELS: Record<string, string> = {
   bill_1st: 'Bill: Introduced',
   bill_2nd: 'Bill: Debated',
   bill_3rd: 'Bill: Final Vote',
+  bill_reading: 'Bill: Reading',
+  bill_amendment: 'Bill Change',
   committee_of_supply: 'Budget Review',
   tabling: 'Document Filed',
   amendment: 'Bill Change',
   petition: 'Petition',
+  ministerial_statement: "Minister's Update",
+  question_without_notice: 'Question',
 };
 
 export function typeLabel(contributionType: string): string {
