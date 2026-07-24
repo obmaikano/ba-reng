@@ -309,8 +309,16 @@ class TestParsePdf:
 # ---------------------------------------------------------------------------
 
 
-SCHEMA_SQL = (Path(__file__).resolve().parent.parent.parent
-              / 'backend' / 'db' / 'migrations' / '001_initial.sql').read_text()
+SCHEMA_SQL = (
+    (Path(__file__).resolve().parent.parent.parent
+     / 'backend' / 'db' / 'migrations' / '001_initial.sql').read_text()
+    + '\n'
+    + (Path(__file__).resolve().parent.parent.parent
+       / 'backend' / 'db' / 'migrations' / '002_ministry_mapping.sql').read_text()
+    + '\n'
+    + (Path(__file__).resolve().parent.parent.parent
+       / 'backend' / 'db' / 'migrations' / '003_dedup_and_errors.sql').read_text()
+)
 
 
 class TestParseAndStore:

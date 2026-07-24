@@ -1,5 +1,6 @@
 """Orchestration: iterate documents, parse, insert contributions."""
 
+import hashlib
 import logging
 import sqlite3
 from collections.abc import Callable
@@ -32,8 +33,8 @@ def _insert_contribution(
         cursor.execute(
             """INSERT INTO contributions
                (document_id, contribution_type, subject_text, ministry_addressed,
-                date, raw_match_name, raw_constituency, source_url)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                date, raw_match_name, raw_constituency, source_url, subject_hash)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 doc_id,
                 contrib['contribution_type'],
@@ -43,6 +44,7 @@ def _insert_contribution(
                 contrib['raw_match_name'],
                 contrib['raw_constituency'],
                 contrib['source_url'],
+                hashlib.md5(contrib['subject_text'][:200].encode()).hexdigest(),
             ),
         )
         return cursor.lastrowid
