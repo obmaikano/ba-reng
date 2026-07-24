@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from backend.db.connection import _sha256_hex
 from backend.resolve.entity import (
     _build_constituency_map,
     _build_surname_map,
@@ -32,6 +33,7 @@ def _in_memory_db() -> sqlite3.Connection:
     conn = sqlite3.connect(':memory:')
     conn.execute('PRAGMA foreign_keys=ON')
     conn.row_factory = sqlite3.Row
+    conn.create_function('SHA256_HEX', 1, _sha256_hex, deterministic=True)
     conn.executescript(SCHEMA_SQL)
     return conn
 

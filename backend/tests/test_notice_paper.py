@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from backend.db.connection import _sha256_hex
 from backend.parse.notice_paper import (
     _extract_date_from_header,
     _parse_motions,
@@ -311,24 +312,24 @@ class TestParsePdf:
 # ---------------------------------------------------------------------------
 
 
-SCHEMA_SQL = (
-    (Path(__file__).resolve().parent.parent.parent
-     / 'backend' / 'db' / 'migrations' / '001_initial.sql').read_text()
-    + '\n'
-    + (Path(__file__).resolve().parent.parent.parent
-       / 'backend' / 'db' / 'migrations' / '002_ministry_mapping.sql').read_text()
-    + '\n'
-    + (Path(__file__).resolve().parent.parent.parent
-       / 'backend' / 'db' / 'migrations' / '003_dedup_and_errors.sql').read_text()
+MIGRATIONS_DIR = (
+    Path(__file__).resolve().parent.parent.parent / 'backend' / 'db' / 'migrations'
 )
+SCHEMA_SQL = ''.join(p.read_text() for p in sorted(MIGRATIONS_DIR.glob('*.sql')))
+
+
+def _in_memory_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(':memory:')
+    conn.execute('PRAGMA foreign_keys=ON')
+    conn.row_factory = sqlite3.Row
+    conn.create_function('SHA256_HEX', 1, _sha256_hex, deterministic=True)
+    conn.executescript(SCHEMA_SQL)
+    return conn
 
 
 class TestParseAndStore:
     def test_stores_contributions_and_unresolved(self) -> None:
-        conn = sqlite3.connect(':memory:')
-        conn.execute('PRAGMA foreign_keys=ON')
-        conn.row_factory = sqlite3.Row
-        conn.executescript(SCHEMA_SQL)
+        conn = _in_memory_db()
 
         doc_id = 1
         conn.execute(
@@ -371,10 +372,7 @@ class TestParseAndStore:
 
 class TestRunAll:
     def test_processes_all_notice_papers(self) -> None:
-        conn = sqlite3.connect(':memory:')
-        conn.execute('PRAGMA foreign_keys=ON')
-        conn.row_factory = sqlite3.Row
-        conn.executescript(SCHEMA_SQL)
+        conn = _in_memory_db()
 
         for i in range(1, 4):
             conn.execute(
@@ -402,10 +400,7 @@ class TestRunAll:
         assert total == 12
 
     def test_skips_unsupported_doc_types(self) -> None:
-        conn = sqlite3.connect(':memory:')
-        conn.execute('PRAGMA foreign_keys=ON')
-        conn.row_factory = sqlite3.Row
-        conn.executescript(SCHEMA_SQL)
+        conn = _in_memory_db()
 
         conn.execute(
             'INSERT INTO documents (id, title, doc_type, file_path, source_url) '
@@ -421,10 +416,7 @@ class TestRunAll:
         mock_open.assert_not_called()
 
     def test_processes_order_papers(self) -> None:
-        conn = sqlite3.connect(':memory:')
-        conn.execute('PRAGMA foreign_keys=ON')
-        conn.row_factory = sqlite3.Row
-        conn.executescript(SCHEMA_SQL)
+        conn = _in_memory_db()
 
         conn.execute(
             'INSERT INTO documents (id, title, doc_type, file_path, source_url) '
