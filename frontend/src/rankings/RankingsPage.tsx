@@ -26,7 +26,33 @@ function shortParty(party: string): string {
 }
 
 function partyColor(party: string): string {
-  return PARTY_COLOR[party] ?? 'var(--text-tertiary)';
+  return PARTY_COLOR[party] ?? 'var(--accent-blue)';
+}
+
+function downloadCSV(mps: MpSummary[]) {
+  const getCount = (b: BreakdownItem[] | undefined, t: string) => b?.find((x) => x.contribution_type === t)?.count ?? 0;
+  const rows = mps.map((mp, i) => {
+    const b = mp.participation_index.breakdown;
+    return [
+      i + 1,
+      mp.name,
+      mp.constituency,
+      shortParty(mp.party),
+      mp.participation_index.participation_index,
+      mp.contribution_count,
+      getCount(b, 'oral_question'),
+      getCount(b, 'motion'),
+      getCount(b, 'committee_of_supply'),
+    ].join(',');
+  });
+  const header = 'Rank,MP,Constituency,Party,Index Score,Total Contributions,Oral Questions,Motions,Committee of Supply';
+  const blob = new Blob([`${header}\n${rows.join('\n')}`], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'participation_index.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function getTypeCount(
@@ -80,7 +106,7 @@ function RankRow({ mp, rank, maxIndex, onSelect }: RankRowProps) {
   const score = pi.participation_index;
   const isZero = score === 0;
   const isFirst = rank === 1;
-  const breakdown = pi.breakdown || [];
+  const breakdown = pi.breakdown;
   const oralQ = getTypeCount(breakdown, 'oral_question');
   const motion = getTypeCount(breakdown, 'motion');
   const cos = getTypeCount(breakdown, 'committee_of_supply');
@@ -206,7 +232,10 @@ export default function RankingsPage() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button style={{ ...mono, fontSize: 11, color: 'var(--text-secondary)', background: 'transparent', border: '1px solid var(--border-default)', padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            onClick={() => downloadCSV(filtered)}
+            style={{ ...mono, fontSize: 11, color: 'var(--text-secondary)', background: 'transparent', border: '1px solid var(--border-default)', padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+          >
             <DownloadIcon /> CSV
           </button>
           <select
@@ -216,7 +245,7 @@ export default function RankingsPage() {
               ...mono, fontSize: 11, color: 'var(--text-secondary)', background: 'var(--bg-elevated)',
               border: '1px solid var(--border-default)', padding: '4px 8px', cursor: 'pointer',
               minWidth: 130, appearance: 'none', WebkitAppearance: 'none',
-              backgroundImage: 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'><path d=\'M0 0l5 6 5-6z\' fill=\'%235A6473\'/></svg>")',
+              backgroundImage: 'url("data:image/svg+xml;charset=utf-8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'6\'><path d=\'M0 0l5 6 5-6z\' fill=\'%235A6473\'/></svg>")',
               backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', paddingRight: 28,
             }}
           >
