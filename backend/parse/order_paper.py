@@ -133,6 +133,8 @@ def _parse_bills(text: str, date: str | None) -> list[dict]:
                 minister = item_match.group(4) or ''
                 if bill_no:
                     title = f'{title} (Bill No. {bill_no} of {bill_year})'.strip()
+                if len(title) < 5:
+                    continue
                 contributions.append({
                     'contribution_type': _stage_to_type(current_stage),
                     'raw_match_name': minister.strip() if minister else '',
