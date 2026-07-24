@@ -7,11 +7,13 @@ from backend.db.connection import get_connection
 from backend.parse.notice_paper import parse_pdf as parse_notice_paper
 from backend.parse.order_paper import parse_pdf as parse_order_paper
 from backend.parse.committee_of_supply import parse_pdf as parse_committee_of_supply
+from backend.parse.bill import parse_pdf as parse_bill
 
 _PARSERS: dict[str, Callable[..., list[dict]]] = {
     'notice_paper': parse_notice_paper,
     'order_paper': parse_order_paper,
     'committee_of_supply': parse_committee_of_supply,
+    'bill': parse_bill,
 }
 
 
@@ -114,7 +116,7 @@ def run_all(conn: sqlite3.Connection | None = None) -> list[dict]:
     cursor = conn.cursor()
     docs = cursor.execute(
         """SELECT id, title, file_path, source_url, doc_type
-           FROM documents WHERE doc_type IN ('notice_paper', 'order_paper', 'committee_of_supply')
+           FROM documents WHERE doc_type IN ('notice_paper', 'order_paper', 'committee_of_supply', 'bill')
            ORDER BY id""",
     ).fetchall()
 
