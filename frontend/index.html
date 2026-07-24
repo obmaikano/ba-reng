@@ -11,5 +11,19 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+      <script>
+      // GitHub Pages SPA redirect recovery — restores the original path
+      // after 404.html stores it in sessionStorage and redirects to root.
+      (function () {
+        var redirect = sessionStorage.getItem('__spa_redirect');
+        if (redirect) {
+          sessionStorage.removeItem('__spa_redirect');
+          if (redirect !== window.location.pathname + window.location.search + window.location.hash) {
+            window.history.replaceState(null, '', redirect);
+          }
+        }
+      })();
+    </script>
+
   </body>
 </html>

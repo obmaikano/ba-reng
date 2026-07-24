@@ -1,15 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Redirecting…</title>
+  <title>Ba Reng? — Redirecting…</title>
   <script>
+    // Store the intended path and redirect to the SPA root.
+    // index.html recovers this via sessionStorage to restore client-side routing.
     (function () {
       var wanted = window.location.pathname + window.location.search + window.location.hash;
       sessionStorage.setItem('__spa_redirect', wanted);
-      window.location.replace(window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/'));
+      window.location.replace('/');
     })();
   </script>
 </head>
-<body><a href="/">Redirecting…</a></body>
+<body>
+  <p>Redirecting to Ba Reng?…</p>
+  <p>If you are not redirected, <a href="/">click here</a>.</p>
+</body>
 </html>
