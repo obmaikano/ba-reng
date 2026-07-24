@@ -99,7 +99,7 @@ class TestSplitSections:
     def test_splits_by_section_type(self) -> None:
         sections = _split_sections(SPLIT_INPUT)
         types = [s[0] for s in sections]
-        assert 'question' in types
+        assert 'oral_question' in types
         assert 'motion' in types
 
     def test_ignores_header_text_before_first_section(self) -> None:
@@ -207,7 +207,7 @@ class TestParseTablings:
         results = _parse_tablings_and_bills(text, '2026-07-24', 'tabling')
         assert len(results) == 1
         assert results[0]['subject_text'] == 'Financial Report for 2023/2024'
-        assert results[0]['ministry_addressed'] == 'Minister of Finance'
+        assert results[0]['ministry_addressed'] == 'Finance'
         assert results[0]['raw_match_name'] == 'Minister of Finance'
 
     def test_parses_petition_with_name(self) -> None:
@@ -241,7 +241,7 @@ class TestParseTablings:
         assert results[0]['subject_text'] == 'Report A (no minister)'
         assert results[0]['ministry_addressed'] == ''
         assert results[1]['subject_text'] == 'Report B'
-        assert results[1]['ministry_addressed'] == 'Minister of Finance'
+        assert results[1]['ministry_addressed'] == 'Finance'
 
     def test_empty_text(self) -> None:
         assert _parse_tablings_and_bills('', '2026-07-24', 'tabling') == []
@@ -286,7 +286,7 @@ class TestParsePdf:
 
         assert len(results) == 4
         types = [c['contribution_type'] for c in results]
-        assert types.count('question') == 2
+        assert types.count('oral_question') == 2
         assert types.count('motion') == 2
         assert all(c['source_url'] == 'https://example.com/doc' for c in results)
 
@@ -346,7 +346,7 @@ class TestParseAndStore:
         assert len(rows) == 4
 
         q_count = conn.execute(
-            "SELECT COUNT(*) FROM contributions WHERE contribution_type='question'"
+            "SELECT COUNT(*) FROM contributions WHERE contribution_type='oral_question'"
         ).fetchone()[0]
         assert q_count == 2
 

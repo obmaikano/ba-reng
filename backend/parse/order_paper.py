@@ -1,17 +1,11 @@
 """Parser for Botswana National Assembly Order Paper PDFs."""
 
 import re
-from datetime import datetime
 
-import pdfplumber
-
-DATE_PATTERN = re.compile(
-    r'(?:FOR\s+)?'
-    r'(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)'
-    r'\s+\d{1,2}(?:ST|ND|RD|TH)?\s+'
-    r'(?:JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|'
-    r'OCTOBER|NOVEMBER|DECEMBER),?\s+\d{4}',
-    re.IGNORECASE,
+from backend.parse.base import (
+    _extract_date_from_header,
+    extract_text,
+    normalise_ministry,
 )
 
 QUESTION_HEADER = re.compile(
@@ -33,31 +27,6 @@ MINISTRY_DELIM = re.compile(
     r'and\s+further\s+state|and\s+to\s+state)',
     re.IGNORECASE,
 )
-
-
-def extract_text(pdf_path: str) -> str:
-    with pdfplumber.open(pdf_path) as pdf:
-        lines: list[str] = []
-        for page in pdf.pages:
-            text = page.extract_text()
-            if text:
-                lines.append(text)
-    return '\n'.join(lines)
-
-
-def _extract_date_from_header(text: str) -> str | None:
-    match = DATE_PATTERN.search(text)
-    if not match:
-        return None
-    raw = match.group(0).strip().upper()
-    raw = raw.removeprefix('FOR ')
-    raw = re.sub(r'\b(\d+)(ST|ND|RD|TH)\b', r'\1', raw)
-    raw = raw.replace(',', '').strip()
-    try:
-        dt = datetime.strptime(raw, '%A %d %B %Y')
-        return dt.strftime('%Y-%m-%d')
-    except ValueError:
-        return None
 
 
 def _normalise_block(block: str) -> str:
@@ -88,8 +57,7 @@ def _parse_questions(text: str, date: str | None) -> list[dict]:
         delim_match = MINISTRY_DELIM.search(after_header)
         if delim_match:
             ministry = after_header[:delim_match.start()].strip()
-            ministry = re.sub(r'\s*:\s*\(?[ivx]+\)?\s*$', '', ministry).strip()
-            ministry = re.sub(r'[:,\s]+$', '', ministry).strip()
+            ministry = normalise_ministry(ministry)
             subject_text = after_header[delim_match.start():].strip()
         else:
             ministry = after_header

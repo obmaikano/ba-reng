@@ -110,9 +110,9 @@ class TestParseQuestions:
     def test_extracts_ministry(self) -> None:
         results = _parse_questions(SAMPLE_QUESTIONS, '2026-02-16')
 
-        assert results[0]['ministry_addressed'] == 'Minister of Health'
-        assert results[1]['ministry_addressed'] == 'Minister of Education'
-        assert results[2]['ministry_addressed'] == 'Minister of Finance'
+        assert results[0]['ministry_addressed'] == 'Health'
+        assert results[1]['ministry_addressed'] == 'Education'
+        assert results[2]['ministry_addressed'] == 'Finance'
 
     def test_extracts_subject_text(self) -> None:
         results = _parse_questions(SAMPLE_QUESTIONS, '2026-02-16')
@@ -145,7 +145,7 @@ class TestParseQuestions:
         )
         results = _parse_questions(text, '2026-07-01')
         assert len(results) == 2
-        assert results[0]['ministry_addressed'] == 'Minister of Works and Transport'
+        assert results[0]['ministry_addressed'] == 'Works and Transport'
 
     def test_handles_brigadier_title(self) -> None:
         text = (
@@ -163,7 +163,7 @@ class TestParseQuestions:
         )
         results = _parse_questions(text, '2026-07-01')
         assert len(results) == 1
-        assert 'Minister for State President' in results[0]['ministry_addressed']
+        assert 'President' in results[0]['ministry_addressed']
 
 
 # ---------------------------------------------------------------------------

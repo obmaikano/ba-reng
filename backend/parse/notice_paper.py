@@ -1,22 +1,17 @@
 """Parser for Botswana National Assembly Notice Paper PDFs."""
 
 import re
-from datetime import datetime
 
-import pdfplumber
-
-DATE_PATTERN = re.compile(
-    r'(?:FOR\s+)?'
-    r'(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)'
-    r'\s+\d{1,2}(?:ST|ND|RD|TH)?\s+'
-    r'(?:JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|'
-    r'OCTOBER|NOVEMBER|DECEMBER),?\s+\d{4}',
-    re.IGNORECASE,
+from backend.parse.base import (
+    DATE_PATTERN,
+    _extract_date_from_header,
+    extract_text,
+    normalise_ministry,
 )
 
 SECTION_TYPES: list[tuple[re.Pattern, str]] = [
-    (re.compile(r'NOTICE\s+OF\s+QUESTIONS', re.IGNORECASE), 'question'),
-    (re.compile(r"NOTICE\s+OF\s+MINISTERS['\u2019]\s*QUESTION\s+TIME", re.IGNORECASE), 'question'),
+    (re.compile(r'NOTICE\s+OF\s+QUESTIONS', re.IGNORECASE), 'oral_question'),
+    (re.compile(r"NOTICE\s+OF\s+MINISTERS['\u2019]\s*QUESTION\s+TIME", re.IGNORECASE), 'oral_question'),
     (re.compile(r'NOTICE\s+OF\s+A?\s*MOTION', re.IGNORECASE), 'motion'),
     (re.compile(r'NOTICE\s+OF\s+MOTIONS', re.IGNORECASE), 'motion'),
     (re.compile(r'NOTICE\s+OF\s+A?\s*TABLING', re.IGNORECASE), 'tabling'),
@@ -59,32 +54,6 @@ PAGE_NUM = re.compile(r'\((\d+)\)\s*')
 def _remove_inline_page_numbers(text: str) -> str:
     """Remove parenthesized page numbers inserted during PDF text extraction."""
     return PAGE_NUM.sub('', text)
-
-
-def _extract_date_from_header(text: str) -> str | None:
-    match = DATE_PATTERN.search(text)
-    if not match:
-        return None
-    raw = match.group(0).strip().upper()
-    raw = raw.removeprefix('FOR ')
-    raw = re.sub(r'\b(\d+)(ST|ND|RD|TH)\b', r'\1', raw)
-    raw = raw.replace(',', '').strip()
-    try:
-        dt = datetime.strptime(raw, '%A %d %B %Y')
-        return dt.strftime('%Y-%m-%d')
-    except ValueError:
-        return None
-
-
-def extract_text(pdf_path: str) -> str:
-    """Extract and concatenate text from all PDF pages."""
-    with pdfplumber.open(pdf_path) as pdf:
-        lines: list[str] = []
-        for page in pdf.pages:
-            text = page.extract_text()
-            if text:
-                lines.append(text)
-    return '\n'.join(lines)
 
 
 def _split_sections(text: str) -> list[tuple[str, str, str]]:
@@ -152,10 +121,10 @@ def _parse_questions(text: str, date: str | None) -> list[dict]:
         subject_text = subject_text.lstrip(':').strip()
 
         contributions.append({
-            'contribution_type': 'question',
+            'contribution_type': 'oral_question',
             'raw_match_name': raw_name,
             'raw_constituency': constituency,
-            'ministry_addressed': ministry,
+            'ministry_addressed': normalise_ministry(ministry),
             'subject_text': subject_text,
             'date': date or '',
             'source_url': '',
@@ -244,7 +213,7 @@ def _finalize_tabling(
         'contribution_type': ctype,
         'raw_match_name': raw_match_name,
         'raw_constituency': raw_constituency,
-        'ministry_addressed': minister,
+        'ministry_addressed': normalise_ministry(minister) if minister else '',
         'subject_text': subject_text,
         'date': date or '',
     })
@@ -297,7 +266,7 @@ def parse_pdf(pdf_path: str, source_url: str = '') -> list[dict]:
     contributions: list[dict] = []
 
     for ctype, header, section_text in sections:
-        if ctype in ('question',):
+        if ctype in ('oral_question',):
             parsed = _parse_questions(section_text, date)
             for p in parsed:
                 p['source_url'] = source_url
