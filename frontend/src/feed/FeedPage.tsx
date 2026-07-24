@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Contribution } from '../dashboard/types';
 import { typeTag, typeLabel, mono } from '../dashboard/styles';
 
@@ -124,6 +125,8 @@ export default function FeedPage({ contributions, totalCount }: FeedPageProps) {
 function FeedRow({ contribution: c }: { contribution: Contribution }) {
   const [hover, setHover] = useState(false);
 
+  const navigate = useNavigate();
+
   return (
     <div
       style={{
@@ -139,6 +142,7 @@ function FeedRow({ contribution: c }: { contribution: Contribution }) {
       }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onClick={() => { if (c.mp_id) navigate(`/mp/${c.mp_id}`); }}
     >
       <div>
         <div style={{ ...mono, fontSize: 12, color: 'var(--text-secondary)' }}>
