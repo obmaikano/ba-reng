@@ -129,6 +129,31 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleExport = () => {
+    if (!data) return;
+    const rows = [
+      ['Metric', 'Value'],
+      ['Documents', String(data.document_count)],
+      ['Contributions', String(data.contribution_count)],
+      ['MPs Indexed', String(data.mp_count)],
+      ['Unresolved Entities', String(data.unresolved_entity_count)],
+      ['Resolved Entities', String(data.resolved_entity_count)],
+      ['Crawl Status', data.crawl_running ? 'RUNNING' : 'IDLE'],
+      ['Last Crawl', data.last_crawl?.finished_at ?? 'N/A'],
+      ['Last Crawl Status', data.last_crawl?.status ?? 'N/A'],
+      ['Last Crawl New Docs', String(data.last_crawl?.new_documents ?? 0)],
+      ['Last Crawl Errors', String(data.last_crawl?.errors ?? 0)],
+    ];
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bareng-admin-dashboard-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const isAdmin = user?.role === 'admin';
 
   // -----------------------------------------------------------------------
@@ -185,6 +210,15 @@ export default function AdminDashboardPage() {
               {data.crawl_running ? 'Crawl Running…' : 'Trigger Crawl'}
             </Button>
           )}
+          <Button
+            icon="export"
+            small
+            minimal
+            onClick={handleExport}
+            title="Export dashboard data as CSV"
+          >
+            Export
+          </Button>
           {triggerMsg && (
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#738091' }}>
               {triggerMsg}
@@ -277,10 +311,10 @@ export default function AdminDashboardPage() {
         <Button minimal small onClick={() => navigate('/admin/ministry-mappings')}>
           Ministry Mappings
         </Button>
-        <Button minimal small disabled title="Coming soon">
+        <Button minimal small onClick={() => navigate('/admin/entity-review')}>
           Entity Review Queue
         </Button>
-        <Button minimal small disabled title="Coming soon">
+        <Button minimal small onClick={() => navigate('/admin/users')}>
           User Management
         </Button>
       </div>
