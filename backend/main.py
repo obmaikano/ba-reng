@@ -7,9 +7,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.admin.routes import router as admin_router
 from backend.api.auth.routes import router as auth_router
+from backend.api.routes.analytics import router as analytics_router
 from backend.api.routes.constituencies import router as constituencies_router
 from backend.api.routes.contributions import router as contributions_router
+from backend.api.routes.hansard import router as hansard_router
 from backend.api.routes.mps import router as mps_router
+from backend.api.routes.narrative import router as narrative_router
 from backend.api.routes.search import router as search_router
 from backend.api.routes.status import router as status_router
 
@@ -41,6 +44,9 @@ app.include_router(admin_router)
 app.include_router(mps_router)
 app.include_router(contributions_router)
 app.include_router(constituencies_router)
+app.include_router(hansard_router)
+app.include_router(analytics_router)
+app.include_router(narrative_router)
 app.include_router(search_router)
 app.include_router(status_router)
 

@@ -1,4 +1,4 @@
-import { Contribution } from './types';
+import { Contribution, NarrativeData } from './types';
 import { narrativeSection, statCard, grid4, statLabel, statValue, mono } from './styles';
 
 interface WeekAtGlanceProps {
@@ -6,6 +6,7 @@ interface WeekAtGlanceProps {
   activeMpCount: number;
   totalMpCount: number;
   prevWeekCount: number;
+  narrative: NarrativeData | null;
 }
 
 interface Stat {
@@ -16,23 +17,6 @@ interface Stat {
 }
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function topMinistry(contributions: Contribution[]): { name: string; count: number } {
-  const counts = new Map<string, number>();
-  for (const c of contributions) {
-    if (!c.ministry_addressed) continue;
-    counts.set(c.ministry_addressed, (counts.get(c.ministry_addressed) ?? 0) + 1);
-  }
-  let name = '—';
-  let count = 0;
-  for (const [ministry, ministryCount] of counts) {
-    if (ministryCount > count) {
-      name = ministry;
-      count = ministryCount;
-    }
-  }
-  return { name, count };
-}
 
 function sittingDayNames(contributions: Contribution[]): string {
   const days = Array.from(new Set(contributions.map((c) => c.date)))
@@ -54,9 +38,13 @@ export default function WeekAtGlance({
   activeMpCount,
   totalMpCount,
   prevWeekCount,
+  narrative,
 }: WeekAtGlanceProps) {
   const sittingDays = new Set(contributions.map((c) => c.date)).size;
-  const ministry = topMinistry(contributions);
+
+  const topMinistry = narrative?.summary_metrics?.top_addressed_ministry ?? '—';
+  const topMinistryCount = narrative?.summary_metrics?.top_ministry_count ?? 0;
+  const topMinistryPct = narrative?.summary_metrics?.top_ministry_pct ?? 0;
 
   const stats: Stat[] = [
     { label: 'Sitting Days', value: String(sittingDays), detail: sittingDayNames(contributions) },
@@ -74,9 +62,11 @@ export default function WeekAtGlance({
     },
     {
       label: 'Most Addressed',
-      value: ministry.name,
+      value: topMinistry,
       valueColor: 'var(--accent-amber)',
-      detail: ministry.count > 0 ? `${ministry.count} question${ministry.count === 1 ? '' : 's'} this week` : 'No ministry recorded',
+      detail: topMinistryCount > 0
+        ? `${topMinistryCount} question${topMinistryCount === 1 ? '' : 's'} (${topMinistryPct}%)`
+        : 'No ministry recorded',
     },
   ];
 

@@ -4,6 +4,8 @@ import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from backend.parse.notice_paper import (
     _extract_date_from_header,
     _parse_motions,
@@ -408,7 +410,7 @@ class TestRunAll:
         conn.execute(
             'INSERT INTO documents (id, title, doc_type, file_path, source_url) '
             'VALUES (?, ?, ?, ?, ?)',
-            (1, 'Hansard', 'hansard', '/fake/hansard.pdf', ''),
+            (1, 'Unknown', 'unknown_type', '/fake/unknown.pdf', ''),
         )
         conn.commit()
 

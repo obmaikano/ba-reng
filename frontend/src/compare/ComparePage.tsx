@@ -12,8 +12,44 @@ interface CompareData {
   ministries: { ministry: string; count: number }[];
 }
 
+function generateComparisonStory(mpA: CompareData, mpB: CompareData): string {
+  const leader = mpA.contribution_count >= mpB.contribution_count ? mpA : mpB;
+  const follower = leader === mpA ? mpB : mpA;
+  const diff = leader.contribution_count - follower.contribution_count;
+  const gapPhrase = diff > 0 ? ` (a gap of ${diff})` : '';
+
+  const leaderMotions = typeCount(leader, 'motion');
+  const followerMotions = typeCount(follower, 'motion');
+
+  if (diff === 0) {
+    return `${mpA.name} and ${mpB.name} have equal activity with ${mpA.contribution_count} recorded contributions each.`;
+  }
+
+  let story = `${leader.name} leads the comparison with ${leader.contribution_count} total contributions vs ${follower.name}'s ${follower.contribution_count}${gapPhrase}. `;
+
+  if (leaderMotions > followerMotions) {
+    story += `The gap is widest in motions (${leaderMotions} vs ${followerMotions}), suggesting ${leader.name} takes more legislative initiative. `;
+  } else if (followerMotions > leaderMotions) {
+    story += `${follower.name} surpasses ${leader.name} in motions (${followerMotions} vs ${leaderMotions}), revealing a stronger legislative drafting focus. `;
+  }
+
+  const leaderQuestions = typeCount(leader, 'question') + typeCount(leader, 'oral_question');
+  const followerQuestions = typeCount(follower, 'question') + typeCount(follower, 'oral_question');
+  if (followerQuestions > leaderQuestions) {
+    story += `However, ${follower.name}'s oral questions (${followerQuestions} vs ${leaderQuestions}) are proportionally higher — questioning is ${follower.id === mpA.id ? 'his' : 'his'} primary oversight tool.`;
+  }
+
+  return story;
+}
+
 function typeCount(dp: CompareData, type: string): number {
-  return dp.breakdown_by_type.find(t => t.contribution_type === type)?.cnt ?? 0;
+  const exact = dp.breakdown_by_type.find(t => t.contribution_type === type)?.cnt ?? 0;
+  if (exact > 0) return exact;
+  if (type === 'question' || type === 'oral_question') {
+    return (dp.breakdown_by_type.find(t => t.contribution_type === 'oral_question')?.cnt ?? 0)
+      + (dp.breakdown_by_type.find(t => t.contribution_type === 'question')?.cnt ?? 0);
+  }
+  return exact;
 }
 
 function topMinistry(dp: CompareData): { ministry: string; count: number } {
@@ -124,12 +160,7 @@ export default function ComparePage() {
             <div>
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-blue)' }}>Comparison Story</span>
               <p style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, marginBottom: 0, lineHeight: 1.5 }}>
-                {mpA.name} leads across{mpA.contribution_count < mpB.contribution_count ? '' : ' all'} categories with {mpA.contribution_count} total contributions vs {mpB.name}&rsquo;s {mpB.contribution_count}.{' '}
-                The gap is widest in motions ({typeCount(mpA, 'motion')} vs {typeCount(mpB, 'motion')}),{' '}
-                {typeCount(mpA, 'motion') > typeCount(mpB, 'motion')
-                  ? `suggesting ${mpA.name} takes more legislative initiative.`
-                  : `suggesting ${mpB.name} takes more legislative initiative.`}{' '}
-                However, {typeCount(mpA, 'question') > typeCount(mpB, 'question') ? mpA.name : mpB.name}&rsquo;s oral questions ({Math.max(typeCount(mpA, 'question'), typeCount(mpB, 'question'))} vs {Math.min(typeCount(mpA, 'question'), typeCount(mpB, 'question'))}) are proportionally higher relative to total count — questioning is {typeCount(mpA, 'question') > typeCount(mpB, 'question') ? "his" : "his"} primary tool.
+                {generateComparisonStory(mpA, mpB)}
               </p>
             </div>
           </div>
@@ -142,7 +173,7 @@ export default function ComparePage() {
             </div>
             {[
               { label: 'Total Contributions', a: mpA.contribution_count, b: mpB.contribution_count },
-              { label: 'Oral Questions', a: typeCount(mpA, 'question'), b: typeCount(mpB, 'question') },
+              { label: 'Oral Questions', a: typeCount(mpA, 'oral_question'), b: typeCount(mpB, 'oral_question') },
               { label: 'Motions', a: typeCount(mpA, 'motion'), b: typeCount(mpB, 'motion') },
               { label: 'Bill Readings', a: typeCount(mpA, 'bill_presentation'), b: typeCount(mpB, 'bill_presentation') },
               { label: 'Ministries Addressed', a: mpA.ministries.length, b: mpB.ministries.length },

@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useCallback, useState } from 'react';
 import { AuthProvider } from './auth/AuthContext';
 import LoginPage from './auth/LoginPage';
 import ProtectedRoute from './auth/ProtectedRoute';
@@ -9,7 +10,7 @@ import DashboardSidebar from './dashboard/DashboardSidebar';
 import { useDashboardData } from './dashboard/useDashboardData';
 import { useFeedData } from './feed/useFeedData';
 import FeedPage from './feed/FeedPage';
-import FilterSidebar from './feed/FilterSidebar';
+import FilterSidebar, { DEFAULT_FILTERS, FilterState } from './feed/FilterSidebar';
 import FeedRightPanel from './feed/FeedRightPanel';
 import FindMpPage from './findmp/FindMpPage';
 import MpProfilePage from './mp/MpProfilePage';
@@ -49,13 +50,13 @@ function Home() {
 }
 
 function MpProfile() {
-  const { data } = useFeedData();
+  const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
   const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={[]} />}
+      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
       rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
     >
       <MpProfilePage />
@@ -64,13 +65,13 @@ function MpProfile() {
 }
 
 function Compare() {
-  const { data } = useFeedData();
+  const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
   const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={[]} />}
+      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
       rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
     >
       <ComparePage />
@@ -79,12 +80,16 @@ function Compare() {
 }
 
 function Feed() {
-  const { data, error } = useFeedData();
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const { data, error } = useFeedData(filters);
+  const handleFilterChange = useCallback((next: FilterState) => {
+    setFilters(next);
+  }, []);
 
   if (error) {
     return (
       <AppShell>
-        <span style={{ color: 'var(--accent-red)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+        <span style={{ color: 'var(--accent-red)', fontFamily: 'var(--font-mono)', fontSize: 12, padding: 24, display: 'block' }}>
           Could not load feed data. Is the API running?
         </span>
       </AppShell>
@@ -94,7 +99,7 @@ function Feed() {
   if (!data) {
     return (
       <AppShell>
-        <span style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+        <span style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12, padding: 24, display: 'block' }}>
           Loading…
         </span>
       </AppShell>
@@ -105,9 +110,16 @@ function Feed() {
     new Set(data.contributions.map((c) => c.ministry_addressed).filter((m): m is string => Boolean(m))),
   ).sort();
 
+  const ministryCounts: Record<string, number> = {};
+  for (const c of data.contributions) {
+    if (c.ministry_addressed) {
+      ministryCounts[c.ministry_addressed] = (ministryCounts[c.ministry_addressed] ?? 0) + 1;
+    }
+  }
+
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={ministryNames} />}
+      sidebar={<FilterSidebar ministries={ministryNames} filters={filters} onChange={handleFilterChange} ministryCounts={ministryCounts} />}
       rightPanel={<FeedRightPanel mps={data.mps} unresolvedCount={data.unresolvedCount} />}
     >
       <FeedPage contributions={data.contributions} totalCount={data.totalCount} />
@@ -118,7 +130,7 @@ function Feed() {
 function FindMp() {
   return (
     <AppShell
-      sidebar={<FilterSidebar ministries={[]} />}
+      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
     >
       <FindMpPage />
     </AppShell>
@@ -126,24 +138,45 @@ function FindMp() {
 }
 
 function Rankings() {
+  const { data } = useFeedData(DEFAULT_FILTERS);
+  const mps = data?.mps ?? [];
+  const unresolvedCount = data?.unresolvedCount ?? 0;
+
   return (
-    <AppShell>
+    <AppShell
+      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
+      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+    >
       <RankingsPage />
     </AppShell>
   );
 }
 
 function Bills() {
+  const { data } = useFeedData(DEFAULT_FILTERS);
+  const mps = data?.mps ?? [];
+  const unresolvedCount = data?.unresolvedCount ?? 0;
+
   return (
-    <AppShell>
+    <AppShell
+      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
+      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+    >
       <BillTrackerPage />
     </AppShell>
   );
 }
 
 function Search() {
+  const { data } = useFeedData(DEFAULT_FILTERS);
+  const mps = data?.mps ?? [];
+  const unresolvedCount = data?.unresolvedCount ?? 0;
+
   return (
-    <AppShell>
+    <AppShell
+      sidebar={<FilterSidebar ministries={[]} filters={DEFAULT_FILTERS} onChange={() => {}} />}
+      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+    >
       <SearchPage />
     </AppShell>
   );

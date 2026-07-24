@@ -50,8 +50,8 @@ def resolve_all(conn: sqlite3.Connection | None = None) -> dict:
         )
         if mp_id is not None:
             cursor.execute(
-                'UPDATE contributions SET mp_id = ? WHERE raw_match_name = ?',
-                (mp_id, row['raw_match_name']),
+                'UPDATE contributions SET mp_id = ? WHERE id = ?',
+                (mp_id, row['contribution_id']),
             )
             cursor.execute(
                 'UPDATE entity_review_queue SET status = ?, resolved_mp_id = ? WHERE id = ?',

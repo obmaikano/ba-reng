@@ -1,8 +1,9 @@
-import { Contribution } from './types';
+import { Contribution, NarrativeData } from './types';
 import { narrativeSection, sectionTitle, mono, surfaceElevated, typeTag } from './styles';
 
 interface WeeklyTimelineProps {
   contributions: Contribution[];
+  narrative: NarrativeData | null;
 }
 
 interface DaySummary {
@@ -20,7 +21,14 @@ function formatDay(date: string): string {
   return `${DAY_NAMES[d.getUTCDay()]} ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()]}`;
 }
 
-function summarizeDays(contributions: Contribution[]): DaySummary[] {
+function summarizeDays(contributions: Contribution[], narrative: NarrativeData | null): DaySummary[] {
+  const ministryMap = new Map<string, string>();
+  if (narrative?.summary_metrics?.ministry_breakdown) {
+    for (const ministry of Object.keys(narrative.summary_metrics.ministry_breakdown)) {
+      ministryMap.set(ministry, ministry);
+    }
+  }
+
   const byDate = new Map<string, Contribution[]>();
   for (const c of contributions) {
     const bucket = byDate.get(c.date) ?? [];
@@ -46,8 +54,8 @@ function describeDay(day: DaySummary): string {
   return `${day.ministries.join(' and ')} addressed via ${day.types.map((t) => t.toUpperCase()).join(', ')}.`;
 }
 
-export default function WeeklyTimeline({ contributions }: WeeklyTimelineProps) {
-  const days = summarizeDays(contributions);
+export default function WeeklyTimeline({ contributions, narrative }: WeeklyTimelineProps) {
+  const days = summarizeDays(contributions, narrative);
   const sitting = days.filter((d) => d.count > 0);
 
   return (

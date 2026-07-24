@@ -481,11 +481,11 @@ class TestResolveAll:
         mp_id = conn.execute("SELECT mp_id FROM contributions WHERE id=1").fetchone()[0]
         assert mp_id == 1
 
-        mp_id = conn.execute("SELECT mp_id FROM contributions WHERE id=3").fetchone()[0]
-        assert mp_id == 1
-
         mp_id = conn.execute("SELECT mp_id FROM contributions WHERE id=2").fetchone()[0]
         assert mp_id is None
+
+        mp_id_3 = conn.execute("SELECT mp_id FROM contributions WHERE id=3").fetchone()[0]
+        assert mp_id_3 is None
 
     def test_no_unresolved(self) -> None:
         conn = _in_memory_db()

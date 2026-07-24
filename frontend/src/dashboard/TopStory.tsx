@@ -1,16 +1,21 @@
-import { Contribution } from './types';
+import { Contribution, TopStoryNarrative } from './types';
 import { narrativeSection, sectionTitle, storyCard, mono, typeTag, avatarMono, initials } from './styles';
 
 interface TopStoryProps {
   contribution: Contribution | null;
+  narrative: TopStoryNarrative | null;
 }
 
-export default function TopStory({ contribution }: TopStoryProps) {
-  if (!contribution) {
+export default function TopStory({ contribution, narrative }: TopStoryProps) {
+  if (!contribution && !narrative) {
     return null;
   }
 
-  const mpLabel = contribution.mp_name ?? contribution.constituency ?? 'Unresolved MP';
+  const mpLabel = narrative?.mp_name ?? contribution?.mp_name ?? contribution?.constituency ?? 'Unresolved MP';
+  const ministry = narrative?.ministry ?? contribution?.ministry_addressed ?? 'Not specified';
+  const ctype = narrative?.contribution_type ?? contribution?.contribution_type ?? '';
+  const date = narrative?.date ?? contribution?.date ?? '';
+  const isInferred = narrative ? (contribution?.ministry_addressed !== ministry && ministry !== 'Not specified') : false;
 
   return (
     <div style={narrativeSection}>
@@ -30,42 +35,106 @@ export default function TopStory({ contribution }: TopStoryProps) {
             {initials(mpLabel)}
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={typeTag(contribution.contribution_type)}>
-                {contribution.contribution_type.toUpperCase()}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={typeTag(ctype)}>
+                {ctype.replace(/_/g, ' ').toUpperCase()}
               </span>
               <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
-                {contribution.date}
+                {date}
+              </span>
+              <span style={{ color: 'var(--text-tertiary)' }}>·</span>
+              <span style={{ ...mono, fontSize: 10, color: 'var(--accent-amber)' }}>
+                {ministry}{isInferred ? ' (Inferred)' : ''}
               </span>
             </div>
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                marginBottom: 4,
-                lineHeight: 1.3,
-              }}
-            >
-              {contribution.subject_text.slice(0, 140)}
-              {contribution.subject_text.length > 140 ? '…' : ''}
-            </div>
-            <p
-              style={{
-                fontSize: 12,
-                color: 'var(--text-secondary)',
-                lineHeight: 1.5,
-                margin: 0,
-              }}
-            >
-              {contribution.subject_text}
-            </p>
+
+            {narrative ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 9,
+                      color: 'var(--accent-blue)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      marginRight: 8,
+                    }}
+                  >
+                    THE ACTION
+                  </span>
+                  <span style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                    {narrative.action}
+                  </span>
+                </div>
+                <div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 9,
+                      color: 'var(--text-tertiary)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      marginRight: 8,
+                    }}
+                  >
+                    THE CONTEXT
+                  </span>
+                  <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    {narrative.context}
+                  </span>
+                </div>
+                <div>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 9,
+                      color: 'var(--accent-green)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      marginRight: 8,
+                    }}
+                  >
+                    IMPACT
+                  </span>
+                  <span style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                    {narrative.impact}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                    marginBottom: 4,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {contribution?.subject_text?.slice(0, 140)}
+                  {contribution?.subject_text && contribution.subject_text.length > 140 ? '…' : ''}
+                </div>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.5,
+                    margin: 0,
+                  }}
+                >
+                  {contribution?.subject_text}
+                </p>
+              </>
+            )}
+
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                marginTop: 8,
+                marginTop: 10,
                 fontFamily: 'var(--font-mono)',
                 fontSize: 10,
               }}
@@ -73,11 +142,11 @@ export default function TopStory({ contribution }: TopStoryProps) {
               <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>Read full Q&amp;A →</span>
               <span style={{ color: 'var(--text-tertiary)' }}>·</span>
               <span style={{ color: 'var(--text-tertiary)' }}>
-                Source: {contribution.source_url ? 'Notice Paper' : 'Unknown'}
+                Source: {contribution?.source_url ? 'Notice Paper' : 'Unknown'}
               </span>
               <span style={{ color: 'var(--text-tertiary)' }}>·</span>
               <span style={{ color: 'var(--text-tertiary)' }}>
-                Ministry: {contribution.ministry_addressed || 'Not specified'}
+                Ministry: {ministry}
               </span>
             </div>
           </div>

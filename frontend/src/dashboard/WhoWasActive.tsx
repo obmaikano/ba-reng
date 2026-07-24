@@ -1,18 +1,31 @@
 import { useNavigate } from 'react-router-dom';
-import { Contribution, MpSummary } from './types';
+import { Contribution, MpSummary, MpFocusNarrative } from './types';
 import { narrativeSection, sectionTitle, mono, surfaceElevated, avatarMono, initials } from './styles';
 
 interface WhoWasActiveProps {
   contributions: Contribution[];
   mps: MpSummary[];
+  mpFocus: MpFocusNarrative[] | null;
 }
 
 interface WeeklyMpActivity {
   mp: MpSummary;
   count: number;
+  focusNarrative?: string;
 }
 
-function rankByWeeklyActivity(contributions: Contribution[], mps: MpSummary[]): WeeklyMpActivity[] {
+function rankByWeeklyActivity(
+  contributions: Contribution[],
+  mps: MpSummary[],
+  mpFocus: MpFocusNarrative[] | null,
+): WeeklyMpActivity[] {
+  const focusByName = new Map<string, string>();
+  if (mpFocus) {
+    for (const f of mpFocus) {
+      focusByName.set(f.mp_name, f.narrative);
+    }
+  }
+
   const mpsById = new Map(mps.map((mp) => [mp.id, mp]));
   const counts = new Map<number, number>();
   for (const c of contributions) {
@@ -20,19 +33,20 @@ function rankByWeeklyActivity(contributions: Contribution[], mps: MpSummary[]): 
     counts.set(c.mp_id, (counts.get(c.mp_id) ?? 0) + 1);
   }
 
-  return Array.from(counts.entries())
-    .map(([mpId, count]) => {
-      const mp = mpsById.get(mpId);
-      return mp ? { mp, count } : null;
-    })
-    .filter((entry): entry is WeeklyMpActivity => entry !== null)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  const result: WeeklyMpActivity[] = [];
+  for (const [mpId, count] of counts.entries()) {
+    const mp = mpsById.get(mpId);
+    if (!mp) continue;
+    result.push({ mp, count, focusNarrative: focusByName.get(mp.name) });
+  }
+
+  result.sort((a, b) => b.count - a.count);
+  return result.slice(0, 5);
 }
 
-export default function WhoWasActive({ contributions, mps }: WhoWasActiveProps) {
+export default function WhoWasActive({ contributions, mps, mpFocus }: WhoWasActiveProps) {
   const navigate = useNavigate();
-  const top5 = rankByWeeklyActivity(contributions, mps);
+  const top5 = rankByWeeklyActivity(contributions, mps, mpFocus);
 
   return (
     <div style={narrativeSection}>
@@ -44,44 +58,60 @@ export default function WhoWasActive({ contributions, mps }: WhoWasActiveProps) 
         <span style={{ ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>No activity recorded this week.</span>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {top5.map(({ mp, count }, index) => (
+          {top5.map(({ mp, count, focusNarrative }, index) => (
             <div
               key={mp.id}
               onClick={() => navigate(`/mp/${mp.id}`)}
               style={{
                 ...surfaceElevated,
                 display: 'flex',
-                alignItems: 'center',
-                gap: 10,
+                flexDirection: 'column',
+                gap: 4,
                 padding: '8px 10px',
                 cursor: 'pointer',
               }}
             >
-              <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)', width: 14, textAlign: 'right' }}>
-                {index + 1}
-              </span>
-              <div style={avatarMono(28)}>{initials(mp.name)}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)', width: 14, textAlign: 'right' }}>
+                  {index + 1}
+                </span>
+                <div style={avatarMono(28)}>{initials(mp.name)}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {mp.name}
+                  </div>
+                  <div style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)' }}>
+                    {mp.party} · {mp.constituency}
+                  </div>
+                </div>
+                <span style={{ ...mono, fontSize: 13, fontWeight: 600, color: 'var(--accent-blue)' }}>
+                  {count}
+                </span>
+                <span style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)' }}>contrib</span>
+              </div>
+              {focusNarrative && (
                 <div
                   style={{
-                    fontSize: 12,
-                    fontWeight: 500,
-                    color: 'var(--text-primary)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    ...mono,
+                    fontSize: 10,
+                    color: 'var(--text-secondary)',
+                    paddingLeft: 52,
+                    lineHeight: 1.4,
+                    fontStyle: 'italic',
                   }}
                 >
-                  {mp.name}
+                  {focusNarrative}
                 </div>
-                <div style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)' }}>
-                  {mp.party} · {mp.constituency}
-                </div>
-              </div>
-              <span style={{ ...mono, fontSize: 13, fontWeight: 600, color: 'var(--accent-blue)' }}>
-                {count}
-              </span>
-              <span style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)' }}>contrib</span>
+              )}
             </div>
           ))}
         </div>

@@ -7,6 +7,7 @@ import ByTheNumbers from './ByTheNumbers';
 import HotTopics from './HotTopics';
 import RecentContributions from './RecentContributions';
 import CaveatBanner from './CaveatBanner';
+import AnalyticsOverview from '../analytics/AnalyticsOverview';
 
 interface DashboardMainProps {
   data: DashboardData;
@@ -18,11 +19,11 @@ function formatDateRange(weekStart: string | null, weekEnd: string | null): stri
   if (!weekStart || !weekEnd) return 'No sitting days';
   const s = new Date(weekStart);
   const e = new Date(weekEnd);
-  return `${e.getDate()}–${s.getDate()} ${MON_ABRV[s.getMonth()]} ${s.getFullYear()}`;
+  return `${s.getDate()}–${e.getDate()} ${MON_ABRV[s.getMonth()]} ${s.getFullYear()}`;
 }
 
 export default function DashboardMain({ data }: DashboardMainProps) {
-  const { weekContributions, weekStart, weekEnd, sittingDays, prevWeekCount, mps, status } = data;
+  const { weekContributions, weekStart, weekEnd, sittingDays, prevWeekCount, mps, status, narrative } = data;
   const activeMpCount = new Set(
     weekContributions.filter((c) => c.mp_id !== null).map((c) => c.mp_id),
   ).size;
@@ -73,6 +74,39 @@ export default function DashboardMain({ data }: DashboardMainProps) {
           <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
             This Week in Parliament
           </h1>
+          {narrative?.narrative_highlights?.headline_story && (
+            <p
+              style={{
+                fontSize: 12,
+                color: 'var(--text-secondary)',
+                marginTop: 4,
+                marginBottom: 0,
+                lineHeight: 1.5,
+                maxWidth: 520,
+              }}
+            >
+              {narrative.narrative_highlights.headline_story}
+            </p>
+          )}
+          {narrative?.narrative_highlights?.deferral_alert && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                marginTop: 6,
+                padding: '4px 8px',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--accent-red)',
+                borderLeft: '3px solid var(--accent-red)',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-red)' }}>
+                {narrative.narrative_highlights.deferral_alert}
+              </span>
+            </div>
+          )}
           <p
             style={{
               fontFamily: 'var(--font-mono)',
@@ -123,23 +157,36 @@ export default function DashboardMain({ data }: DashboardMainProps) {
         </div>
       </div>
 
+      <AnalyticsOverview />
+
       <WeekAtGlance
         contributions={weekContributions}
         activeMpCount={activeMpCount}
         totalMpCount={status.mp_count}
         prevWeekCount={prevWeekCount}
+        narrative={narrative}
       />
 
-      <TopStory contribution={weekContributions[0] ?? null} />
+      <TopStory
+        contribution={weekContributions[0] ?? null}
+        narrative={narrative?.top_story ?? null}
+      />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <WeeklyTimeline contributions={weekContributions} />
-        <WhoWasActive contributions={weekContributions} mps={mps} />
+        <WeeklyTimeline contributions={weekContributions} narrative={narrative} />
+        <WhoWasActive
+          contributions={weekContributions}
+          mps={mps}
+          mpFocus={narrative?.mp_focus ?? null}
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <ByTheNumbers contributions={weekContributions} />
-        <HotTopics contributions={weekContributions} />
+        <ByTheNumbers contributions={weekContributions} narrative={narrative} />
+        <HotTopics
+          contributions={weekContributions}
+          narrativeTopics={narrative?.hot_topics ?? null}
+        />
       </div>
 
       <RecentContributions contributions={weekContributions} />
