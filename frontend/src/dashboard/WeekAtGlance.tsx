@@ -47,7 +47,7 @@ export default function WeekAtGlance({
   const topMinistryPct = narrative?.summary_metrics?.top_ministry_pct ?? 0;
 
   const stats: Stat[] = [
-    { label: 'Sitting Days', value: String(sittingDays), detail: sittingDayNames(contributions) },
+    { label: 'Days Met', value: String(sittingDays), detail: sittingDayNames(contributions) },
     {
       label: 'Contributions',
       value: String(contributions.length),

@@ -126,6 +126,28 @@ const TAG_COLORS: Record<string, string> = {
   amendment: TAG_RED,
 };
 
+const TYPE_LABELS: Record<string, string> = {
+  question: 'Question',
+  oral_question: 'Question',
+  oral_q: 'Question',
+  minist_question: "Minister's Q&A",
+  minist_q: "Minister's Q&A",
+  motion: 'Motion',
+  bill_presentation: 'New Bill',
+  bill_1st: 'Bill: Introduced',
+  bill_2nd: 'Bill: Debated',
+  bill_3rd: 'Bill: Final Vote',
+  committee_of_supply: 'Budget Review',
+  tabling: 'Document Filed',
+  amendment: 'Bill Change',
+  petition: 'Petition',
+};
+
+export function typeLabel(contributionType: string): string {
+  return TYPE_LABELS[contributionType.toLowerCase()]
+    ?? contributionType.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function typeTag(contributionType: string): CSSProperties {
   const color = TAG_COLORS[contributionType.toLowerCase()] ?? 'var(--text-secondary)';
   return {

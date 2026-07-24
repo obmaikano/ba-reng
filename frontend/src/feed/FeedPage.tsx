@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Contribution } from '../dashboard/types';
-import { typeTag, mono } from '../dashboard/styles';
+import { typeTag, typeLabel, mono } from '../dashboard/styles';
 
 interface FeedPageProps {
   contributions: Contribution[];
@@ -31,7 +31,7 @@ export default function FeedPage({ contributions, totalCount }: FeedPageProps) {
         >
           <div>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-              Live Record Stream
+              Live Activity Feed
             </h2>
             <p style={{ ...mono, fontSize: 11, color: 'var(--text-tertiary)', margin: 0, marginTop: 2 }}>
               Displaying {displayed} of {totalCount} records &mdash; 13th Parliament, 5th Session
@@ -92,7 +92,7 @@ export default function FeedPage({ contributions, totalCount }: FeedPageProps) {
         }}
       >
         <div>Timestamp</div>
-        <div>Entity (MP)</div>
+        <div>MP</div>
         <div>Type</div>
         <div>Subject / Excerpt</div>
         <div style={{ textAlign: 'right' }}>Source</div>
@@ -157,7 +157,7 @@ function FeedRow({ contribution: c }: { contribution: Contribution }) {
         </div>
       </div>
       <div>
-        <span style={typeTag(c.contribution_type)}>{c.contribution_type.toUpperCase()}</span>
+        <span style={typeTag(c.contribution_type)}>{typeLabel(c.contribution_type)}</span>
       </div>
       <div
         style={{

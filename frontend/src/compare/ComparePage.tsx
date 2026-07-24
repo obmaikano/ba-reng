@@ -28,15 +28,15 @@ function generateComparisonStory(mpA: CompareData, mpB: CompareData): string {
   let story = `${leader.name} leads the comparison with ${leader.contribution_count} total contributions vs ${follower.name}'s ${follower.contribution_count}${gapPhrase}. `;
 
   if (leaderMotions > followerMotions) {
-    story += `The gap is widest in motions (${leaderMotions} vs ${followerMotions}), suggesting ${leader.name} takes more legislative initiative. `;
+    story += `The gap is widest in motions put forward (${leaderMotions} vs ${followerMotions}). `;
   } else if (followerMotions > leaderMotions) {
-    story += `${follower.name} surpasses ${leader.name} in motions (${followerMotions} vs ${leaderMotions}), revealing a stronger legislative drafting focus. `;
+    story += `${follower.name} put forward more motions than ${leader.name} (${followerMotions} vs ${leaderMotions}). `;
   }
 
   const leaderQuestions = typeCount(leader, 'question') + typeCount(leader, 'oral_question');
   const followerQuestions = typeCount(follower, 'question') + typeCount(follower, 'oral_question');
   if (followerQuestions > leaderQuestions) {
-    story += `However, ${follower.name}'s oral questions (${followerQuestions} vs ${leaderQuestions}) are proportionally higher — questioning is ${follower.id === mpA.id ? 'his' : 'his'} primary oversight tool.`;
+    story += `However, ${follower.name} asked more questions than ${leader.name} (${followerQuestions} vs ${leaderQuestions}).`;
   }
 
   return story;
@@ -173,10 +173,10 @@ export default function ComparePage() {
             </div>
             {[
               { label: 'Total Contributions', a: mpA.contribution_count, b: mpB.contribution_count },
-              { label: 'Oral Questions', a: typeCount(mpA, 'oral_question'), b: typeCount(mpB, 'oral_question') },
+              { label: 'Questions', a: typeCount(mpA, 'oral_question'), b: typeCount(mpB, 'oral_question') },
               { label: 'Motions', a: typeCount(mpA, 'motion'), b: typeCount(mpB, 'motion') },
-              { label: 'Bill Readings', a: typeCount(mpA, 'bill_presentation'), b: typeCount(mpB, 'bill_presentation') },
-              { label: 'Ministries Addressed', a: mpA.ministries.length, b: mpB.ministries.length },
+              { label: 'Bills', a: typeCount(mpA, 'bill_presentation'), b: typeCount(mpB, 'bill_presentation') },
+              { label: 'Ministries Raised With', a: mpA.ministries.length, b: mpB.ministries.length },
               { label: 'Top Ministry', aStr: `${topMinistry(mpA).ministry} (${topMinistry(mpA).count})`, bStr: `${topMinistry(mpB).ministry} (${topMinistry(mpB).count})` },
             ].map((row, i) => {
               const isLast = i === 5;
@@ -204,7 +204,7 @@ export default function ComparePage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: 12, marginTop: 16, background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2, flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0 }}>
-              Comparison uses weighted Participation Index.{' '}
+              This comparison uses each MP's Participation Index score.{' '}
               <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }}>Download as PDF</span>.
             </p>
           </div>

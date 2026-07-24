@@ -1,3 +1,5 @@
+import { typeLabel } from '../dashboard/styles';
+
 export interface FilterState {
   type: string;
   party: string;
@@ -82,12 +84,12 @@ export default function FilterSidebar({ ministries, filters, onChange, ministryC
           <span style={sidebarLabel}>Type</span>
           <select value={filters.type} onChange={(e) => set('type', e.target.value)} style={selectStyle}>
             <option>All Types</option>
-            <option>oral_question</option>
-            <option>motion</option>
-            <option>bill_presentation</option>
-            <option>bill_2nd</option>
-            <option>committee_of_supply</option>
-            <option>petition</option>
+            <option value="oral_question">{typeLabel('oral_question')}</option>
+            <option value="motion">{typeLabel('motion')}</option>
+            <option value="bill_presentation">{typeLabel('bill_presentation')}</option>
+            <option value="bill_2nd">{typeLabel('bill_2nd')}</option>
+            <option value="committee_of_supply">{typeLabel('committee_of_supply')}</option>
+            <option value="petition">{typeLabel('petition')}</option>
           </select>
         </div>
 

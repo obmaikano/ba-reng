@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { get } from '../api';
 import { Contribution } from '../dashboard/types';
+import { typeLabel } from '../dashboard/styles';
 
 interface MpProfile {
   id: number;
@@ -122,7 +123,7 @@ export default function MpProfilePage() {
               </span>
             ))}
             {oralQuestions > motions ? 'Questions' : 'Motions'} dominate his record — {bills} bill reading{bills === 1 ? '' : 's'}.{' '}
-            He has addressed {ministries.length} ministr{ministries.length === 1 ? 'y' : 'ies'} this session, indicating broad portfolio engagement.
+            He has raised matters with {ministries.length} ministr{ministries.length === 1 ? 'y' : 'ies'} this session.
           </p>
         </div>
       </div>
@@ -183,7 +184,7 @@ export default function MpProfilePage() {
                 </div>
                 <div style={{ width: 8, height: 8, background: dotColor, flexShrink: 0 }} />
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: dotColor, textTransform: 'uppercase', letterSpacing: '0.05em', border: `1px solid ${dotColor}`, padding: '2px 6px' }}>
-                  {c.contribution_type.toUpperCase()}
+                  {typeLabel(c.contribution_type)}
                 </span>
                 <div style={{ flex: 1, fontSize: 12, color: 'var(--text-secondary)' }}>
                   {c.subject_text.slice(0, 200)}{c.subject_text.length > 200 ? '…' : ''}
@@ -199,7 +200,7 @@ export default function MpProfilePage() {
           {contributions.length === 0 && (
             <div style={{ padding: 16, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', border: '1px solid var(--border-subtle)' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline', marginRight: 4 }}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              No recorded activity on this date (sitting day)
+              No recorded activity on this day Parliament met
               <span style={{ color: 'var(--accent-amber)', cursor: 'pointer', marginLeft: 8 }}>What does this mean?</span>
             </div>
           )}

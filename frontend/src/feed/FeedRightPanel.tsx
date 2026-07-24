@@ -85,29 +85,29 @@ export default function FeedRightPanel({ mps, unresolvedCount }: FeedRightPanelP
           </svg>
           <div>
             <h4 style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-amber)', margin: 0, marginBottom: 4 }}>
-              Constraint: No Attendance Data
+              Proxy Metric — Not Attendance Data
             </h4>
             <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
-              Botswana Parliament does not publish attendance records. This index tracks{' '}
+              Botswana Parliament keeps no attendance register. This index tracks{' '}
               <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>RECORDED_CONTRIBUTIONS</span> only.
             </p>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-blue)', cursor: 'pointer', display: 'inline-block', marginTop: 4 }}>
-              VIEW_METHODOLOGY &rarr;
+              HOW_THIS_WORKS &rarr;
             </span>
           </div>
         </div>
       </div>
 
       <div style={{ padding: 16 }}>
-        <h3 style={sectionHeader}>Unresolved Entities</h3>
+        <h3 style={sectionHeader}>Names We Could Not Match</h3>
         <p style={{ fontSize: 11, color: 'var(--text-tertiary)', lineHeight: 1.4, margin: 0, marginBottom: 12 }}>
-          These names could not be matched to the MP roster.
+          These names in the record could not be matched to an MP on file.
         </p>
         {unresolvedCount > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-secondary)' }}>Unresolved entries</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-secondary)' }}>Unmatched names</div>
               </div>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent-amber)', textTransform: 'uppercase', letterSpacing: '0.05em', border: '1px solid rgba(245,166,35,0.3)', background: 'rgba(245,166,35,0.1)', padding: '2px 6px' }}>
                 {unresolvedCount} PENDING
@@ -116,7 +116,7 @@ export default function FeedRightPanel({ mps, unresolvedCount }: FeedRightPanelP
           </div>
         ) : (
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-tertiary)' }}>
-            All entities resolved.
+            All names matched.
           </span>
         )}
       </div>
