@@ -336,7 +336,7 @@ class TestParseAndStore:
         mock_pdf.pages = [mock_page]
 
         with patch('pdfplumber.open', return_value=mock_pdf):
-            result = parse_and_store(doc_id, '/fake/path.pdf', 'https://x.com/doc', conn)
+            result = parse_and_store(doc_id, '/fake/path.pdf', 'https://x.com/doc', conn, doc_type='notice_paper')
 
         assert result['parsed'] == 4
         assert result['stored'] == 4
@@ -391,7 +391,7 @@ class TestRunAll:
         total = conn.execute('SELECT COUNT(*) FROM contributions').fetchone()[0]
         assert total == 12
 
-    def test_skips_non_notice_papers(self) -> None:
+    def test_skips_unsupported_doc_types(self) -> None:
         conn = sqlite3.connect(':memory:')
         conn.execute('PRAGMA foreign_keys=ON')
         conn.row_factory = sqlite3.Row
@@ -400,7 +400,7 @@ class TestRunAll:
         conn.execute(
             'INSERT INTO documents (id, title, doc_type, file_path, source_url) '
             'VALUES (?, ?, ?, ?, ?)',
-            (1, 'Order Paper', 'order_paper', '/fake/op.pdf', ''),
+            (1, 'Bill Text', 'bill', '/fake/bill.pdf', ''),
         )
         conn.commit()
 
@@ -409,3 +409,37 @@ class TestRunAll:
 
         assert len(results) == 0
         mock_open.assert_not_called()
+
+    def test_processes_order_papers(self) -> None:
+        conn = sqlite3.connect(':memory:')
+        conn.execute('PRAGMA foreign_keys=ON')
+        conn.row_factory = sqlite3.Row
+        conn.executescript(SCHEMA_SQL)
+
+        conn.execute(
+            'INSERT INTO documents (id, title, doc_type, file_path, source_url) '
+            'VALUES (?, ?, ?, ?, ?)',
+            (1, 'Test OP', 'order_paper', '/fake/op.pdf', ''),
+        )
+        conn.commit()
+
+        order_paper_text = (
+            'BOTSWANA NATIONAL ASSEMBLY\n'
+            'O R D E R P A P E R\n'
+            '(MONDAY 16 FEBRUARY, 2026)\n'
+            '1. MR. J. DOE, MP. (CONST): To ask the Minister of Health\n'
+            'whether he has any plans.\n'
+        )
+
+        mock_page = MagicMock()
+        mock_page.extract_text.return_value = order_paper_text
+
+        mock_pdf = MagicMock()
+        mock_pdf.__enter__.return_value = mock_pdf
+        mock_pdf.pages = [mock_page]
+
+        with patch('pdfplumber.open', return_value=mock_pdf):
+            results = run_all(conn)
+
+        assert len(results) == 1
+        assert results[0]['parsed'] == 1
