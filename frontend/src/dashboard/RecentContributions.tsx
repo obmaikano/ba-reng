@@ -64,7 +64,7 @@ export default function RecentContributions({ contributions }: RecentContributio
               cursor: c.mp_id ? 'pointer' : 'default',
             }}
             onClick={() => {
-              if (c.mp_id) navigate(`/mp/${c.mp_id}`);
+              navigate(`/contribution/${c.id}`);
             }}
           >
             <div style={{ ...mono, fontSize: 11, color: 'var(--text-secondary)' }}>{c.date}</div>

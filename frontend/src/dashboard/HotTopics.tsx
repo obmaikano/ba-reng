@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Contribution, HotTopicNarrative } from './types';
 import { narrativeSection, sectionTitle, mono, ACCENT_ROTATION } from './styles';
 
@@ -42,6 +43,7 @@ function topTopics(contributions: Contribution[], narrativeTopics: HotTopicNarra
 }
 
 export default function HotTopics({ contributions, narrativeTopics }: HotTopicsProps) {
+  const navigate = useNavigate();
   const topics = topTopics(contributions, narrativeTopics);
 
   return (
@@ -75,10 +77,12 @@ export default function HotTopics({ contributions, narrativeTopics }: HotTopicsP
                   }}
                 >
                   <span
+                    onClick={(e) => { e.stopPropagation(); navigate(`/ministry/${encodeURIComponent(topic.ministry)}`); }}
                     style={{
                       fontSize: 12,
                       fontWeight: 600,
                       color: accent,
+                      cursor: 'pointer',
                     }}
                   >
                     {topic.ministry}

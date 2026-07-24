@@ -138,7 +138,7 @@ export default function SearchPage() {
           return (
           <div
             key={`${r.result_type || 'contrib'}-${r.id}`}
-            onClick={() => r.mp_id && navigate(`/mp/${r.mp_id}`)}
+            onClick={() => r.result_type === 'utterance' ? (r.mp_id && navigate(`/mp/${r.mp_id}`)) : navigate(`/contribution/${r.id}`)}
             style={{
               ...surface,
               padding: '12px 16px',
@@ -200,7 +200,7 @@ export default function SearchPage() {
             <div style={{ marginTop: 8, display: 'flex', gap: 12 }}>
               {r.mp_id && (
                 <span
-                  onClick={(e) => { e.stopPropagation(); navigate(`/mp/${r.mp_id}`); }}
+                  onClick={(e) => { e.stopPropagation(); navigate(r.result_type === 'utterance' ? `/mp/${r.mp_id}` : `/contribution/${r.id}`); }}
                   style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-blue)', cursor: 'pointer' }}
                 >
                   View MP profile →

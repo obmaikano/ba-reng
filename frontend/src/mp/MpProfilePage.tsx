@@ -323,7 +323,7 @@ export default function MpProfilePage() {
             const dotColor = tagColors[c.contribution_type] ?? 'var(--text-secondary)';
             const date = new Date(c.date);
             return (
-              <div key={c.id} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div key={c.id} onClick={() => navigate(`/contribution/${c.id}`)} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', padding: 12, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
                 <div style={{ width: 64, flexShrink: 0, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', textAlign: 'right' }}>
                   {date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}<br />
                   <span style={{ color: 'var(--text-tertiary)' }}>{date.getDate()} {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][date.getMonth()]}</span>
@@ -336,7 +336,7 @@ export default function MpProfilePage() {
                   {c.subject_text.slice(0, 200)}{c.subject_text.length > 200 ? '…' : ''}
                 </div>
                 {c.source_url && (
-                  <a href={c.source_url} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
+                  <a href={c.source_url} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                   </a>
                 )}

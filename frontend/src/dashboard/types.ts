@@ -31,8 +31,10 @@ export interface Contribution {
   ministry_addressed: string | null;
   date: string;
   source_url: string;
+  doc_source_url?: string;
   mp_id: number | null;
   mp_name: string | null;
+  raw_match_name?: string;
   party: string | null;
   constituency: string | null;
 }

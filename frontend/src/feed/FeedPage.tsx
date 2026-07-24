@@ -57,6 +57,24 @@ export default function FeedPage({ contributions, totalCount }: FeedPageProps) {
               Filter
             </button>
             <button
+              onClick={() => {
+                const header = 'Date,Type,MP,Ministry,Subject,Source URL';
+                const rows = contributions.map(c => {
+                  const date = new Date(c.date).toISOString().slice(0, 10);
+                  const type = c.contribution_type;
+                  const mp = c.mp_name || '';
+                  const ministry = (c.ministry_addressed || '').replace(/,/g, ';');
+                  const subject = (c.subject_text || '').replace(/"/g, '""').replace(/,/g, ';');
+                  const url = c.source_url || '';
+                  return `${date},"${type}","${String(mp).replace(/"/g, '""')}","${ministry}","${subject}","${url}"`;
+                });
+                const csv = [header, ...rows].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `bareng-feed-${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click();
+              }}
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: 10,
@@ -142,7 +160,7 @@ function FeedRow({ contribution: c }: { contribution: Contribution }) {
       }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      onClick={() => { if (c.mp_id) navigate(`/mp/${c.mp_id}`); }}
+      onClick={() => navigate(`/contribution/${c.id}`)}
     >
       <div>
         <div style={{ ...mono, fontSize: 12, color: 'var(--text-secondary)' }}>

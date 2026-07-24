@@ -67,11 +67,12 @@ export default function BillTrackerPage() {
           return (
             <div
               key={b.id}
+              onClick={() => navigate(`/contribution/${b.id}`)}
               style={{
                 ...surface,
                 padding: '14px 16px',
                 borderLeft: '3px solid var(--accent-green)',
-                cursor: 'default',
+                cursor: 'pointer',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>

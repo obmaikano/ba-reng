@@ -24,6 +24,9 @@ import BillTrackerPage from './bills/BillTrackerPage';
 import SearchPage from './search/SearchPage';
 import AboutPage from './about/AboutPage';
 import AnalyticsOverview from './analytics/AnalyticsOverview';
+import ContributionDetailPage from './detail/ContributionDetailPage';
+import MinistryDetailPage from './detail/MinistryDetailPage';
+import ConstituencyDetailPage from './detail/ConstituencyDetailPage';
 
 function Home() {
   const { data, error } = useDashboardData();
@@ -180,6 +183,50 @@ function Analytics() {
   );
 }
 
+
+function ContributionDetail() {
+  const { data } = useFeedData(DEFAULT_FILTERS);
+  const mps = data?.mps ?? [];
+  const unresolvedCount = data?.unresolvedCount ?? 0;
+
+  return (
+    <AppShell
+      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+    >
+      <ContributionDetailPage />
+    </AppShell>
+  );
+}
+
+
+function MinistryDetail() {
+  const { data } = useFeedData(DEFAULT_FILTERS);
+  const mps = data?.mps ?? [];
+  const unresolvedCount = data?.unresolvedCount ?? 0;
+
+  return (
+    <AppShell
+      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+    >
+      <MinistryDetailPage />
+    </AppShell>
+  );
+}
+
+function ConstituencyDetail() {
+  const { data } = useFeedData(DEFAULT_FILTERS);
+  const mps = data?.mps ?? [];
+  const unresolvedCount = data?.unresolvedCount ?? 0;
+
+  return (
+    <AppShell
+      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+    >
+      <ConstituencyDetailPage />
+    </AppShell>
+  );
+}
+
 function Bills() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
@@ -236,6 +283,9 @@ export default function App() {
           <Route path="entity-review" element={<EntityReviewPage />} />
           <Route path="users" element={<UserManagementPage />} />
         </Route>
+        <Route path="/contribution/:id" element={<ContributionDetail />} />
+        <Route path="/ministry/:name" element={<MinistryDetail />} />
+        <Route path="/constituency/:name" element={<ConstituencyDetail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
