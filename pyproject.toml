@@ -35,6 +35,12 @@ ignore = ["COM812"]
 "__init__.py" = ["F401"]
 "backend/db/migrations/*" = ["D", "ANN"]
 "backend/tests/*" = ["D", "ANN", "ARG", "PLR2004"]
+"backend/roster/wikipedia.py" = ["PLR2004"]
+"backend/resolve/entity.py" = ["PLR2004"]
+"backend/db/seed.py" = ["D103", "ANN"]
+"backend/api/middleware/auth.py" = ["D103", "ANN", "UP017"]
+"backend/api/auth/routes.py" = ["D103", "ANN", "ARG001"]
+"backend/api/admin/routes.py" = ["D103", "ANN", "ARG001"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15

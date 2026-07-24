@@ -48,6 +48,10 @@ MOTION_LINE = re.compile(r'^\s*(\d+)\.\s*\u201c(.+)', re.DOTALL)
 
 TABLING_ENTRY = re.compile(r'^\s*\u2022\s+(.+)')
 TABLING_MINISTER = re.compile(r'\((.+?)\)')
+PETITION_MP = re.compile(
+    r'PRESENTATION OF A PETITION BY ((?:MR|MS|MRS|DR|HON)\.\s+.+?MP\.)',
+    re.IGNORECASE,
+)
 
 PAGE_NUM = re.compile(r'\((\d+)\)\s*')
 
@@ -223,12 +227,25 @@ def _finalize_tabling(
     contributions: list[dict], ctype: str, title: list[str],
     minister: str, date: str | None,
 ) -> None:
+    subject_text = ' '.join(title).strip()
+
+    raw_match_name = ''
+    raw_constituency = ''
+
+    if ctype == 'petition':
+        pet_match = PETITION_MP.search(subject_text)
+        if pet_match:
+            raw_match_name = pet_match.group(1).strip()
+
+    if not raw_match_name and minister:
+        raw_match_name = minister
+
     contributions.append({
         'contribution_type': ctype,
-        'raw_match_name': '',
-        'raw_constituency': '',
+        'raw_match_name': raw_match_name,
+        'raw_constituency': raw_constituency,
         'ministry_addressed': minister,
-        'subject_text': ' '.join(title).strip(),
+        'subject_text': subject_text,
         'date': date or '',
     })
 

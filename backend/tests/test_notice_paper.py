@@ -208,6 +208,18 @@ class TestParseTablings:
         assert len(results) == 1
         assert results[0]['subject_text'] == 'Financial Report for 2023/2024'
         assert results[0]['ministry_addressed'] == 'Minister of Finance'
+        assert results[0]['raw_match_name'] == 'Minister of Finance'
+
+    def test_parses_petition_with_name(self) -> None:
+        text = (
+            '\u2022 PRESENTATION OF A PETITION BY MR. M. MOALOSI, MP. '
+            '\u2013 NKANGE 8\n'
+            '(Mr. M. Moalosi)\n'
+        )
+        results = _parse_tablings_and_bills(text, '2026-07-24', 'petition')
+        assert len(results) == 1
+        assert results[0]['raw_match_name'] == 'MR. M. MOALOSI, MP.'
+        assert results[0]['ministry_addressed'] == ''
 
     def test_multiple_entries(self) -> None:
         text = (
