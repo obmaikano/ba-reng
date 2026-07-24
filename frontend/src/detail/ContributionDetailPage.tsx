@@ -117,7 +117,7 @@ export default function ContributionDetailPage() {
       </div>
 
       {/* Source document */}
-      {contribution.source_url && (
+      {(contribution.doc_source_url || contribution.source_url) && (
         <div style={{
           marginBottom: 24, padding: 14,
           background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
@@ -132,7 +132,7 @@ export default function ContributionDetailPage() {
             </span>
           </div>
           <a
-            href={contribution.source_url}
+            href={contribution.doc_source_url || contribution.source_url}
             target="_blank"
             rel="noreferrer"
             style={{
@@ -140,8 +140,26 @@ export default function ContributionDetailPage() {
               color: 'var(--accent-blue)', textDecoration: 'none', wordBreak: 'break-all',
             }}
           >
-            {contribution.source_url}
+            {contribution.doc_source_url || contribution.source_url}
           </a>
+          {contribution.doc_source_url && contribution.source_url && (
+            <div style={{ marginTop: 8, borderTop: '1px solid var(--border-subtle)', paddingTop: 8 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Article
+              </span>
+              <a
+                href={contribution.source_url}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'block', marginTop: 3, fontFamily: 'var(--font-mono)', fontSize: 10,
+                  color: 'var(--text-tertiary)', textDecoration: 'none', wordBreak: 'break-all',
+                }}
+              >
+                {contribution.source_url}
+              </a>
+            </div>
+          )}
         </div>
       )}
 

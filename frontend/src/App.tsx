@@ -27,6 +27,7 @@ import AnalyticsOverview from './analytics/AnalyticsOverview';
 import ContributionDetailPage from './detail/ContributionDetailPage';
 import MinistryDetailPage from './detail/MinistryDetailPage';
 import ConstituencyDetailPage from './detail/ConstituencyDetailPage';
+import HansardSessionDetailPage from './detail/HansardSessionDetailPage';
 
 function Home() {
   const { data, error } = useDashboardData();
@@ -227,6 +228,21 @@ function ConstituencyDetail() {
   );
 }
 
+
+function HansardSessionDetail() {
+  const { data } = useFeedData(DEFAULT_FILTERS);
+  const mps = data?.mps ?? [];
+  const unresolvedCount = data?.unresolvedCount ?? 0;
+
+  return (
+    <AppShell
+      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+    >
+      <HansardSessionDetailPage />
+    </AppShell>
+  );
+}
+
 function Bills() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
@@ -286,6 +302,7 @@ export default function App() {
         <Route path="/contribution/:id" element={<ContributionDetail />} />
         <Route path="/ministry/:name" element={<MinistryDetail />} />
         <Route path="/constituency/:name" element={<ConstituencyDetail />} />
+        <Route path="/hansard/session/:id" element={<HansardSessionDetail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

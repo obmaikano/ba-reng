@@ -11,6 +11,7 @@ router = APIRouter(prefix='/api/v1/hansard', tags=['hansard'])
 @router.get('/utterances')
 def list_utterances(
     mp_id: int | None = None,
+    session_id: int | None = None,
     language: str | None = Query(None, pattern='^(en|tn|mixed)$'),
     speech_type: str | None = None,
     q: str | None = None,
@@ -29,6 +30,9 @@ def list_utterances(
         if mp_id:
             clauses.append('u.mp_id = ?')
             params.append(mp_id)
+        if session_id:
+            clauses.append('a.session_id = ?')
+            params.append(session_id)
         if language:
             clauses.append('u.language = ?')
             params.append(language)
