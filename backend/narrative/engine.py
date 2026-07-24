@@ -12,6 +12,7 @@ from backend.narrative.ministerial_inference import dynamic_infer_ministry
 from backend.narrative.persona_classifier import classify_persona
 from backend.narrative.rhetorical_classifier import DBIntentClassifier
 from backend.narrative.rhetorical_harvester import RhetoricalHarvester
+from backend.narrative.auto_harvester import auto_harvest_from_contribution
 
 
 def _week_bounds() -> tuple[str, str]:
@@ -96,6 +97,11 @@ class NarrativeEngine:
                 r.get('subject_text', ''),
                 r.get('ministry_addressed'),
                 conn=self._conn,
+            )
+            auto_harvest_from_contribution(
+                r.get("subject_text", ""),
+                r["inferred_ministry"],
+                self._conn,
             )
 
         rh = RhetoricalHarvester(self._conn)

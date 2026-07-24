@@ -16,6 +16,7 @@ from backend.parse.ministerial_speech import parse_pdf as parse_ministerial_spee
 from backend.parse.motion import parse_pdf as parse_motion
 from backend.parse.notice_paper import parse_pdf as parse_notice_paper
 from backend.parse.order_paper import parse_pdf as parse_order_paper
+from backend.parse.ministry_harvester import MinistryHarvester
 from backend.resolve.entity import resolve_contribution
 
 logger = logging.getLogger(__name__)
@@ -234,6 +235,17 @@ def parse_and_store(
                 continue
             if _insert_unresolved(cursor, raw_name, doc_id, cid):
                 unresolved += 1
+
+    # Harvest ministries and keywords from stored contributions
+    try:
+        harvester = MinistryHarvester(conn)
+        for contrib in contributions:
+            subject = contrib.get('subject_text', '')
+            ministry = contrib.get('ministry_addressed', '')
+            if subject and ministry:
+                harvester.harvest_topic_keywords(subject, ministry)
+    except Exception:
+        logger.warning('MinistryHarvester keyword harvest failed', exc_info=True)
 
     conn.commit()
 

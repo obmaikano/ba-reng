@@ -22,6 +22,7 @@ import ComparePage from './compare/ComparePage';
 import RankingsPage from './rankings/RankingsPage';
 import BillTrackerPage from './bills/BillTrackerPage';
 import SearchPage from './search/SearchPage';
+import AnalyticsOverview from './analytics/AnalyticsOverview';
 
 function Home() {
   const { data, error } = useDashboardData();
@@ -156,6 +157,21 @@ function Rankings() {
   );
 }
 
+function Analytics() {
+  return (
+    <AppShell>
+      <div style={{ padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
+            Parliamentary Analytics
+          </h2>
+        </div>
+        <AnalyticsOverview />
+      </div>
+    </AppShell>
+  );
+}
+
 function Bills() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
@@ -198,6 +214,7 @@ export default function App() {
         <Route path="/compare" element={<Compare />} />
         <Route path="/bills" element={<Bills />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/analytics" element={<Analytics />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/admin"

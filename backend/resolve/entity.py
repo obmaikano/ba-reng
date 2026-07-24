@@ -4,6 +4,7 @@ import re
 import sqlite3
 
 from backend.db.connection import get_connection
+from backend.resolve.nearest_match import resolve_nearest
 
 # Honorifics to strip when extracting surname
 HONORIFICS_RE = re.compile(
@@ -122,6 +123,16 @@ def resolve_contribution_scalable(
     lookup_key = _normalize_constituency(raw_match_name)
     if lookup_key in ministry_map:
         return ministry_map[lookup_key]
+
+    # Fourth fallback: Levenshtein + Jaccard token similarity nearest-match
+    if surname_map:
+        mp_names = [(mid, cursor.execute(
+            'SELECT name FROM mps WHERE id = ?', (mid,)
+        ).fetchone()['name'].upper()) for mids in surname_map.values() for mid in mids]
+        mp_names = list(set(mp_names))  # deduplicate
+        nearest_id, _score = resolve_nearest(raw_match_name, mp_names)
+        if nearest_id is not None:
+            return nearest_id
 
     return None
 

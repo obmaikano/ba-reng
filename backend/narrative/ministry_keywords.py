@@ -1,5 +1,12 @@
 """Deterministic keyword-matching ministry inference rules."""
 
+# DEPRECATED: The infer_ministry() function below uses a hardcoded dictionary.
+# Use backend.narrative.ministerial_inference.dynamic_infer_ministry() instead,
+# which delegates to DBTopicClassifier for DB-backed classification.
+#
+# The MINISTRY_KEYWORDS dictionary below is retained as a seed reference.
+# To seed the DB from this dict, run: seed_keywords_from_static()
+
 MINISTRY_KEYWORDS: dict[str, list[str]] = {
     'Environment and Tourism': [
         'eco-tourism', 'wildlife', 'hunting', 'concessions', 'mophane',
@@ -109,3 +116,49 @@ def infer_ministry(subject_text: str, current_ministry: str | None = None) -> st
                 return ministry
 
     return 'General Parliamentary Business'
+
+
+def seed_keywords_from_static() -> int:
+    """Seed the ministry_keywords DB table from this module's static dictionary.
+
+    Inserts all keywords from MINISTRY_KEYWORDS into the DB, creating
+    ministry entries as needed. Returns total keyword associations inserted.
+    """
+    import sqlite3
+    from backend.db.connection import get_connection
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        total = 0
+        for ministry_name, keywords in MINISTRY_KEYWORDS.items():
+            # Ensure ministry exists
+            row = cursor.execute(
+                "SELECT id FROM ministries WHERE canonical_name = ?",
+                (ministry_name,),
+            ).fetchone()
+            if not row:
+                cursor.execute(
+                    """INSERT INTO ministries
+                       (canonical_name, source_type, first_seen_date, last_seen_date)
+                       VALUES (?, 'static_seed', date('now'), date('now'))""",
+                    (ministry_name,),
+                )
+                ministry_id = cursor.lastrowid
+            else:
+                ministry_id = row['id']
+
+            # Insert keywords
+            for kw in keywords:
+                cursor.execute(
+                    """INSERT INTO ministry_keywords (ministry_id, keyword, weight, source_type)
+                       VALUES (?, ?, 1.0, 'static_seed')
+                       ON CONFLICT(ministry_id, keyword) DO NOTHING""",
+                    (ministry_id, kw),
+                )
+                total += cursor.rowcount
+
+        conn.commit()
+        return total
+    finally:
+        conn.close()

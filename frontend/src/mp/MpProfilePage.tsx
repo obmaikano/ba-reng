@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { get } from '../api';
 import { Contribution } from '../dashboard/types';
 import { typeLabel } from '../dashboard/styles';
+import ScorecardGrid from '../analytics/ScorecardGrid';
 
 interface MpProfile {
   id: number;
@@ -25,13 +26,42 @@ interface MinistryCount {
   count: number;
 }
 
+interface HansardUtterance {
+  utterance_id: number;
+  speaker_name: string;
+  speech_type: string;
+  speech_text: string;
+  language: string;
+  evidence_type: string | null;
+  word_count: number | null;
+  sequence_order: number;
+  mp_name: string;
+  party: string;
+  constituency: string;
+  agenda_title: string;
+  agenda_category: string;
+}
+
+interface EvidenceBreakdown {
+  mp_id: number;
+  session_id: number;
+  total_utterances: number;
+  breakdown: Record<string, number>;
+  empirical_pct: number;
+  statutory_pct: number;
+  anecdotal_pct: number;
+  normative_pct: number;
+}
+
 export default function MpProfilePage() {
   const { mpId } = useParams();
   const navigate = useNavigate();
   const [mp, setMp] = useState<MpProfile | null>(null);
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [ministries, setMinistries] = useState<MinistryCount[]>([]);
-  const [tab, setTab] = useState<'timeline' | 'type' | 'ministries' | 'compare'>('timeline');
+  const [utterances, setUtterances] = useState<HansardUtterance[]>([]);
+  const [evidence, setEvidence] = useState<EvidenceBreakdown | null>(null);
+  const [tab, setTab] = useState<'timeline' | 'type' | 'ministries' | 'compare' | 'debate'>('timeline');
   const [loadError, setLoadError] = useState<'not_found' | 'other' | null>(null);
 
   useEffect(() => {
@@ -58,6 +88,24 @@ export default function MpProfilePage() {
       const message = err instanceof Error ? err.message : '';
       setLoadError(message === 'MP not found' ? 'not_found' : 'other');
     });
+    // Fetch Hansard utterances for debate tab
+    if (mpId) {
+      const mpid = Number(mpId);
+      get<{ data: HansardUtterance[] }>(`/api/v1/hansard/utterances?mp_id=${mpid}&limit=20`)
+        .then(res => setUtterances(Array.isArray(res.data) ? res.data : []))
+        .catch(() => setUtterances([]));
+      // Fetch recent evidence breakdown from sessions endpoint
+      get<Array<{ session_id: number }>>('/api/v1/hansard/sessions')
+        .then(sessions => {
+          if (Array.isArray(sessions) && sessions.length > 0) {
+            const latestId = sessions[0].session_id;
+            return get<EvidenceBreakdown>(`/api/v1/hansard/evidence-breakdown/${mpid}?session_id=${latestId}`);
+          }
+          return null;
+        })
+        .then(eb => { if (eb) setEvidence(eb as EvidenceBreakdown); })
+        .catch(() => setEvidence(null));
+    }
   }, [mpId]);
 
   if (loadError === 'not_found') {
@@ -167,6 +215,8 @@ export default function MpProfilePage() {
         </div>
       </div>
 
+      <ScorecardGrid mpId={mp.id} />
+
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: 12, marginBottom: 16, background: 'var(--bg-elevated)', border: '1px solid rgba(245,166,35,0.2)' }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2, flexShrink: 0 }}>
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -177,7 +227,7 @@ export default function MpProfilePage() {
       </div>
 
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border-default)', marginBottom: 16 }}>
-        {(['timeline', 'type', 'ministries', 'compare'] as const).map((t) => (
+        {(['timeline', 'type', 'ministries', 'compare', 'debate'] as const).map((t) => (
           <span
             key={t}
             onClick={() => setTab(t)}
@@ -190,7 +240,7 @@ export default function MpProfilePage() {
               cursor: 'pointer',
             }}
           >
-            {t === 'timeline' ? 'Timeline' : t === 'type' ? 'By Type' : t === 'ministries' ? 'Ministries' : 'Compare'}
+            {t === 'timeline' ? 'Timeline' : t === 'type' ? 'By Type' : t === 'ministries' ? 'Ministries' : t === 'compare' ? 'Compare' : 'Debate'}
           </span>
         ))}
       </div>
@@ -252,6 +302,139 @@ export default function MpProfilePage() {
           )}
         </div>
       )}
+
+            {tab === 'type' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {mp.breakdown_by_type
+            .filter(t => t.cnt > 0)
+            .sort((a, b) => b.cnt - a.cnt)
+            .map((t) => {
+              const maxCount = Math.max(...mp.breakdown_by_type.map(x => x.cnt), 1);
+              const barWidth = Math.max((t.cnt / maxCount) * 100, 3);
+              const typeColors: Record<string, string> = {
+                question: 'var(--accent-blue)',
+                oral_question: 'var(--accent-blue)',
+                motion: 'var(--accent-amber)',
+                bill_presentation: 'var(--accent-green)',
+                bill_2nd: 'var(--accent-green)',
+                ministerial_statement: 'var(--text-secondary)',
+                committee_of_supply: 'var(--accent-amber)',
+              };
+              const barColor = typeColors[t.contribution_type] ?? 'var(--text-secondary)';
+              return (
+                <div key={t.contribution_type} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-secondary)', textTransform: 'uppercase', minWidth: 120 }}>
+                    {typeLabel(t.contribution_type)}
+                  </span>
+                  <div style={{ flex: 1, height: 16, background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', position: 'relative' }}>
+                    <div style={{ height: '100%', width: `${barWidth}%`, background: barColor, opacity: 0.7 }} />
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', minWidth: 30, textAlign: 'right' }}>
+                    {t.cnt}
+                  </span>
+                </div>
+              );
+            })}
+          {mp.breakdown_by_type.filter(t => t.cnt > 0).length === 0 && (
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-tertiary)' }}>No contribution type data available.</span>
+          )}
+        </div>
+      )}
+
+      {tab === 'compare' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: 16 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Session Context
+            </span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 10 }}>
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 10, textAlign: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Contributions</span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: 'var(--accent-blue)', marginTop: 4 }}>
+                  {mp.contribution_count}
+                </span>
+              </div>
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 10, textAlign: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Ministries</span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: 'var(--accent-blue)', marginTop: 4 }}>
+                  {ministries.length}
+                </span>
+              </div>
+              <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 10, textAlign: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Rank</span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: 'var(--accent-amber)', marginTop: 4 }}>
+                  #{Math.round(rank)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 16, textAlign: 'center' }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 12px 0', lineHeight: 1.5 }}>
+              Compare {mp.name} side-by-side with another MP across contribution types, ministries addressed, and participation metrics.
+            </p>
+            <button
+              onClick={() => navigate('/compare')}
+              style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, background: 'var(--accent-blue)', color: 'white', padding: '8px 20px', border: 'none', cursor: 'pointer' }}>
+              Open Full Comparison →
+            </button>
+          </div>
+        </div>
+      )}
+
+{tab === 'debate' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {evidence && (
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', padding: 16 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Debate Evidence Profile
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 10 }}>
+                <EvidenceBar label="Empirical" pct={evidence.empirical_pct} color="var(--accent-green)" />
+                <EvidenceBar label="Statutory" pct={evidence.statutory_pct} color="var(--accent-blue)" />
+                <EvidenceBar label="Anecdotal" pct={evidence.anecdotal_pct} color="var(--accent-amber)" />
+                <EvidenceBar label="Normative" pct={evidence.normative_pct} color="var(--text-secondary)" />
+              </div>
+            </div>
+          )}
+
+          {utterances.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {utterances.map((u) => {
+                const topicTag = u.evidence_type || u.speech_type;
+                const evidenceColors: Record<string, string> = {
+                  EMPIRICAL: 'var(--accent-green)',
+                  STATUTORY: 'var(--accent-blue)',
+                  ANECDOTAL: 'var(--accent-amber)',
+                  NORMATIVE: 'var(--text-secondary)',
+                };
+                const tagColor = evidenceColors[u.evidence_type || ''] ?? 'var(--text-tertiary)';
+                return (
+                  <div key={u.utterance_id} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', padding: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: tagColor, textTransform: 'uppercase', letterSpacing: '0.05em', border: `1px solid ${tagColor}`, padding: '1px 6px', flexShrink: 0, marginTop: 1 }}>
+                      {topicTag}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                        {u.speech_text.slice(0, 300)}{u.speech_text.length > 300 ? '…' : ''}
+                      </div>
+                      <div style={{ display: 'flex', gap: 12, marginTop: 6, fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)' }}>
+                        <span>{u.agenda_title}</span>
+                        <span>·</span>
+                        <span>{u.language?.toUpperCase() || 'EN'}</span>
+                        {u.word_count != null && <><span>·</span><span>{u.word_count} words</span></>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ padding: 16, textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', border: '1px solid var(--border-subtle)' }}>
+              No Hansard debate utterances on record for this MP.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -261,6 +444,17 @@ function StatCard({ label, value, valueColor }: { label: string; value: string; 
     <div style={{ border: '1px solid var(--border-subtle)', background: 'var(--bg-elevated)', padding: 12 }}>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 600, color: valueColor ?? 'var(--text-primary)', lineHeight: 1.1, marginTop: 2 }}>{value}</div>
+    </div>
+  );
+}
+
+function EvidenceBar({ label, pct, color }: { label: string; pct: number; color: string }) {
+  return (
+    <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: 8, textAlign: 'center' }}>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{label}</span>
+      <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color, marginTop: 2 }}>
+        {pct}%
+      </span>
     </div>
   );
 }
