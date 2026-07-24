@@ -51,13 +51,14 @@ export default function AppShell({ sidebar, rightPanel, children, fullWidth }: A
                 borderRight: '1px solid var(--border-subtle)',
                 overflow: 'auto',
                 background: 'var(--bg-surface)',
+                padding: 16,
               }}
             >
               {sidebar}
             </aside>
           )}
 
-          <main style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+          <main style={{ flex: 1, overflow: 'auto' }}>
             {children}
           </main>
 

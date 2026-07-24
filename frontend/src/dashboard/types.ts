@@ -1,5 +1,13 @@
+export interface BreakdownItem {
+  contribution_type: string;
+  count: number;
+  weight: number;
+  weighted_score: number;
+}
+
 export interface ParticipationIndex {
   participation_index: number;
+  breakdown: BreakdownItem[];
   is_proxy: boolean;
   caveat: string;
 }
