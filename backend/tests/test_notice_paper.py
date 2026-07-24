@@ -157,6 +157,89 @@ class TestParseQuestions:
     def test_empty_text(self) -> None:
         assert _parse_questions('', '2026-07-24') == []
 
+    def test_extracts_trailing_notice_number(self) -> None:
+        text = (
+            '1. MR. G. KEKGONEGILE, MP. (MAUN EAST): To ask the Minister of Trade and\n'
+            '(381)\n'
+            'Entrepreneurship to brief this Honourable House on progress made.'
+        )
+        results = _parse_questions(text, '2026-03-25')
+        assert len(results) == 1
+        assert results[0]['ministry_addressed'] == 'Trade and Entrepreneurship'
+        assert results[0]['extracted_data']['notice_number'] == 381
+        assert '(381)' not in results[0]['subject_text']
+
+    def test_extracts_notice_number_when_interrupting_minister_of(self) -> None:
+        text = (
+            '1. MR. P. K. MOTAOSANE, MP. (THAMAGA - KUMAKWANE): To ask the Minister\n'
+            '(391)\n'
+            'of Lands and Agriculture whether it is lawful to employ a Landboard\n'
+            'Chairperson when the substantive one is on suspension.'
+        )
+        results = _parse_questions(text, '2026-03-25')
+        assert len(results) == 1
+        assert results[0]['ministry_addressed'] == 'Lands and Agriculture'
+        assert results[0]['extracted_data']['notice_number'] == 391
+
+    def test_recognises_brigadier_honorific(self) -> None:
+        text = (
+            '1. BRIGADIER D. MOKGWATHI, MP. (LETLHAKENG): To ask the Minister of\n'
+            '(425)\n'
+            'Child Welfare and Basic Education to apprise this Honourable House.'
+        )
+        results = _parse_questions(text, '2026-04-01')
+        assert len(results) == 1
+        assert results[0]['raw_match_name'] == 'BRIGADIER D. MOKGWATHI, MP.'
+        assert results[0]['raw_constituency'] == 'LETLHAKENG'
+        assert results[0]['extracted_data']['notice_number'] == 425
+
+    def test_captures_sub_questions_i_through_vi(self) -> None:
+        text = (
+            '1. MR. A. K. KHAN, MP. (MOLEPOLOLE NORTH): To ask the Minister of Lands\n'
+            '(384)\n'
+            'and Agriculture to state:\n'
+            '(i) whether ground fissures are present;\n'
+            '(ii) the current position on assessments;\n'
+            '(iii) technical considerations relied upon;\n'
+            '(iv) whether the road project is affected;\n'
+            '(v) whether a moratorium is in place; and\n'
+            '(vi) how long residents must wait for clearance.'
+        )
+        results = _parse_questions(text, '2026-03-25')
+        assert len(results) == 1
+        sub_questions = results[0]['extracted_data']['sub_questions']
+        assert len(sub_questions) == 6
+        assert sub_questions[0] == 'whether ground fissures are present;'
+        assert sub_questions[5] == 'how long residents must wait for clearance.'
+        # subject_text retains the full inline text for search/feed rendering
+        assert '(i)' in results[0]['subject_text']
+
+    def test_stray_parenthetical_number_does_not_shift_later_questions(self) -> None:
+        # A stray 2-4 digit parenthetical elsewhere in a question's own text
+        # (e.g. a page number, a statute reference) must not desync the
+        # notice numbers attributed to subsequent questions — each question's
+        # notice number is scoped to its own header-to-next-header window.
+        text = (
+            '1. MR. A, MP. (CONST1): To ask the Minister of Health\n'
+            '(381)\n'
+            'whether Act No. 12 of (2024) requires review.\n'
+            '2. MS. B, MP. (CONST2): To ask the Minister of Education\n'
+            '(382)\n'
+            'if schools have enough textbooks.'
+        )
+        results = _parse_questions(text, '2026-07-24')
+        assert len(results) == 2
+        assert results[0]['extracted_data']['notice_number'] == 381
+        assert results[1]['extracted_data']['notice_number'] == 382
+
+    def test_no_extracted_data_when_no_notice_number_or_sub_questions(self) -> None:
+        text = (
+            '1. MR. J. DOE, MP. (CONST): To ask the Minister of Health\n'
+            'whether he has any plans to improve hospitals.'
+        )
+        results = _parse_questions(text, '2026-07-24')
+        assert results[0]['extracted_data'] is None
+
 
 # ---------------------------------------------------------------------------
 # _parse_motions
