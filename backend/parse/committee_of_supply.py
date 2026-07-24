@@ -10,7 +10,7 @@ from backend.parse.base import (
 
 
 def _extract_minister_and_ministry(text: str) -> tuple[str, str]:
-    lines = [l.strip() for l in text.split('\n')[:25] if l.strip()]
+    lines = [l.strip() for l in text.split('\n')[:100] if l.strip()]
 
     name = ''
     ministry = ''
@@ -57,7 +57,27 @@ def _extract_minister_and_ministry(text: str) -> tuple[str, str]:
     # Clean name
     name = _clean_name(name)
 
-    # Ministry from MINISTRY OF header
+    # Fallback: BY line without HON prefix — plain name block
+    if not name and not ministry:
+        for i, line in enumerate(lines):
+            if line.upper().strip() in ('BY', 'PRESENTED BY', 'DELIVERED BY', 'SPEECH BY'):
+                for j in range(i + 1, min(i + 5, len(lines))):
+                    nl = lines[j]
+                    if re.match(r'^(?:COMMITTEE|ORGANI|REPUBLIC|\d|I\.|Mr\.\s)', nl, re.IGNORECASE):
+                        break
+                    if re.match(r'^(?:THE )?MINISTER\b', nl, re.IGNORECASE):
+                        role_parts = [nl]
+                        for k in range(j + 1, min(j + 3, len(lines))):
+                            if lines[k][0].isupper() and not re.match(r'^(?:HON|MR|MS|DR|PROF|\d)', lines[k]):
+                                role_parts.append(lines[k])
+                            else:
+                                break
+                        ministry = normalise_ministry(' '.join(role_parts))
+                        break
+                    if re.match(r'^[A-Z][A-Za-z]{2,}(?:\s+[A-Z][A-Za-z]{2,}){1,4}$', nl):
+                        name = nl
+                        break
+                break
     if not ministry:
         for line in lines[:8]:
             m = re.search(r'MINISTRY\s+(?:OF|FOR(?:\s+STATE)?)\s+([A-Z][A-Z\s,&-]+)', line, re.IGNORECASE)

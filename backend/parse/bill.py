@@ -84,6 +84,9 @@ def parse_pdf(pdf_path: str, source_url: str = '') -> list[dict]:
     date = _extract_date(text)
     minister, ministry = _extract_minister_and_ministry(text)
 
+    if not minister and not ministry:
+        return []
+
     subject = title
     if bill_no:
         subject = f'{title} ({bill_no})'

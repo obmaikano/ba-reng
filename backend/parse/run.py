@@ -1,5 +1,6 @@
 """Orchestration: iterate documents, parse, insert contributions."""
 
+import logging
 import sqlite3
 from collections.abc import Callable
 
@@ -9,12 +10,17 @@ from backend.parse.order_paper import parse_pdf as parse_order_paper
 from backend.parse.committee_of_supply import parse_pdf as parse_committee_of_supply
 from backend.parse.bill import parse_pdf as parse_bill
 
+logger = logging.getLogger(__name__)
+
 _PARSERS: dict[str, Callable[..., list[dict]]] = {
     'notice_paper': parse_notice_paper,
     'order_paper': parse_order_paper,
     'committee_of_supply': parse_committee_of_supply,
     'bill': parse_bill,
+    'motion': parse_notice_paper,
 }
+
+_PARSABLE_TYPES = tuple(_PARSERS.keys())
 
 
 def _insert_contribution(
@@ -76,6 +82,8 @@ def parse_and_store(
         conn = get_connection()
 
     cursor = conn.cursor()
+    if doc_type not in _PARSERS:
+        logger.warning('Unknown doc_type=%s for document %d, falling back to notice_paper parser', doc_type, doc_id)
     parser = _PARSERS.get(doc_type, parse_notice_paper)
     contributions = parser(file_path, source_url)
 
@@ -114,10 +122,12 @@ def run_all(conn: sqlite3.Connection | None = None) -> list[dict]:
         conn = get_connection()
 
     cursor = conn.cursor()
+    placeholders = ','.join('?' * len(_PARSERS))
     docs = cursor.execute(
-        """SELECT id, title, file_path, source_url, doc_type
-           FROM documents WHERE doc_type IN ('notice_paper', 'order_paper', 'committee_of_supply', 'bill')
+        f"""SELECT id, title, file_path, source_url, doc_type
+           FROM documents WHERE doc_type IN ({placeholders})
            ORDER BY id""",
+        list(_PARSERS.keys()),
     ).fetchall()
 
     results: list[dict] = []
