@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from backend.api.middleware.auth import require_role
 from backend.db.connection import get_connection
+from backend.resolve.entity import _extract_surname
 
 router = APIRouter(prefix='/api/v1/admin', tags=['admin'])
 
@@ -259,3 +260,134 @@ def delete_ministry_mapping(
         return {'detail': 'Deleted'}
     finally:
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Entity Review Queue
+# ---------------------------------------------------------------------------
+
+
+@router.get('/entity-review')
+def list_unresolved_entities(
+    current_user: dict[str, Any] = Depends(require_admin),
+) -> list[dict]:
+    """List unresolved entities with suggested MP matches."""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT eq.id, eq.raw_match_name, eq.status, eq.resolved_mp_id, "
+            "eq.document_id, eq.contribution_id, "
+            "d.title AS document_title, d.source_url "
+            "FROM entity_review_queue eq "
+            "LEFT JOIN documents d ON eq.document_id = d.id "
+            "WHERE eq.status = 'UNRESOLVED' "
+            "ORDER BY eq.id",
+        ).fetchall()
+
+        result: list[dict] = []
+        for row in rows:
+            entity = dict(row)
+            # Suggestion engine: try constituency match first, then surname fallback
+            entity['suggestions'] = _suggest_mp(entity['raw_match_name'], conn)
+            result.append(entity)
+
+        return result
+    finally:
+        conn.close()
+
+
+@router.post('/entity-review/{entity_id}/resolve')
+def resolve_entity(
+    entity_id: int,
+    body: dict[str, Any],
+    current_user: dict[str, Any] = Depends(require_admin),
+) -> dict:
+    """Resolve an entity by assigning it to an MP."""
+    mp_id = body.get('mp_id')
+    if not mp_id:
+        raise HTTPException(status_code=400, detail='mp_id is required')
+
+    conn = get_connection()
+    try:
+        existing = conn.execute(
+            'SELECT id, status FROM entity_review_queue WHERE id = ?',
+            (entity_id,),
+        ).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail='Entity not found')
+        if existing['status'] != 'UNRESOLVED':
+            raise HTTPException(status_code=409, detail='Entity is no longer unresolved')
+
+        # Verify MP exists
+        mp = conn.execute('SELECT id, name FROM mps WHERE id = ?', (mp_id,)).fetchone()
+        if not mp:
+            raise HTTPException(status_code=400, detail='MP not found')
+
+        conn.execute(
+            "UPDATE entity_review_queue SET status = 'RESOLVED', resolved_mp_id = ? "
+            "WHERE id = ?",
+            (mp_id, entity_id),
+        )
+        conn.commit()
+
+        return {
+            'detail': 'Resolved',
+            'entity_id': entity_id,
+            'mp_name': mp['name'],
+        }
+    finally:
+        conn.close()
+
+
+@router.post('/entity-review/{entity_id}/skip')
+def skip_entity(
+    entity_id: int,
+    current_user: dict[str, Any] = Depends(require_admin),
+) -> dict:
+    """Skip an entity — mark it as IGNORED."""
+    conn = get_connection()
+    try:
+        existing = conn.execute(
+            'SELECT id, status FROM entity_review_queue WHERE id = ?',
+            (entity_id,),
+        ).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail='Entity not found')
+
+        conn.execute(
+            "UPDATE entity_review_queue SET status = 'IGNORED' WHERE id = ?",
+            (entity_id,),
+        )
+        conn.commit()
+
+        return {'detail': 'Skipped', 'entity_id': entity_id}
+    finally:
+        conn.close()
+
+
+def _suggest_mp(raw_name: str, conn: Any) -> list[dict]:
+    """Return candidate MP matches for a raw name string.
+
+    Strategy: extract surname, try constituency text search, then
+    fall back to surname-based match.
+    """
+    from backend.resolve.entity import _extract_surname
+
+    surname = _extract_surname(raw_name)
+    suggestions: list[dict] = []
+
+    if not surname:
+        return suggestions
+
+    # Try surname match first
+    rows = conn.execute(
+        'SELECT id, name, constituency, party FROM mps '
+        'WHERE name LIKE ? COLLATE NOCASE '
+        'ORDER BY name LIMIT 5',
+        (f'%{surname}%',),
+    ).fetchall()
+
+    for r in rows:
+        suggestions.append(dict(r))
+
+    return suggestions

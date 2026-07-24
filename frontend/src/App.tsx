@@ -6,6 +6,7 @@ import ProtectedRoute from './auth/ProtectedRoute';
 import AdminLayout from './admin/AdminLayout';
 import AdminDashboardPage from './admin/AdminDashboardPage';
 import MinistryMappingPage from './admin/MinistryMappingPage';
+import EntityReviewPage from './admin/EntityReviewPage';
 import AppShell from './layout/AppShell';
 import DashboardMain from './dashboard/DashboardMain';
 import DashboardSidebar from './dashboard/DashboardSidebar';
@@ -207,6 +208,7 @@ export default function App() {
         >
           <Route index element={<AdminDashboardPage />} />
           <Route path="ministry-mappings" element={<MinistryMappingPage />} />
+          <Route path="entity-review" element={<EntityReviewPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
