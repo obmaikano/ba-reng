@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting…</title>
+  <script>
+    (function () {
+      var wanted = window.location.pathname + window.location.search + window.location.hash;
+      sessionStorage.setItem('__spa_redirect', wanted);
+      window.location.replace(window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/'));
+    })();
+  </script>
+</head>
+<body><a href="/">Redirecting…</a></body>
+</html>
