@@ -47,6 +47,13 @@ def _extract_bill_no(text: str) -> str:
     return ''
 
 
+def _extract_bill_identity(text: str) -> tuple[int, int] | None:
+    m = BILL_NO_RE.search(text)
+    if not m:
+        return None
+    return int(m.group(1)), int(m.group(2))
+
+
 def _extract_minister_and_ministry(text: str) -> tuple[str, str]:
     # Minister signature appears at the END of bills
     # Use rfind instead of search to get the last occurrence
@@ -91,6 +98,22 @@ def parse_pdf(pdf_path: str, source_url: str = '') -> list[dict]:
     if bill_no:
         subject = f'{title} ({bill_no})'
 
+    # Every standalone Bill document observed in the corpus is the initial
+    # gazettal publication ("A draft of the above Bill... is set out below"),
+    # with "Date of Assent"/"Date of Commencement" left blank -- i.e. always
+    # the pre-first-reading "introduced" stage, before any Order Paper
+    # reading. bill_no/bill_year let this record be grouped with the
+    # bill_1st/bill_2nd/bill_3rd/committee_stage records order_paper.py
+    # produces for the same bill into a single stage chronology.
+    identity = _extract_bill_identity(text)
+    extracted_data = None
+    if identity:
+        extracted_data = {
+            'bill_no': identity[0],
+            'bill_year': identity[1],
+            'stage': 'introduced',
+        }
+
     return [{
         'contribution_type': 'bill_presentation',
         'raw_match_name': minister,
@@ -99,6 +122,7 @@ def parse_pdf(pdf_path: str, source_url: str = '') -> list[dict]:
         'subject_text': subject,
         'date': date,
         'source_url': source_url,
+        'extracted_data': extracted_data,
     }]
 
 

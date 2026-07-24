@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from backend.parse.bill import (
+    _extract_bill_identity,
     _extract_bill_no,
     _extract_date,
     _extract_minister_and_ministry,
@@ -50,6 +51,14 @@ class TestExtractBillNo:
         assert _extract_bill_no('') == ''
 
 
+class TestExtractBillIdentity:
+    def test_extracts_number_and_year_as_ints(self) -> None:
+        assert _extract_bill_identity(SAMPLE_BILL) == (5, 2026)
+
+    def test_returns_none_when_no_match(self) -> None:
+        assert _extract_bill_identity('no bill here') is None
+
+
 class TestExtractDate:
     def test_extracts_published_date(self) -> None:
         assert _extract_date(SAMPLE_BILL) == '2026-03-06'
@@ -90,6 +99,9 @@ class TestParsePdf:
         assert results[0]['contribution_type'] == 'bill_presentation'
         assert 'MOHWASA' in results[0]['raw_match_name']
         assert 'PUBLIC SERVICE' in results[0]['subject_text']
+        assert results[0]['extracted_data'] == {
+            'bill_no': 5, 'bill_year': 2026, 'stage': 'introduced',
+        }
 
     def test_handles_empty_pdf(self) -> None:
         mock_page = MagicMock()
