@@ -90,10 +90,12 @@ BILL_READING_HEADER = re.compile(
 )
 
 BILL_ITEM = re.compile(
-    r'[•\-\*\u2022]\s+(.+?)(?:\s*\(?(?:Bill\s+No\.?\s*(\d+)\s+of\s+(\d{4}))?\)?)'
+    r'[•\-\*\u2022]\s+(.+?)'
+    r'(?:\s*\(?(?:Bill\s+No\.?\s*(\d+)\s+of\s+(\d{4}))\)?)?'
     r'(?:\s*\(Published on\s+[^)]+\))?'
-    r'(?:\s*\(([^)]*Minister[^)]*)\))?',
-    re.IGNORECASE | re.DOTALL,
+    r'(?:\s*\(([^)]*Minister[^)]*)\))?'
+    r'\s*$',
+    re.IGNORECASE | re.MULTILINE,
 )
 
 
