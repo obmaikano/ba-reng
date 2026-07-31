@@ -1,9 +1,9 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MpSummary } from '../dashboard/types';
 
 interface FeedRightPanelProps {
   mps: MpSummary[];
-  unresolvedCount: number;
 }
 
 const sectionHeader: React.CSSProperties = {
@@ -15,8 +15,10 @@ const sectionHeader: React.CSSProperties = {
   margin: 0,
 };
 
-export default function FeedRightPanel({ mps, unresolvedCount }: FeedRightPanelProps) {
+export default function FeedRightPanel({ mps }: FeedRightPanelProps) {
   const navigate = useNavigate();
+  const [expandedMp, setExpandedMp] = useState<number | null>(null);
+
   const top5 = [...mps]
     .sort((a, b) => b.participation_index.participation_index - a.participation_index.participation_index)
     .slice(0, 5);
@@ -35,28 +37,77 @@ export default function FeedRightPanel({ mps, unresolvedCount }: FeedRightPanelP
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {top5.map((mp, i) => {
             const score = mp.participation_index.participation_index;
+            const breakdown = mp.participation_index.breakdown || [];
+            const isExpanded = expandedMp === mp.id;
+
             return (
-              <div
-                key={mp.id}
-                onClick={() => navigate(`/mp/${mp.id}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', width: 16, textAlign: 'right' }}>
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {mp.name}
-                      </span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--accent-blue)', fontWeight: 600 }}>{score}</span>
-                    </div>
-                    <div style={{ height: 2, background: 'var(--bg-elevated)' }}>
-                      <div style={{ height: 2, background: 'var(--accent-blue)', width: `${(score / maxScore) * 100}%` }} />
+              <div key={mp.id}>
+                <div
+                  onClick={() => setExpandedMp(isExpanded ? null : mp.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', width: 16, textAlign: 'right' }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
+                        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {mp.name}
+                        </span>
+                        <span
+                          onClick={(e) => { e.stopPropagation(); navigate(`/mp/${mp.id}`); }}
+                          style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--accent-blue)', fontWeight: 600, cursor: 'pointer' }}
+                          title="View MP profile"
+                        >
+                          {score}
+                        </span>
+                      </div>
+                      <div style={{ height: 2, background: 'var(--bg-elevated)' }}>
+                        <div style={{ height: 2, background: 'var(--accent-blue)', width: `${(score / maxScore) * 100}%` }} />
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {isExpanded && breakdown.length > 0 && (
+                  <div style={{
+                    marginTop: 6,
+                    marginLeft: 26,
+                    padding: '8px 10px',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-subtle)',
+                    borderLeft: '2px solid var(--accent-blue)',
+                  }}>
+                    {breakdown.map((item) => (
+                      <div key={item.contribution_type} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '3px 0',
+                        borderBottom: '1px solid var(--border-subtle)',
+                      }}>
+                        <span style={{ fontSize: 10, color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
+                          {item.contribution_type.replace(/_/g, ' ')}
+                        </span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)' }}>
+                          {item.count} &times; {item.weight} = <span style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>{item.weighted_score}</span>
+                        </span>
+                      </div>
+                    ))}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '3px 0',
+                      marginTop: 4,
+                      borderTop: '1px solid var(--border-default)',
+                    }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-primary)' }}>Total</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--accent-blue)' }}>{score}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -96,29 +147,6 @@ export default function FeedRightPanel({ mps, unresolvedCount }: FeedRightPanelP
             </span>
           </div>
         </div>
-      </div>
-
-      <div style={{ padding: 16 }}>
-        <h3 style={sectionHeader}>Names We Could Not Match</h3>
-        <p style={{ fontSize: 11, color: 'var(--text-tertiary)', lineHeight: 1.4, margin: 0, marginBottom: 12 }}>
-          These names in the record could not be matched to an MP on file.
-        </p>
-        {unresolvedCount > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-secondary)' }}>Unmatched names</div>
-              </div>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--accent-amber)', textTransform: 'uppercase', letterSpacing: '0.05em', border: '1px solid rgba(245,166,35,0.3)', background: 'rgba(245,166,35,0.1)', padding: '2px 6px' }}>
-                {unresolvedCount} PENDING
-              </span>
-            </div>
-          </div>
-        ) : (
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-tertiary)' }}>
-            All names matched.
-          </span>
-        )}
       </div>
     </div>
   );

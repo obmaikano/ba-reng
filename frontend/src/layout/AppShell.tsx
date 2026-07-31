@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import TopNav from './TopNav';
 import SystemStatusBar from './SystemStatusBar';
+import Breadcrumbs from './Breadcrumbs';
 
 interface AppShellProps {
   sidebar?: ReactNode;
@@ -9,16 +10,32 @@ interface AppShellProps {
   fullWidth?: boolean;
 }
 
+const RESPONSIVE_CSS = `
+  @media (max-width: 768px) {
+    .appshell-grid { grid-template-columns: 1fr !important; }
+    .appshell-grid > aside { display: none; }
+    .appshell-flex > aside { display: none; }
+    .appshell-flex > main { width: 100% !important; }
+    .appshell-status { font-size: 9px !important; padding: 0 8px !important; }
+    .appshell-status span { gap: 8px !important; }
+  }
+`;
+
 export default function AppShell({ sidebar, rightPanel, children, fullWidth }: AppShellProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <style>{RESPONSIVE_CSS}</style>
       <TopNav />
-      <SystemStatusBar />
+      <Breadcrumbs />
+      <div className="appshell-status">
+        <SystemStatusBar />
+      </div>
 
       {fullWidth ? (
         <main style={{ flex: 1, overflow: 'auto' }}>{children}</main>
       ) : rightPanel && !sidebar ? (
         <div
+          className="appshell-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: '9fr 3fr',
@@ -43,7 +60,7 @@ export default function AppShell({ sidebar, rightPanel, children, fullWidth }: A
           </aside>
         </div>
       ) : (
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div className="appshell-flex" style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {sidebar && (
             <aside
               style={{

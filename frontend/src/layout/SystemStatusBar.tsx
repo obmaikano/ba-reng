@@ -49,9 +49,6 @@ export default function SystemStatusBar() {
             <span>SOURCE: {CRAWL_SOURCE}</span>
             {status.last_crawl && <span>LAST_UPDATE: {status.last_crawl.started_at}</span>}
             <span>DOCUMENTS_READ: {status.document_count}</span>
-            <span style={status.unresolved_entity_count > 0 ? { color: 'var(--accent-amber)' } : undefined}>
-              NAMES_UNMATCHED: {status.unresolved_entity_count}
-            </span>
           </div>
           <span style={{ color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: 4 }}>
             ⚠ PROXY_METRIC

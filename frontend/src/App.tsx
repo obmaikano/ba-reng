@@ -21,6 +21,7 @@ import MpProfilePage from './mp/MpProfilePage';
 import ComparePage from './compare/ComparePage';
 import RankingsPage from './rankings/RankingsPage';
 import BillTrackerPage from './bills/BillTrackerPage';
+import BillRightPanel from './bills/BillRightPanel';
 import SearchPage from './search/SearchPage';
 import AboutPage from './about/AboutPage';
 import AnalyticsOverview from './analytics/AnalyticsOverview';
@@ -28,6 +29,8 @@ import ContributionDetailPage from './detail/ContributionDetailPage';
 import MinistryDetailPage from './detail/MinistryDetailPage';
 import ConstituencyDetailPage from './detail/ConstituencyDetailPage';
 import HansardSessionDetailPage from './detail/HansardSessionDetailPage';
+import HansardSessionsPage from './hansard/HansardSessionsPage';
+import BillDetailPage from './bills/BillDetailPage';
 
 function Home() {
   const { data, error } = useDashboardData();
@@ -62,11 +65,10 @@ function Home() {
 function MpProfile() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={mps} />}
     >
       <MpProfilePage />
     </AppShell>
@@ -76,11 +78,10 @@ function MpProfile() {
 function Compare() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={mps} />}
     >
       <ComparePage />
     </AppShell>
@@ -132,7 +133,7 @@ function Feed() {
   return (
     <AppShell
       sidebar={<FilterSidebar ministries={ministryNames} parties={partyNames} filters={filters} onChange={handleFilterChange} ministryCounts={ministryCounts} />}
-      rightPanel={<FeedRightPanel mps={data.mps} unresolvedCount={data.unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={data.mps} />}
     >
       <FeedPage contributions={data.contributions} totalCount={data.totalCount} />
     </AppShell>
@@ -150,11 +151,10 @@ function FindMp() {
 function Rankings() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={mps} />}
     >
       <RankingsPage />
     </AppShell>
@@ -188,11 +188,10 @@ function Analytics() {
 function ContributionDetail() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={mps} />}
     >
       <ContributionDetailPage />
     </AppShell>
@@ -203,11 +202,10 @@ function ContributionDetail() {
 function MinistryDetail() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={mps} />}
     >
       <MinistryDetailPage />
     </AppShell>
@@ -217,11 +215,10 @@ function MinistryDetail() {
 function ConstituencyDetail() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={mps} />}
     >
       <ConstituencyDetailPage />
     </AppShell>
@@ -232,11 +229,10 @@ function ConstituencyDetail() {
 function HansardSessionDetail() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={mps} />}
     >
       <HansardSessionDetailPage />
     </AppShell>
@@ -244,15 +240,21 @@ function HansardSessionDetail() {
 }
 
 function Bills() {
-  const { data } = useFeedData(DEFAULT_FILTERS);
-  const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
-
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<BillRightPanel />}
     >
       <BillTrackerPage />
+    </AppShell>
+  );
+}
+
+function BillDetail() {
+  return (
+    <AppShell
+      rightPanel={<BillRightPanel />}
+    >
+      <BillDetailPage />
     </AppShell>
   );
 }
@@ -260,11 +262,10 @@ function Bills() {
 function Search() {
   const { data } = useFeedData(DEFAULT_FILTERS);
   const mps = data?.mps ?? [];
-  const unresolvedCount = data?.unresolvedCount ?? 0;
 
   return (
     <AppShell
-      rightPanel={<FeedRightPanel mps={mps} unresolvedCount={unresolvedCount} />}
+      rightPanel={<FeedRightPanel mps={mps} />}
     >
       <SearchPage />
     </AppShell>
@@ -282,6 +283,7 @@ export default function App() {
         <Route path="/mp/:mpId" element={<MpProfile />} />
         <Route path="/compare" element={<Compare />} />
         <Route path="/bills" element={<Bills />} />
+        <Route path="/bills/:billKey" element={<BillDetail />} />
         <Route path="/search" element={<Search />} />
         <Route path="/about" element={<About />} />
         <Route path="/analytics" element={<Analytics />} />
@@ -302,6 +304,7 @@ export default function App() {
         <Route path="/contribution/:id" element={<ContributionDetail />} />
         <Route path="/ministry/:name" element={<MinistryDetail />} />
         <Route path="/constituency/:name" element={<ConstituencyDetail />} />
+        <Route path="/hansard" element={<AppShell><HansardSessionsPage /></AppShell>} />
         <Route path="/hansard/session/:id" element={<HansardSessionDetail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

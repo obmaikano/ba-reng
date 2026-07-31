@@ -120,6 +120,35 @@ export default function DashboardMain({ data }: DashboardMainProps) {
           >
             {subtitle}
           </p>
+          {weekContributions.length > 0 && (
+            <p
+              style={{
+                fontSize: 13,
+                color: 'var(--text-secondary)',
+                marginTop: 12,
+                marginBottom: 4,
+                lineHeight: 1.6,
+                maxWidth: 600,
+              }}
+            >
+              This week, Parliament sat for {sittingDays} day{sittingDays === 1 ? '' : 's'} and recorded{' '}
+              {weekContributions.length} contribution{weekContributions.length === 1 ? '' : 's'} from{' '}
+              {activeMpCount} active MP{activeMpCount === 1 ? '' : 's'} across{' '}
+              {new Set(weekContributions.map(c => c.ministry_addressed).filter(Boolean)).size} ministries.
+              {narrative?.summary_metrics?.top_addressed_ministry && (
+                <>
+                  {' '}The most addressed ministry was{' '}
+                  <strong>{narrative.summary_metrics.top_addressed_ministry}</strong>
+                  {narrative.summary_metrics.top_ministry_count > 0 && (
+                    <> with {narrative.summary_metrics.top_ministry_count} question{narrative.summary_metrics.top_ministry_count === 1 ? '' : 's'}</>
+                  )}.
+                </>
+              )}
+              {prevWeekCount > 0 && weekContributions.length > prevWeekCount && (
+                <> Activity increased {Math.round(((weekContributions.length - prevWeekCount) / prevWeekCount) * 100)}% from the previous week ({prevWeekCount} contributions).</>
+              )}
+            </p>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button

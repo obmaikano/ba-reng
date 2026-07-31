@@ -28,7 +28,12 @@ export default function ByTheNumbers({ contributions, narrative }: ByTheNumbersP
     ? Object.keys(narrative.summary_metrics.ministry_breakdown).length
     : 0;
 
-  const rows: { label: string; count: string; color?: string }[] = [
+  function formatCount(value: string): { display: string; color: string } {
+    if (value === '0') return { display: '—', color: 'var(--text-tertiary)' };
+    return { display: value, color: 'var(--accent-blue)' };
+  }
+
+  const rows = [
     { label: 'Questions asked', count: counts.get('Questions asked') ?? '0' },
     { label: 'Motions moved', count: counts.get('Motions moved') ?? '0' },
     { label: 'Bill readings', count: counts.get('Bill readings') ?? '0' },
@@ -48,8 +53,8 @@ export default function ByTheNumbers({ contributions, narrative }: ByTheNumbersP
           return (
             <div key={row.label} style={style}>
               <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{row.label}</span>
-              <span style={{ ...mono, fontSize: 12, color: row.color ?? 'var(--accent-blue)' }}>
-                {row.count}
+              <span style={{ ...mono, fontSize: 12, color: formatCount(row.count).color }}>
+                {formatCount(row.count).display}
               </span>
             </div>
           );

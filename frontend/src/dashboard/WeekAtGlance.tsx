@@ -28,9 +28,9 @@ function sittingDayNames(contributions: Contribution[]): string {
 function trendDetail(current: number, previous: number): string {
   const delta = current - previous;
   if (previous === 0) return 'vs prev week (none)';
-  if (delta > 0) return `+${delta} vs prev week`;
-  if (delta < 0) return `${delta} vs prev week`;
-  return 'same as prev week';
+  if (delta > 0) return `+${delta} vs prev week (${previous} → ${current})`;
+  if (delta < 0) return `${delta} vs prev week (${previous} → ${current})`;
+  return `same as prev week (${current})`;
 }
 
 export default function WeekAtGlance({
@@ -66,7 +66,7 @@ export default function WeekAtGlance({
       valueColor: 'var(--accent-amber)',
       detail: topMinistryCount > 0
         ? `${topMinistryCount} question${topMinistryCount === 1 ? '' : 's'} (${topMinistryPct}%)`
-        : 'No ministry recorded',
+        : '—',
     },
   ];
 

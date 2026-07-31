@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { get } from '../api';
 import { Contribution } from '../dashboard/types';
-import { typeLabel } from '../dashboard/styles';
+import { typeLabel, mono } from '../dashboard/styles';
 
 interface ConstituencyData {
   constituency: string;
@@ -55,7 +55,7 @@ export default function ConstituencyDetailPage() {
   if (loading) {
     return (
       <div style={{ padding: 24 }}>
-        <span style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+        <span style={{ ...mono, fontSize: 12, color: 'var(--text-tertiary)' }}>
           Loading constituency data…
         </span>
       </div>
@@ -65,14 +65,9 @@ export default function ConstituencyDetailPage() {
   if (error || !stats) {
     return (
       <div style={{ padding: 24 }}>
-        <span style={{ color: 'var(--accent-red)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+        <span style={{ ...mono, fontSize: 12, color: 'var(--accent-red)' }}>
           {error || 'Constituency not found.'}
         </span>
-        <div style={{ marginTop: 12 }}>
-          <span onClick={() => navigate('/find')} style={{ color: 'var(--accent-blue)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
-            ← Find MP
-          </span>
-        </div>
       </div>
     );
   }
@@ -81,86 +76,103 @@ export default function ConstituencyDetailPage() {
   const hasMp = info.mp_name !== null;
 
   return (
-    <div style={{ padding: 24 }}>
-      {/* Breadcrumb */}
-      <div style={{ marginBottom: 16, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)' }}>
-        <span onClick={() => navigate('/find')} style={{ cursor: 'pointer', color: 'var(--accent-blue)' }}>Find MP</span>
-        <span style={{ margin: '0 6px' }}>→</span>
-        <span>{info.constituency}</span>
-      </div>
-
+    <div style={{ padding: 24, maxWidth: 900 }}>
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 24 }}>
         <span style={{
-          fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)',
+          ...mono, fontSize: 10, color: 'var(--text-tertiary)',
           textTransform: 'uppercase', letterSpacing: '0.08em',
         }}>
           CONSTITUENCY PROFILE
         </span>
-        <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', margin: '4px 0 2px 0' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', margin: '4px 0 0 0', lineHeight: 1.3 }}>
           {info.constituency}
         </h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-tertiary)', margin: 0 }}>
-          {info.contribution_count} contribution{info.contribution_count === 1 ? '' : 's'} on record
-        </p>
       </div>
 
       {/* MP Card */}
-      {hasMp && (
-        <div
-          onClick={() => navigate(`/find`)}
-          style={{
-            marginBottom: 20, padding: 16,
-            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
-            borderLeft: '3px solid var(--accent-blue)', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 14,
-          }}
-        >
+      {hasMp ? (
+        <div style={{
+          marginBottom: 20, padding: 16,
+          background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
+          borderLeft: '3px solid var(--accent-blue)',
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
           <div style={{
-            width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700,
+            width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            ...mono, fontSize: 16, fontWeight: 700,
             color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)',
             background: 'var(--bg-surface)', flexShrink: 0,
           }}>
             {(info.mp_name || '??').split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()}
           </div>
-          <div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--accent-blue)' }}>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--accent-blue)', display: 'block' }}>
               {info.mp_name}
             </span>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
-              {info.party || 'No party'} · {info.contribution_count} contributions
+            <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                {info.party || 'No party'}
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                {info.contribution_count} contributions
+              </span>
             </div>
           </div>
-          <span style={{ marginLeft: 'auto', color: 'var(--accent-blue)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+          <span
+            onClick={() => navigate('/find')}
+            style={{ ...mono, fontSize: 11, color: 'var(--accent-blue)', cursor: 'pointer' }}
+          >
             Find MP →
           </span>
         </div>
-      )}
-
-      {!hasMp && (
+      ) : (
         <div style={{
           marginBottom: 20, padding: 14,
           background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
           borderLeft: '3px solid var(--accent-amber)',
         }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-amber)' }}>
-            No MP found for this constituency in the current database.
+          <span style={{ ...mono, fontSize: 11, color: 'var(--accent-amber)' }}>
+            No MP found for this constituency in the database.
           </span>
         </div>
       )}
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-        <StatCard label="Total Contributions" value={String(info.contribution_count)} color="var(--accent-blue)" />
-        <StatCard label="Oral Questions" value={String(info.oral_question_count)} color="var(--accent-blue)" />
-        <StatCard label="Motions" value={String(info.motion_count)} color="var(--accent-amber)" />
+      {/* Stats row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: 12 }}>
+          <span style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>
+            Total
+          </span>
+          <span style={{ ...mono, fontSize: 22, fontWeight: 700, color: 'var(--accent-blue)', display: 'block', marginTop: 4 }}>
+            {info.contribution_count}
+          </span>
+        </div>
+        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: 12 }}>
+          <span style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>
+            Questions
+          </span>
+          <span style={{ ...mono, fontSize: 22, fontWeight: 700, color: 'var(--accent-blue)', display: 'block', marginTop: 4 }}>
+            {info.oral_question_count}
+          </span>
+        </div>
+        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: 12 }}>
+          <span style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block' }}>
+            Motions
+          </span>
+          <span style={{ ...mono, fontSize: 22, fontWeight: 700, color: 'var(--accent-amber)', display: 'block', marginTop: 4 }}>
+            {info.motion_count}
+          </span>
+        </div>
       </div>
 
       {/* Contributions */}
       <div>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 10 }}>
-          Contributions from this Constituency
+        <span style={{
+          ...mono, fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase',
+          letterSpacing: '0.08em', display: 'block', marginBottom: 12,
+        }}>
+          Recent Contributions
         </span>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {stats.contributions.map((c) => (
@@ -169,42 +181,37 @@ export default function ConstituencyDetailPage() {
               onClick={() => navigate(`/contribution/${c.id}`)}
               style={{
                 background: 'var(--bg-elevated)', border: '1px solid var(--border-default)',
-                padding: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 12px', cursor: 'pointer',
               }}
             >
-              <span style={{
-                fontFamily: 'var(--font-mono)', fontSize: 9, textTransform: 'uppercase',
-                padding: '2px 6px', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)',
-                flexShrink: 0,
-              }}>
-                {typeLabel(c.contribution_type)}
-              </span>
-              <span style={{ fontSize: 11, color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {c.subject_text.slice(0, 120)}{c.subject_text.length > 120 ? '…' : ''}
-              </span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)' }}>
-                {new Date(c.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                <span style={{
+                  ...mono, fontSize: 8, textTransform: 'uppercase',
+                  padding: '1px 5px', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)',
+                }}>
+                  {typeLabel(c.contribution_type)}
+                </span>
+                <span style={{ ...mono, fontSize: 9, color: 'var(--text-tertiary)' }}>
+                  {new Date(c.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                </span>
+                {c.mp_name && (
+                  <span style={{ ...mono, fontSize: 9, color: 'var(--accent-blue)', marginLeft: 'auto' }}>
+                    {c.mp_name}
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.4, display: 'block' }}>
+                {c.subject_text.slice(0, 150)}{c.subject_text.length > 150 ? '…' : ''}
               </span>
             </div>
           ))}
           {stats.contributions.length === 0 && (
-            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', padding: 12 }}>No contributions found for this constituency.</span>
+            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', padding: 12 }}>
+              No contributions found for this constituency.
+            </span>
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', padding: 12 }}>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {label}
-      </span>
-      <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color, marginTop: 4 }}>
-        {value}
-      </span>
     </div>
   );
 }

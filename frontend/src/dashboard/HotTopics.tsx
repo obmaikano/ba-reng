@@ -90,6 +90,7 @@ export default function HotTopics({ contributions, narrativeTopics }: HotTopicsP
                   <span style={{ ...mono, fontSize: 10, color: 'var(--text-tertiary)' }}>
                     {topic.count} matter{topic.count === 1 ? '' : 's'}
                     {topic.pct !== undefined && ` (${topic.pct}%)`}
+                    {topic.count === 0 && <span style={{ color: 'var(--text-tertiary)' }}> —</span>}
                   </span>
                 </div>
                 {topic.mpNames.length > 0 && (

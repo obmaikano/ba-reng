@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: '06 Index', path: '/rankings' },
   { label: '07 Bills', path: '/bills' },
   { label: '08 Search', path: '/search' },
+  { label: 'Hansard', path: '/hansard' },
   { label: 'Analytics', path: '/analytics' },
   { label: 'About', path: '/about' },
 ];
