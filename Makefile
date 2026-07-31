@@ -1,4 +1,4 @@
-.PHONY: install dev dev-backend dev-frontend lint test typecheck build clean dc-up dc-down dc-build dc-logs
+.PHONY: install dev dev-backend dev-frontend lint test typecheck build clean dc-up dc-down dc-build dc-logs learn-run learn-status learn-export
 
 BACKEND_DIR = backend
 FRONTEND_DIR = frontend
@@ -49,3 +49,13 @@ dc-build:
 
 dc-logs:
 	docker compose logs -f
+
+# System-learning pipeline — model-agnostic, no LLM/vector dependencies
+learn-run:
+	$(VENV)/bin/python -m backend.learn.run
+
+learn-status:
+	$(VENV)/bin/python -c "from backend.learn.pipeline import LearningPipeline; import json; p=LearningPipeline(); print(json.dumps(p.status(), indent=2)); p.close()"
+
+learn-export:
+	$(VENV)/bin/python -m backend.learn.run --export-only

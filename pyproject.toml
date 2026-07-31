@@ -20,6 +20,7 @@ dependencies = [
     "python-multipart>=0.0.12",
     "lingua-language-detector>=2.0",
     "spacy>=3.7",
+    "aiosqlite>=0.20",
 ]
 
 [tool.setuptools.packages.find]

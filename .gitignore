@@ -25,9 +25,14 @@ dist/
 
 # Data
 data/*.db
+data/*.db.bak
+data/*.db.pre-wipe.bak
 data/*.db-wal
 data/*.db-shm
 data/pdfs/
+data/chroma/
+data/knowledge/
+data/training/
 
 # IDE
 .vscode/
