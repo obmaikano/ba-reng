@@ -1,57 +1,12 @@
 {
-  "loop": "advance",
-  "result": "pass",
-  "stage": "4-5",
   "checkpoint": "5.1 \u2014 Social Draft Generator (final committed checkpoint)",
-  "status": "DONE",
+  "loop": "stop",
   "next_role_hint": "stop",
   "protocol_version": 1,
-  "recorded_at": "2026-07-24T21:03:37.338124+00:00",
-  "report": {
-    "acceptance_matrix": [
-      {
-        "item": "ISSUE-009: FindMpPage Math.random() fake stats replaced with real API data",
-        "status": "PASS",
-        "critical": true,
-        "confidence": 1.0,
-        "evidence": "PR #19 merged, 321/321 tests pass, tsc clean, vite build clean",
-        "evidence_strength": "HIGH"
-      }
-    ],
-    "top_findings": [
-      {
-        "impact": "MAJOR",
-        "title": "ISSUE-005: mps table empty \u2014 cannot demo live resolution",
-        "evidence": "mps table has 0 rows",
-        "action": "Run roster scraper to populate"
-      },
-      {
-        "impact": "MAJOR",
-        "title": "ISSUE-007: Search doesn't cover utterances or glossary expansion",
-        "evidence": "search.py only queries contributions table",
-        "action": "Add utterances branch + bilingual query expansion"
-      }
-    ],
-    "state_transition": {
-      "before": {
-        "stage": "4-5",
-        "checkpoint": "5.1",
-        "status": "DONE"
-      },
-      "after": {
-        "stage": "4-5",
-        "checkpoint": "5.1",
-        "status": "DONE"
-      }
-    },
-    "loop_result": {
-      "stage": "4-5",
-      "checkpoint": "5.1",
-      "status": "DONE",
-      "result": "pass",
-      "loop": "advance",
-      "next_role_hint": "stop"
-    }
-  },
-  "state_sha256": "final"
+  "reason": "Current checkpoint is last checkpoint in .vibe/PLAN.md (plan exhausted).",
+  "recorded_at": "2026-07-31T18:13:16.929962+00:00",
+  "result": "stop",
+  "stage": "4-5",
+  "state_sha256": "2098d416750ac545ae448ac2d4d2a625949ac9bccb57f29abf0383079a1d88eb",
+  "status": "DONE"
 }
