@@ -57,10 +57,10 @@ def resolve_contribution(
     Delegates to the scalable implementation with on-the-fly maps.
     """
     constituency_map = _build_constituency_map(cursor)
-    surname_map = _build_surname_map(cursor)
+    token_map = _build_token_map(cursor)
     return resolve_contribution_scalable(
         cursor, raw_match_name, raw_constituency,
-        constituency_map, surname_map,
+        constituency_map, token_map,
     )
 
 
@@ -75,14 +75,21 @@ def _build_constituency_map(cursor: sqlite3.Cursor) -> dict[str, int]:
     return mapping
 
 
-def _build_surname_map(cursor: sqlite3.Cursor) -> dict[str, list[int]]:
-    """Build a map of surname (last word) -> [mp_id, ...]."""
+def _build_token_map(cursor: sqlite3.Cursor) -> dict[str, list[int]]:
+    """Build a map of every name token -> [mp_id, ...] for surname matching.
+
+    Maps every word in an MP's full name (not just the last word) so that
+    both first-name and last-name extraction from raw_match_name can resolve.
+    Uses sets internally to avoid duplicates when an MP has the same token twice
+    (e.g. 'Motsamai Motsamai').
+    """
     rows = cursor.execute('SELECT id, name FROM mps').fetchall()
-    mapping: dict[str, list[int]] = {}
+    mapping: dict[str, set[int]] = {}
     for row in rows:
-        surname = row['name'].strip().split()[-1].upper()
-        mapping.setdefault(surname, []).append(row['id'])
-    return mapping
+        tokens = row['name'].strip().upper().split()
+        for token in tokens:
+            mapping.setdefault(token, set()).add(row['id'])
+    return {k: list(v) for k, v in mapping.items()}
 
 
 def _build_ministry_map(cursor: sqlite3.Cursor) -> dict[str, int]:
@@ -98,14 +105,14 @@ def resolve_contribution_scalable(
     raw_match_name: str,
     raw_constituency: str | None,
     constituency_map: dict[str, int] | None = None,
-    surname_map: dict[str, list[int]] | None = None,
+    token_map: dict[str, list[int]] | None = None,
     ministry_map: dict[str, int] | None = None,
 ) -> int | None:
     """Resolve a contribution to an mp_id using pre-built maps."""
     if constituency_map is None:
         constituency_map = _build_constituency_map(cursor)
-    if surname_map is None:
-        surname_map = _build_surname_map(cursor)
+    if token_map is None:
+        token_map = _build_token_map(cursor)
     if ministry_map is None:
         ministry_map = _build_ministry_map(cursor)
 
@@ -116,7 +123,7 @@ def resolve_contribution_scalable(
 
     surname = _extract_surname(raw_match_name)
     if surname:
-        candidates = surname_map.get(surname.upper(), [])
+        candidates = token_map.get(surname.upper(), [])
         if len(candidates) == 1:
             return candidates[0]
 
@@ -125,10 +132,15 @@ def resolve_contribution_scalable(
         return ministry_map[lookup_key]
 
     # Fourth fallback: Levenshtein + Jaccard token similarity nearest-match
-    if surname_map:
-        mp_names = [(mid, cursor.execute(
-            'SELECT name FROM mps WHERE id = ?', (mid,)
-        ).fetchone()['name'].upper()) for mids in surname_map.values() for mid in mids]
+    if token_map:
+        mp_names = [
+            (mid, row['name'].upper())
+            for mids in token_map.values()
+            for mid in mids
+            if (row := cursor.execute(
+                'SELECT name FROM mps WHERE id = ?', (mid,),
+            ).fetchone()) is not None
+        ]
         mp_names = list(set(mp_names))  # deduplicate
         nearest_id, _score = resolve_nearest(raw_match_name, mp_names)
         if nearest_id is not None:
@@ -145,13 +157,13 @@ if __name__ == '__main__':
         "FROM entity_review_queue WHERE status='UNRESOLVED'",
     ).fetchall()
     constituency_map = _build_constituency_map(cursor)
-    surname_map = _build_surname_map(cursor)
+    token_map = _build_token_map(cursor)
     ministry_map = _build_ministry_map(cursor)
     resolved = 0
     for row in unresolved:
         mp_id = resolve_contribution_scalable(
             cursor, row['raw_match_name'], row['raw_constituency'],
-            constituency_map, surname_map, ministry_map,
+            constituency_map, token_map, ministry_map,
         )
         if mp_id:
             resolved += 1

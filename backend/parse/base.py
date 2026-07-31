@@ -5,12 +5,21 @@ from datetime import datetime
 
 import pdfplumber
 
+from backend.db.connection import get_connection
+
 DATE_PATTERN = re.compile(
     r'(?:FOR\s+)?'
     r'(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)'
     r'\s+\d{1,2}(?:ST|ND|RD|TH)?\s+'
     r'(?:JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|'
     r'OCTOBER|NOVEMBER|DECEMBER),?\s+\d{4}',
+    re.IGNORECASE,
+)
+
+# Fallback: dates without weekday prefix (Committee of Supply speeches, motions)
+DATE_WITHOUT_WEEKDAY = re.compile(
+    r'(?:ON\s+|DELIVERED\s+(?:TO\s+THE\s+NATIONAL\s+ASSEMBLY\s+)?ON\s+)?'
+    r'(\d{1,2})(?:ST|ND|RD|TH)?\s+(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER),?\s+(\d{4})',
     re.IGNORECASE,
 )
 
@@ -49,13 +58,36 @@ MINISTRY_LEAKED_SUBJECT = re.compile(
 MINISTRY_BARE_ROMAN = re.compile(r'\s+\(?[ivx]+\)?\s*$', re.IGNORECASE)
 
 def _get_canonical_ministry(name: str) -> str:
-    """Look up a canonical ministry name from the database keywords table."""
-    from backend.db.connection import get_connection
+    """Look up a canonical ministry name from the database.
+
+    The lookup is deterministic. It tries, in order:
+      1. Exact canonical-name match on the ministries table.
+      2. Keyword match preferring static-seed rows, then highest weight.
+
+    Returns:
+        The canonical ministry name, or empty string if no match.
+    """
     conn = get_connection()
     try:
+        cleaned = name.lower().strip().rstrip('.').rstrip(',')
         row = conn.execute(
-            "SELECT m.canonical_name FROM ministry_keywords k JOIN ministries m ON m.id = k.ministry_id WHERE k.keyword = ?",
-            (name.lower().strip().rstrip('.').rstrip(','),),
+            'SELECT canonical_name FROM ministries WHERE LOWER(canonical_name) = ?',
+            (cleaned,),
+        ).fetchone()
+        if row:
+            return row['canonical_name']
+        row = conn.execute(
+            """
+            SELECT m.canonical_name
+            FROM ministry_keywords k
+            JOIN ministries m ON m.id = k.ministry_id
+            WHERE k.keyword = ?
+            ORDER BY CASE WHEN k.source_type = 'static_seed' THEN 0 ELSE 1 END,
+                     k.weight DESC,
+                     m.id ASC
+            LIMIT 1
+            """,
+            (cleaned,),
         ).fetchone()
         if row:
             return row['canonical_name']
@@ -142,19 +174,36 @@ def extract_text(pdf_path: str) -> str:
 
 
 def _extract_date_from_header(text: str) -> str | None:
-    match = DATE_PATTERN.search(text)
-    if not match:
-        return None
-    raw = match.group(0).strip().upper()
-    raw = raw.removeprefix('FOR ')
-    raw = re.sub(r'\b(\d+)(ST|ND|RD|TH)\b', r'\1', raw)
-    raw = raw.replace(',', '').strip()
-    try:
-        dt = datetime.strptime(raw, '%A %d %B %Y')
-        return dt.strftime('%Y-%m-%d')
-    except ValueError:
-        return None
+    """Extract a date from document text.
 
+    Tries weekday-prefixed format first, then falls back to bare date
+    format (common in Committee of Supply speeches).
+    """
+    match = DATE_PATTERN.search(text)
+    if match:
+        raw = match.group(0).strip().upper()
+        raw = raw.removeprefix('FOR ')
+        raw = re.sub(r'\b(\d+)(ST|ND|RD|TH)\b', r'', raw)
+        raw = raw.replace(',', '').strip()
+        try:
+            dt = datetime.strptime(raw, '%A %d %B %Y')
+            return dt.strftime('%Y-%m-%d')
+        except ValueError:
+            pass
+
+    # Fallback: dates without weekday (e.g. "24 MARCH 2026", "23rd MARCH, 2026")
+    match = DATE_WITHOUT_WEEKDAY.search(text)
+    if match:
+        try:
+            dt = datetime.strptime(
+                f'{match.group(1)} {match.group(2)} {match.group(3)}',
+                '%d %B %Y',
+            )
+            return dt.strftime('%Y-%m-%d')
+        except ValueError:
+            pass
+
+    return None
 
 def normalise_ministry(raw: str) -> str:
     """Normalise ministry name: strip prefixes, artifacts, subject leaks."""
@@ -193,7 +242,6 @@ def normalise_ministry(raw: str) -> str:
     if not name:
         return ''
 
-    lower = name.lower().strip().rstrip('.').rstrip(',')
     result = _get_canonical_ministry(name)
     if result:
         return result

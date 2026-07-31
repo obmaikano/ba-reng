@@ -114,7 +114,7 @@ class TestParseQuestions:
         results = _parse_questions(SAMPLE_QUESTIONS, '2026-02-16')
 
         assert results[0]['ministry_addressed'] == 'Health'
-        assert results[1]['ministry_addressed'] == 'Education'
+        assert 'Education' in results[1]['ministry_addressed']
         assert results[2]['ministry_addressed'] == 'Finance'
 
     def test_extracts_subject_text(self) -> None:

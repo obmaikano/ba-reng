@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from backend.db.connection import _sha256_hex
 from backend.resolve.entity import (
     _build_constituency_map,
-    _build_surname_map,
+    _build_token_map,
     _extract_surname,
     _normalize_constituency,
     resolve_contribution,
@@ -403,7 +403,7 @@ class TestResolveContributionScalable:
         cursor = conn.cursor()
 
         cmap = _build_constituency_map(cursor)
-        smap = _build_surname_map(cursor)
+        smap = _build_token_map(cursor)
 
         got = resolve_contribution_scalable(
             cursor, 'MR. S. O. MAPULANGA, MP.', 'Chobe', cmap, smap,

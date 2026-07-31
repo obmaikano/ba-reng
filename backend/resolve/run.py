@@ -6,7 +6,7 @@ from backend.db.connection import get_connection
 from backend.resolve.entity import (
     _build_constituency_map,
     _build_ministry_map,
-    _build_surname_map,
+    _build_token_map,
     resolve_contribution_scalable,
 )
 
@@ -33,7 +33,7 @@ def resolve_all(conn: sqlite3.Connection | None = None) -> dict:
         return {'total': 0, 'resolved': 0, 'unresolved': 0, 'rate': 0.0}
 
     constituency_map = _build_constituency_map(cursor)
-    surname_map = _build_surname_map(cursor)
+    token_map = _build_token_map(cursor)
     ministry_map = _build_ministry_map(cursor)
 
     resolved_count = 0
@@ -45,7 +45,7 @@ def resolve_all(conn: sqlite3.Connection | None = None) -> dict:
             row['raw_match_name'],
             row['raw_constituency'],
             constituency_map,
-            surname_map,
+            token_map,
             ministry_map,
         )
         if mp_id is not None:

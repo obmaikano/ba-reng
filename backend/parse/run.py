@@ -218,6 +218,11 @@ def parse_and_store(
             conn.close()
         return result
 
+    # Look up published_date from documents table for date fallback
+    cursor.execute('SELECT published_date FROM documents WHERE id = ?', (doc_id,))
+    doc_row = cursor.fetchone()
+    published_date = doc_row[0] if doc_row and doc_row[0] else ''
+
     parser = _PARSERS[doc_type]
     contributions = parser(file_path, source_url)
 
@@ -226,6 +231,9 @@ def parse_and_store(
     unresolved = 0
 
     for contrib in contributions:
+        # Fallback: use document published_date when parser returns empty date
+        if not contrib.get('date') and published_date:
+            contrib['date'] = published_date
         parsed += 1
         cid = _insert_contribution(cursor, doc_id, contrib)
         if cid is not None:
