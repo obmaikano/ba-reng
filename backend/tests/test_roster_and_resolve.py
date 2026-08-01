@@ -228,6 +228,26 @@ class TestFetchRoster:
             mps = fetch_roster()
         assert mps == []
 
+    def test_skips_empty_rows(self) -> None:
+        """Live Wikipedia can emit a trailing <tr> with no cells; it must not crash."""
+        html = (
+            '<html><body><table class="wikitable">'
+            + _THEAD
+            + '<tbody>'
+            + _TR
+            + '<tr></tr>'
+            + _TR1
+            + '<tr>  </tr>'
+            + '</tbody></table></body></html>'
+        )
+        with patch('backend.roster.wikipedia.requests.get') as mock_get:
+            mock_get.return_value = _mock_wiki_response(html)
+            mps = fetch_roster()
+
+        assert len(mps) == 2
+        assert mps[0]['name'] == 'Simasiku Mapulanga'
+        assert mps[1]['name'] == 'Dumelang Saleshando'
+
     def test_handles_network_error(self) -> None:
         with patch('backend.roster.wikipedia.requests.get') as mock_get:
             mock_get.side_effect = ConnectionError('Network error')

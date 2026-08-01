@@ -41,7 +41,7 @@ def _normalize_party(raw: str) -> str:
     return party
 
 
-def _detect_special_row(no: int, cells: list) -> str | None:
+def _detect_special_row(cells: list) -> str | None:
     """Detect if a row represents the President or Speaker from cell text.
 
     Returns the descriptive label, or None if this is a regular MP row.
@@ -106,6 +106,11 @@ def fetch_roster() -> list[dict]:
         cells = row.find_all(['td', 'th'])
         ncols = len(cells)
 
+        # Skip empty rows (a trailing <tr> with no cells can appear on the
+        # live Wikipedia page; cells[0] below would crash on it).
+        if ncols == 0:
+            continue
+
         first_text = cells[0].get_text(strip=True)
 
         # Track section headers (e.g. "President", "Specially-elected MPs")
@@ -113,14 +118,15 @@ def fetch_roster() -> list[dict]:
         # have only one cell and would otherwise be skipped.
         if not first_text.isdigit():
             all_text = ' '.join(c.get_text(strip=True).lower() for c in cells)
-            if any(s in all_text for s in ('president', 'speaker', 'presiding officer', 'specially-elected')):
+            if any(
+                s in all_text
+                for s in ('president', 'speaker', 'presiding officer', 'specially-elected')
+            ):
                 current_section = all_text
             continue
 
         if ncols < 2:
             continue
-
-        no = int(first_text)
 
         # Wikitable column layout:
         #   8-col: [0]No [1]Constituency [2]Name [3]portrait [4]Party [5]Majority [6]% [7]Margin
@@ -133,7 +139,7 @@ def fetch_roster() -> list[dict]:
             if party == 'Speaker':
                 constituency = 'Speaker'
             else:
-                special = _detect_special_row(no, cells) or _detect_from_section(current_section)
+                special = _detect_special_row(cells) or _detect_from_section(current_section)
                 if special:
                     constituency = special
                 else:
@@ -144,7 +150,7 @@ def fetch_roster() -> list[dict]:
             party_text = cells[4].get_text(strip=True) if len(cells) > 4 else ''
             party = _normalize_party(party_text)
 
-            special = _detect_special_row(no, cells)
+            special = _detect_special_row(cells)
             if special:
                 constituency = special
         else:
