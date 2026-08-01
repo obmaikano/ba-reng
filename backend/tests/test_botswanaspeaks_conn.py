@@ -56,6 +56,49 @@ class TestInferDocType:
     def test_other(self) -> None:
         assert infer_doc_type('Some random document') == 'other'
 
+    @staticmethod
+    def _bold_unicode(text: str) -> str:
+        """Map ASCII letters/digits to their mathematical bold forms."""
+        out: list[str] = []
+        for ch in text:
+            if 'A' <= ch <= 'Z':
+                out.append(chr(ord(ch) - ord('A') + 0x1D400))
+            elif '0' <= ch <= '9':
+                out.append(chr(ord(ch) - ord('0') + 0x1D7CE))
+            else:
+                out.append(ch)
+        return ''.join(out)
+
+    def test_bold_unicode_order_paper(self) -> None:
+        title = self._bold_unicode(
+            'BOTSWANA NATIONAL ASSEMBLY ORDER PAPER (THURSDAY 24TH JULY, 2026)',
+        )
+        assert infer_doc_type(title) == 'order_paper'
+
+    def test_spaced_letters_order_paper(self) -> None:
+        title = 'BOTSWANA NATIONAL ASSEMBLY O R D E R P A P E R (TUESDAY 14TH APRIL)'
+        assert infer_doc_type(title) == 'order_paper'
+
+    def test_spaced_letters_addendum_notice_paper(self) -> None:
+        title = 'A D D E N D U M BOTSWANA NATIONAL ASSEMBLY N O T I C E P A P E R (THURSDAY)'
+        assert infer_doc_type(title) == 'notice_paper'
+
+    def test_order_paper_addendum(self) -> None:
+        assert infer_doc_type('ORDER PAPER-ADDENDUM (MONDAY 27TH JULY, 2026)') == 'order_paper'
+
+    def test_notice_of_tabling(self) -> None:
+        title = 'NOTICE OF TABLING OF A PAPER (FOR TUESDAY 14TH APRIL, 2026)'
+        assert infer_doc_type(title) == 'notice_paper'
+
+    def test_notice_of_questions(self) -> None:
+        title = 'NOTICE OF QUESTIONS (FOR ORAL ANSWER ON MONDAY 13TH APRIL, 2026)'
+        assert infer_doc_type(title) == 'notice_paper'
+
+    def test_ministerial_status_update(self) -> None:
+        title = ('MINISTRY OF MINERALS AND ENERGY FUEL SUPPLY STATUS UPDATE BY '
+                 'HONOURABLE MINISTER')
+        assert infer_doc_type(title) == 'ministerial_statement'
+
 
 class TestParseDateFromArticle:
     def test_valid_date(self) -> None:

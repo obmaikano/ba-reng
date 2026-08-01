@@ -3,6 +3,7 @@
 import hashlib
 import re
 import sqlite3
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 
@@ -21,22 +22,38 @@ HEADERS = {
     'User-Agent': 'BaReng/0.1 (Botswana Parliament MP Monitor; research)',
 }
 
+# Matching runs against a normalized title key (NFKC-folded, lowercased,
+# non-alphanumerics removed). This handles the site's bold unicode fonts,
+# space-separated lettering (e.g. "O R D E R P A P E R"), and phrasing
+# like "NOTICE OF TABLING OF A PAPER".
 DOC_TYPE_PATTERNS: list[tuple[re.Pattern, str]] = [
-    (re.compile(r'notice\s*paper', re.IGNORECASE), 'notice_paper'),
-    (re.compile(r'order\s*paper', re.IGNORECASE), 'order_paper'),
-    (re.compile(r'\bbill\b', re.IGNORECASE), 'bill'),
-    (re.compile(r'motion', re.IGNORECASE), 'motion'),
-    (re.compile(r'committee\s*of\s*supply', re.IGNORECASE), 'committee_of_supply'),
-    (re.compile(r'hansard', re.IGNORECASE), 'hansard'),
-    (re.compile(r'addendum', re.IGNORECASE), 'addendum'),
-    (re.compile(r'corrigendum', re.IGNORECASE), 'corrigendum'),
+    (re.compile(r'noticepaper'), 'notice_paper'),
+    (re.compile(r'noticeoftabling'), 'notice_paper'),
+    (re.compile(r'noticeofquestions'), 'notice_paper'),
+    (re.compile(r'orderpaper'), 'order_paper'),
+    (re.compile(r'bill'), 'bill'),
+    (re.compile(r'motion'), 'motion'),
+    (re.compile(r'committeeofsupply'), 'committee_of_supply'),
+    (re.compile(r'hansard'), 'hansard'),
+    (re.compile(r'ministerialstatement'), 'ministerial_statement'),
+    (re.compile(r'statusupdate'), 'ministerial_statement'),
+    (re.compile(r'policyupdate'), 'ministerial_statement'),
+    (re.compile(r'addendum'), 'addendum'),
+    (re.compile(r'corrigendum'), 'corrigendum'),
 ]
+
+
+def _normalize_title_key(title: str) -> str:
+    """Build a stable classification key from a document title."""
+    folded = unicodedata.normalize('NFKC', title)
+    return re.sub(r'[^a-z0-9]', '', folded.lower())
 
 
 def infer_doc_type(title: str) -> str:
     """Map a document title to a normalized doc_type."""
+    key = _normalize_title_key(title)
     for pattern, doc_type in DOC_TYPE_PATTERNS:
-        if pattern.search(title):
+        if pattern.search(key):
             return doc_type
     return 'other'
 
