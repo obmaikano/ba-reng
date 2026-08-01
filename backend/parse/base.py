@@ -107,6 +107,10 @@ MOTION_SIGNATURE = re.compile(
 # source PDF, not a formatting choice we control.
 MOTION_LINE = re.compile(r'^\s*(\d+)\.\s*["“](.+)', re.DOTALL)
 
+# Single-motion Notice Papers (e.g. "NOTICE OF A MOTION" for one motion) start
+# the quoted motion text with a bullet instead of a number.
+BULLET_MOTION_LINE = re.compile(r'^\s*[\u2022\u25AA]\s*["“](.+)', re.DOTALL)
+
 
 def parse_numbered_motions(text: str, date: str | None) -> list[dict]:
     """Parse a numbered "(Mover, MP. - Constituency)"-signed motion list."""
@@ -115,6 +119,7 @@ def parse_numbered_motions(text: str, date: str | None) -> list[dict]:
 
     current_motion_lines: list[str] = []
     in_motion = False
+    prev_line = ''
 
     def finalize_unsigned() -> None:
         full_text = ' '.join(current_motion_lines).strip()
@@ -132,11 +137,23 @@ def parse_numbered_motions(text: str, date: str | None) -> list[dict]:
         if not ls:
             continue
 
-        motion_match = MOTION_LINE.match(ls)
+        motion_match = MOTION_LINE.match(ls) or BULLET_MOTION_LINE.match(ls)
         if motion_match:
             if in_motion and current_motion_lines:
                 finalize_unsigned()
-            current_motion_lines = [motion_match.group(2)]
+            group = motion_match.lastindex or 1
+            start_text = motion_match.group(group)
+            if BULLET_MOTION_LINE.match(ls):
+                # A standalone bullet motion often carries its title on the
+                # line above the quoted text (e.g. "DECRIMINALISATION OF SEX
+                # WORK" then the motion). Keep that title in the subject.
+                title = prev_line.strip()
+                if title and not title.startswith('('):
+                    current_motion_lines = [f'{title}: {start_text}']
+                else:
+                    current_motion_lines = [start_text]
+            else:
+                current_motion_lines = [start_text]
             in_motion = True
         elif in_motion:
             sig_match = MOTION_SIGNATURE.search(ls)
@@ -155,6 +172,7 @@ def parse_numbered_motions(text: str, date: str | None) -> list[dict]:
                 current_motion_lines = []
             else:
                 current_motion_lines.append(ls)
+        prev_line = ls
 
     if in_motion and current_motion_lines:
         finalize_unsigned()

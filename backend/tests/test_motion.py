@@ -15,17 +15,30 @@ NOTICE_OF_MOTIONS = (
     '1. “That this Honourable House resolves to request Government to take the\n'
     'necessary steps to ratify and domesticate the SADC Model Law on Public\n'
     'Finance Management into the national Legal Framework.”\n'
-    '(Mr. T. Furniture, MP. – Tati East)\n'
+    '(Mr. T. Furniture, MP. \u2013 Tati East)\n'
     'AMENDMENT OF THE PUBLIC HEALTH ACT\n'
     '2. “That this Honourable House requests Government to amend the Public\n'
     'Health Act in order to give the Director of Health Services powers.”\n'
-    '(Mr. L. Lesedi, MP. – Serowe South)\n'
+    '(Mr. L. Lesedi, MP. \u2013 Serowe South)\n'
 )
 
 DEBATE_TRANSCRIPT_MOTION = (
     'PRIVATE MEMBERS MOTION - National Eco-Tourism Fund\n'
     'MOVED BY: HON. K. GOBOTSWANG (TSWAPONG SOUTH)\n'
     'SECONDED BY: MR. A. K. KHAN (MOLEPOLOLE NORTH)\n'
+)
+
+SINGLE_BULLET_MOTION = (
+    'BOTSWANA NATIONAL ASSEMBLY\n'
+    'N O T I C E P A P E R\n'
+    '(WEDNESDAY 29TH JULY, 2026)\n'
+    'NOTICE OF A MOTION\n'
+    '(FOR TUESDAY 4TH AUGUST, 2026)\n'
+    'DECRIMINALISATION OF SEX WORK\n'
+    '• “That this Honourable House resolves to request Government to decriminalise\n'
+    'sex work by repealing section 155 (Living on the earnings of prostitution)\n'
+    'and Section 156 (Keeping a brothel) of the Penal Code.”\n'
+    '(Mr. G. Lekau, MP. \u2013 Mogoditshane West)\n'
 )
 
 
@@ -48,6 +61,18 @@ class TestParsePdfNoticeOfMotions:
         for r in results:
             assert r['subject_text'] != 'S'
             assert len(r['subject_text']) > 10
+
+
+class TestParsePdfSingleBulletMotion:
+    @patch('backend.parse.motion.extract_text', return_value=SINGLE_BULLET_MOTION)
+    def test_extracts_single_bullet_motion_with_title(self, _mock_extract) -> None:
+        results = parse_pdf('fake.pdf', 'https://example.com')
+
+        assert len(results) == 1
+        assert results[0]['raw_match_name'] == 'Mr. G. Lekau'
+        assert results[0]['raw_constituency'] == 'Mogoditshane West'
+        assert results[0]['subject_text'].startswith('DECRIMINALISATION OF SEX WORK: ')
+        assert 'repealing section 155' in results[0]['subject_text']
 
 
 class TestParsePdfDebateTranscriptFallback:
