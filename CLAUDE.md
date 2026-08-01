@@ -33,7 +33,12 @@ docker compose up --build      # backend :8000, frontend :5173
 make install       # venv + backend deps + frontend npm install
 make dev-backend   # uvicorn backend.main:app --reload --port 8000
 make dev-frontend  # vite dev server
+```
 
+Re-run `make install` (or `.venv/bin/pip install -e .`) whenever `pyproject.toml` gains a new
+dependency — an existing venv does not pick these up on its own.
+
+```bash
 make lint          # ruff check backend/ + eslint frontend/src
 make typecheck     # tsc --noEmit (frontend)
 make test          # pytest (backend)
@@ -112,6 +117,11 @@ Stream), `mp/`, `compare/`, `bills/`, `rankings/`, `search/`, `findmp/`, `admin/
 - `api.ts` — single fetch client for the FastAPI backend.
 - Each screen owns its own `use*Data.ts` hook for fetching + shaping API responses (see
   `dashboard/useDashboardData.ts`, `feed/useFeedData.ts`) rather than a shared global store.
+- `vite.config.ts` dev-server proxy target for `/api` is `http://localhost:8000` by default (native
+  `make dev-frontend`), overridden to `http://backend:8000` via the `VITE_API_PROXY_TARGET` env var
+  set in `docker-compose.yml` (Docker Compose service-name networking). This only affects the dev
+  proxy — the production build (GitHub Pages, `.github/workflows/deploy.yml`) instead reads
+  `VITE_API_BASE_URL` at build time.
 
 ### Design system (hard constraints, not just style preference)
 
